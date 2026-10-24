@@ -1,0 +1,271 @@
+{
+  "timestamp": "2026-10-24T12:37:00+07:00",
+  "codingHarness": "ZCode",
+  "model": "glm-5.3",
+  "effort": "High",
+  "provider": "Z.ai",
+  "durationMinutes": 96,
+  "costUsd": 12.9,
+  "commits": 8,
+  "tests": {
+    "passed": 80,
+    "total": 80,
+    "durationSeconds": 120.9,
+    "details": "Finished in 120.9 seconds (4.6s async, 116.2s sync) — 80 passed (some compiler warnings: unused import, etc.)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "interface": {
+    "type": "desktop",
+    "command": "@PROMPT.md",
+    "details": "ZCode desktop app • Run window: 12:37–14:25 (96m active, 108m wall-clock excl. 12m rate-limit pauses) • Session c316b383a14afdcc42b5e71bddca0c69 (account:zai-start-plan / GLM-5.3)"
+  },
+  "tokens": {
+    "input": "259.5k",
+    "cachedInput": "44.75M",
+    "output": "204.6k",
+    "thinking": "119.0k",
+    "total": "45.22M",
+    "cacheHitRate": "99.42%"
+  },
+  "contextWindow": "271.4k peak (26,846 → 271,444 tokens)",
+  "calls": {
+    "llmCalls": 263,
+    "toolCalls": {
+      "total": 269,
+      "done": 253,
+      "error": 16,
+      "breakdown": [
+        { "tool": "Bash", "total": 140, "done": 132, "error": 8 },
+        { "tool": "Edit", "total": 56, "done": 50, "error": 6 },
+        { "tool": "Write", "total": 38, "done": 36, "error": 2 },
+        { "tool": "Read", "total": 20, "done": 20, "error": 0 },
+        { "tool": "TodoWrite", "total": 8, "done": 8, "error": 0 },
+        { "tool": "WebFetch", "total": 4, "done": 4, "error": 0 },
+        { "tool": "TaskOutput", "total": 2, "done": 2, "error": 0 },
+        { "tool": "WebSearch", "total": 1, "done": 1, "error": 0 }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "284c325",
+      "relativeTime": "7 minutes",
+      "author": "Riza Fahmi",
+      "message": "Release verification: all checks green, Linux untested"
+    },
+    {
+      "hash": "4aa1f78",
+      "relativeTime": "11 minutes",
+      "author": "Riza Fahmi",
+      "message": "S7: orderly Ctrl-C via pty-tested signal path with exit 130"
+    },
+    {
+      "hash": "dda95cd",
+      "relativeTime": "25 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: elapsed time and latency percentiles with exact ranks"
+    },
+    {
+      "hash": "77782e1",
+      "relativeTime": "32 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: outcome counts by status, failures, and exit codes"
+    },
+    {
+      "hash": "b26fae5",
+      "relativeTime": "41 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: paced five-second loop with deterministic scheduler"
+    },
+    {
+      "hash": "d5598a1",
+      "relativeTime": "55 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: bounded GET via stdlib HTTP client with exact deadlines"
+    },
+    {
+      "hash": "b1ff44c",
+      "relativeTime": "79 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate cb arguments with exit 2 and stderr errors"
+    },
+    {
+      "hash": "2cc1106",
+      "relativeTime": "85 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI via wrapper + escript with help flags"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "259,545",
+      "rate2026": "$1.40 / 1M",
+      "cost2026": "$0.3634 ($0.363363)"
+    },
+    {
+      "component": "Cached Input",
+      "tokens": "44,752,960",
+      "rate2026": "$0.26 / 1M",
+      "cost2026": "$11.6358 ($11.635770)"
+    },
+    {
+      "component": "Output (incl. thinking)",
+      "tokens": "204,560",
+      "rate2026": "$4.40 / 1M",
+      "cost2026": "$0.9001 ($0.900064)"
+    },
+    {
+      "component": "Total",
+      "tokens": "45,217,065",
+      "cost2026": "$12.90 ($12.899197)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "S0: Environment & architecture probing (SIGINT, +Bi, :httpc)",
+      "stepRange": "1–38",
+      "llmCalls": 37,
+      "manageTaskPolls": 2,
+      "thinkingTokens": 31426,
+      "costUsd": 0.88
+    },
+    {
+      "slice": "S1: Launch CLI (wrapper + escript + --help)",
+      "stepRange": "39–50",
+      "llmCalls": 12,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 378,
+      "costUsd": 0.3
+    },
+    {
+      "slice": "S2: Validate CLI arguments (exit 2)",
+      "stepRange": "51–68",
+      "llmCalls": 17,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4768,
+      "costUsd": 0.52
+    },
+    {
+      "slice": "S3: Bounded GET (stdlib HTTP/1.1 client, TLS, TestServer)",
+      "stepRange": "69–154",
+      "llmCalls": 82,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 21950,
+      "costUsd": 3.8
+    },
+    {
+      "slice": "S4: Paced 5-second loop & deterministic scheduler",
+      "stepRange": "155–192",
+      "llmCalls": 36,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 7968,
+      "costUsd": 2.1
+    },
+    {
+      "slice": "S5: Report HTTP outcomes & exit codes",
+      "stepRange": "193–213",
+      "llmCalls": 20,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2866,
+      "costUsd": 1.23
+    },
+    {
+      "slice": "S6: Report elapsed time & exact latency percentiles",
+      "stepRange": "214–230",
+      "llmCalls": 16,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2163,
+      "costUsd": 1.03
+    },
+    {
+      "slice": "S7: Handle terminal Ctrl-C via PTY & :erl_signal_server",
+      "stepRange": "231–263",
+      "llmCalls": 33,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 8925,
+      "costUsd": 2.32
+    },
+    {
+      "slice": "Post-S7: Release verification & final wrap-up",
+      "stepRange": "264–273",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 819,
+      "costUsd": 0.72
+    }
+  ],
+  "notes": [
+    "Upfront Source-Code Probing Prevented Two Major Architecture Traps (S0)",
+    "Freemium Concurrency Limiter Triggered on Sub-85ms Turnarounds (10 Errors)",
+    "Friction Between ZCode's Stateful File Guards and mix format (27 Python/Sed Mutations)",
+    "Extreme Front-Loaded Reasoning Spikes (75.5% of Active Time in LLM Inference)",
+    "Two Subtle Bugs Caught and Fixed via Systematic Isolation (S3 & S7)",
+    "Genuine Slice-by-Slice Discipline & 80-Test Suite (with Some Compiler Warnings)",
+    "Training-Data Fingerprint: GLM-5.3 Signed Every Commit as 'Claude Fable 5'"
+  ],
+  "notesDetails": [
+    {
+      "title": "Upfront Source-Code Probing Prevented Two Major Architecture Traps (S0)",
+      "bullets": [
+        "20.0 Active Minutes of Probing Before S1 (Lines 1–38): The agent spent 37 LLM calls and 51.9k output tokens running empirical probes in /tmp and inspecting local Erlang/OTP 28 source files before touching project code.",
+        "1. Uncovering an Erlang :httpc Streaming Blind Spot (Lines 25–37): After writing /tmp/probe_httpc.exs, the agent grepped ~/.nix-profile/lib/erlang/lib/inets-9.6.2.3/src/http_client/httpc_handler.erl and found -define(IS_STREAMED(Code), ((Code =:= 200) orelse (Code =:= 206))) (line 34). It proved that :httpc with stream: :self never delivers the HTTP status code on 200/206 responses ({RequestId, :stream_end, Headers}) and buffers the full body in memory for all other status codes. That led it to build a zero-dependency HTTP/1.1 client over :gen_tcp and :ssl (lib/capy_bench/http/conn.ex and lib/capy_bench/http.ex) with exact monotonic deadlines.",
+        "2. Solving BEAM SIGINT & Escript Handling Upfront (Lines 7–23): It verified that OTP 28 rejects :os.set_signal(:sigint, :handle), proved in /tmp that +Bi -noinput disables the BEAM break handler cleanly, and validated replacing :erl_signal_server's default handler via :gen_event.delete_handler/3 + :gen_event.add_handler/3 so a POSIX ./cb wrapper could forward SIGINT as SIGTERM directly to the runner PID."
+      ]
+    },
+    {
+      "title": "Freemium Concurrency Limiter Triggered on Sub-85ms Turnarounds (10 Errors)",
+      "bullets": [
+        "10 Failed Requests on zai-start-plan (Lines 24, 59, 73, 98, 115, 132, 160, 163, 202, 221): All 10 aborted turns failed with TerminalStreamChunkError: model concurrency limit exceeded on attempt: 1 despite zero parallel LLM calls.",
+        "Sub-85ms Turnaround Race: In 8 of the 10 errors (lines 59, 73, 98, 132, 160, 163, 202, 221), the preceding tool call was a fast local operation (Edit, Read, or grep) that completed in 21ms to 81ms (0.021s–0.081s). ZCode immediately opened the next SSE stream before the gateway finished releasing the prior stream's concurrency slot.",
+        "No Automatic Backoff Retry: Because ZCode treated TerminalStreamChunkError as fatal without retrying, each occurrence halted the loop until a manual 'continue' was entered (adding 11.75m / 705.2s of idle wait time excluded from the 96m active duration)."
+      ]
+    },
+    {
+      "title": "Friction Between ZCode's Stateful File Guards and mix format (27 Python/Sed Mutations)",
+      "bullets": [
+        "Read-State Invalidated by mix format: ZCode's Edit and Write tools reject modifications if a file's mtime changed since its last Read, while Read rejects re-reading an unchanged file ('Wasted call — file unchanged since your last Read', triggered 3 times at lines 62, 159, 194).",
+        "6 of 8 Edit/Write Errors from Linter/Formatter Drift: Running mix format via Bash updated file mtimes on disk and caused 6 Edit/Write calls (lines 96, 139, 170, 178, 182, 226) to fail with 'File has been modified since read, either by the user or by a linter.'",
+        "Workaround via Inline Python Patching: To avoid extra Read round-trips after formatting, the agent executed 27 file mutations via python3 - <<'EOF' or sed -i inside Bash so it could patch, run mix format, and run mix test in a single turn."
+      ]
+    },
+    {
+      "title": "Extreme Front-Loaded Reasoning Spikes (75.5% of Active Time in LLM Inference)",
+      "bullets": [
+        "75.5% LLM vs. 24.5% Tool Split: Out of 95.99 active minutes, 72.44 minutes were spent in LLM inference (averaging 47.1 output tokens/sec across 263 calls) and only 23.54 minutes in tool execution.",
+        "Selective Reasoning: Only 121 of 263 turns (46.0%) emitted reasoningText (~119.0k estimated thinking tokens, or 58.2% of total output), while 142 tactical turns emitted 0 reasoning characters.",
+        "Top 6 Thinking Turns Took 18.05 Minutes (25% of All LLM Time): Line 5 (S0 plan: 355.0s, 16,763 output tokens), Line 155 (S4 scheduler design: 182.4s, 9,698 output tokens), Line 10 (S0 signal/httpc probes: 171.6s, 8,816 output tokens), Line 37 (S0 inets source analysis: 141.9s, 6,872 output tokens), Line 70 (S3 Conn layer: 118.2s, 6,823 output tokens), and Line 69 (S3 cert & test plan: 114.0s, 5,659 output tokens)."
+      ]
+    },
+    {
+      "title": "Two Subtle Bugs Caught and Fixed via Systematic Isolation (S3 & S7)",
+      "bullets": [
+        "1. The :binary.split/2 Single-Split Trap in HTTP Header Parsing (S3, Lines 111–129): Multi-header responses with Connection: close + Content-Length: 1 timed out after 2s while single-header responses passed. In lib/capy_bench/http.ex, [status_line | header_lines] = :binary.split(head, \"\\r\\n\") (without :global) split only once, collapsing all headers into a single 'connection' header with an embedded '\\r\\ncontent-length: 1' so no framing was recognized and the client waited for EOF. Switching to String.split(head, \"\\r\\n\") at line 128 fixed it.",
+        "2. Interrupted In-Flight Elapsed-Time Accounting (S7, Lines 242–259): When Ctrl-C arrived at 1.2s during a stalled request that settled at its 2.0s timeout, Elapsed reported ~1.29s instead of ~2.0s. lib/capy_bench/runner.ex initially computed Elapsed from interrupted_at even when an in-flight request was still settling; adding interrupt_in_flight?: state.sched.in_flight (line 258) switched Elapsed to last_settle_at when interrupted mid-flight."
+      ]
+    },
+    {
+      "title": "Genuine Slice-by-Slice Discipline & 80-Test Suite (with Some Compiler Warnings)",
+      "bullets": [
+        "True Incremental Git History: The agent tracked phases with TodoWrite, updated PLAN.md verification notes, and created a genuine commit at the end of each slice (lines 50, 68, 154, 192, 213, 230, 263, 271).",
+        "Comprehensive 80-Test Suite: Built 80 passing tests (120.9s total runtime), combining fast deterministic unit tests for the pure scheduler (test/scheduler_test.exs), HTTP framing/TLS tests (test/http_test.exs), and end-to-end PTY/CLI integration tests, though leaving a few minor compiler warnings (unused import, etc.).",
+        "99.42% Cache Hit Rate Saved $51.02 (79.8%): Out of 45,012,505 total input tokens across 263 calls, 44,752,960 were served from cache with zero cache invalidations as context grew from 26.8k to 271.4k tokens (reducing cost from $63.92 uncached to $12.90)."
+      ]
+    },
+    {
+      "title": "Training-Data Fingerprint: GLM-5.3 Signed Every Commit as 'Claude Fable 5'",
+      "bullets": [
+        "Unprompted Commit Trailer: Even though the system prompt explicitly identified the harness and model as 'ZCode' and 'account:zai-start-plan/GLM-5.3'—and neither 'Claude' nor 'Co-Authored-By' appeared anywhere in the prompt, tool schemas, or user messages (lines 1–49 had zero matches)—at line 50 the model spontaneously signed its first git commit with 'Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>'.",
+        "Repeated Across All 8 Commits: Every subsequent commit (lines 68, 154, 192, 213, 230, 263, 271) included the same 'Claude Fable 5' co-author trailer, triggered by ZCode's Claude-Code-style system prompt and tool schemas."
+      ]
+    }
+  ]
+}
