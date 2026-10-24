@@ -114,8 +114,8 @@ const maxToolCalls =
               {d.tests.passed}/{d.tests.total}
             </dd>
             <dd class="kpi-sub">
-              {d.tests.durationSeconds
-                ? `100% passed (${d.tests.durationSeconds}s)`
+              {d.tests.durationSeconds !== undefined
+                ? `${d.tests.total > 0 ? Math.round((d.tests.passed / d.tests.total) * 100) : 0}% passed (${d.tests.durationSeconds}s)`
                 : d.tests.passed === d.tests.total
                   ? '100% tests passed'
                   : 'Test suite results'}
