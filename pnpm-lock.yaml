@@ -11,6 +11,9 @@ importers:
       astro:
         specifier: 7.4.2
         version: 7.4.2(esbuild@0.27.7)(yaml@2.9.1)
+      shiki:
+        specifier: 4.5.0
+        version: 4.5.0
     devDependencies:
       typescript:
         specifier: 5.9.3

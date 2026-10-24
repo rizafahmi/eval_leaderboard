@@ -1,11 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Code } from 'astro:components';
 import { getCollection } from 'astro:content';
 import {
   formatDuration,
   formatCost,
   formatTimestamp,
   getPlanStats,
+  parseNoteBullet,
+  tokenizeNoteText,
 } from '../../utils/format';
 import { BENCHMARK_STAGES } from '../../data/benchmark';
 
@@ -209,7 +212,20 @@ const maxToolCalls =
           </div>
 
           {d.interface?.command && (
-            <pre class="terminal-box" tabindex="0"><code>{d.interface.command}</code></pre>
+            <Code
+              code={d.interface.command}
+              lang="bash"
+              theme="gruvbox-dark-medium"
+              wrap={null}
+              transformers={[
+                {
+                  pre(node) {
+                    delete node.properties.style;
+                  },
+                },
+              ]}
+              class="terminal-box terminal-box-wrap"
+            />
           )}
 
           {d.interface?.details && (
@@ -493,25 +509,96 @@ const maxToolCalls =
       hasNotes && (
         <section
           class="card col-12 deferred-section"
+          id="notes-section"
           aria-labelledby="notes-findings-heading"
         >
           <div class="card-title">
-            <h2 id="notes-findings-heading" class="card-heading">Notes & Key Findings</h2>
+            <div class="card-title-group">
+              <h2 id="notes-findings-heading" class="card-heading">Notes & Key Findings</h2>
+              <span class="badge badge-effort">
+                {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} findings
+              </span>
+            </div>
+            {hasNotesDetails && d.notesDetails!.length > 1 && (
+              <button
+                type="button"
+                class="copy-btn"
+                id="toggle-notes-btn"
+                aria-expanded="false"
+              >
+                Expand All
+              </button>
+            )}
           </div>
 
           {hasNotesDetails ? (
             <ol class="notes-list" role="list">
               {d.notesDetails!.map((note, idx) => (
-                <li class="note-item note-item-detailed">
-                  <div class="note-header">
-                    <span class="note-num" aria-hidden="true">{idx + 1}</span>
-                    <strong class="note-title">{note.title}</strong>
-                  </div>
-                  <ul class="note-bullets">
-                    {note.bullets.map((b) => (
-                      <li>{b}</li>
-                    ))}
-                  </ul>
+                <li class="note-card">
+                  <details class="note-disclosure" open={idx === 0}>
+                    <summary class="note-summary">
+                      <span class="note-num" aria-hidden="true">{idx + 1}</span>
+                      <strong class="note-title">
+                        {tokenizeNoteText(note.title).map((seg) =>
+                          seg.type === 'code' ? (
+                            <code class="note-inline-code">{seg.value}</code>
+                          ) : (
+                            seg.value
+                          )
+                        )}
+                      </strong>
+                      <span class="note-summary-meta">
+                        <span class="badge note-count-badge">
+                          {note.bullets.length} {note.bullets.length === 1 ? 'point' : 'points'}
+                        </span>
+                        <span class="note-chevron" aria-hidden="true">▸</span>
+                      </span>
+                    </summary>
+                    <div class="note-body">
+                      <ul class="note-bullets" role="list">
+                        {note.bullets.map((b) => {
+                          const parsed = parseNoteBullet(b);
+                          return (
+                            <li
+                              class:list={[
+                                'note-bullet-item',
+                                {
+                                  'is-intro': parsed.isIntro,
+                                  'has-block-lead': parsed.isBlockLead,
+                                },
+                              ]}
+                            >
+                              {parsed.lead && (
+                                <strong
+                                  class:list={[
+                                    'note-bullet-lead',
+                                    { 'note-bullet-lead-block': parsed.isBlockLead },
+                                  ]}
+                                >
+                                  {parsed.lead.map((seg) =>
+                                    seg.type === 'code' ? (
+                                      <code class="note-inline-code">{seg.value}</code>
+                                    ) : (
+                                      seg.value
+                                    )
+                                  )}
+                                </strong>
+                              )}{' '}
+                              <span class="note-bullet-copy">
+                                {parsed.body.map((seg) =>
+                                  seg.type === 'code' ? (
+                                    <code class="note-inline-code">{seg.value}</code>
+                                  ) : (
+                                    seg.value
+                                  )
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </details>
                 </li>
               ))}
             </ol>
@@ -520,7 +607,15 @@ const maxToolCalls =
               {d.notes!.map((note, idx) => (
                 <li class="note-item">
                   <span class="note-num" aria-hidden="true">{idx + 1}</span>
-                  <span>{note}</span>
+                  <span>
+                    {tokenizeNoteText(note).map((seg) =>
+                      seg.type === 'code' ? (
+                        <code class="note-inline-code">{seg.value}</code>
+                      ) : (
+                        seg.value
+                      )
+                    )}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -551,4 +646,28 @@ const maxToolCalls =
       if (copyStatus) copyStatus.textContent = 'Failed to copy command.';
     }
   });
+
+  const toggleNotesBtn = document.getElementById('toggle-notes-btn') as HTMLButtonElement | null;
+  const noteDisclosures = Array.from(
+    document.querySelectorAll<HTMLDetailsElement>('#notes-section .note-disclosure')
+  );
+
+  function syncToggleNotesBtn() {
+    if (!toggleNotesBtn || noteDisclosures.length === 0) return;
+    const allOpen = noteDisclosures.every((d) => d.open);
+    toggleNotesBtn.textContent = allOpen ? 'Collapse All' : 'Expand All';
+    toggleNotesBtn.setAttribute('aria-expanded', String(allOpen));
+  }
+
+  toggleNotesBtn?.addEventListener('click', () => {
+    const allOpen = noteDisclosures.every((d) => d.open);
+    for (const d of noteDisclosures) {
+      d.open = !allOpen;
+    }
+    syncToggleNotesBtn();
+  });
+
+  for (const d of noteDisclosures) {
+    d.addEventListener('toggle', syncToggleNotesBtn);
+  }
 </script>
