@@ -16,6 +16,8 @@ const runs = defineCollection({
       .object({
         passed: z.number(),
         total: z.number(),
+        durationSeconds: z.number().optional(),
+        details: z.string().optional(),
       })
       .optional(),
     planCompletion: z.record(z.string(), z.boolean()),
@@ -29,7 +31,10 @@ const runs = defineCollection({
     tokens: z
       .object({
         input: z.string().optional(),
+        cachedInput: z.string().optional(),
         output: z.string().optional(),
+        thinking: z.string().optional(),
+        total: z.string().optional(),
         cacheHitRate: z.string().optional(),
       })
       .optional(),
@@ -56,7 +61,49 @@ const runs = defineCollection({
           .optional(),
       })
       .optional(),
+    commitLog: z
+      .array(
+        z.object({
+          hash: z.string(),
+          relativeTime: z.string().optional(),
+          author: z.string().optional(),
+          message: z.string(),
+        })
+      )
+      .optional(),
+    costBreakdown: z
+      .array(
+        z.object({
+          component: z.string(),
+          tokens: z.string(),
+          rate2026: z.string().optional(),
+          cost2026: z.string(),
+          rate2027: z.string().optional(),
+          cost2027: z.string().optional(),
+        })
+      )
+      .optional(),
+    sliceBreakdown: z
+      .array(
+        z.object({
+          slice: z.string(),
+          stepRange: z.string(),
+          llmCalls: z.number(),
+          manageTaskPolls: z.number().optional(),
+          thinkingTokens: z.number().optional(),
+          costUsd: z.number(),
+        })
+      )
+      .optional(),
     notes: z.array(z.string()).optional(),
+    notesDetails: z
+      .array(
+        z.object({
+          title: z.string(),
+          bullets: z.array(z.string()),
+        })
+      )
+      .optional(),
   }),
 });
 

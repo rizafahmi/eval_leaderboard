@@ -28,7 +28,7 @@ export function formatTimestamp(ts: string): string {
 
 export function parseTokenString(val?: string): number {
   if (!val) return 0;
-  const cleaned = val.trim().toLowerCase();
+  const cleaned = val.replace(/,/g, '').trim().toLowerCase();
   const num = parseFloat(cleaned);
   if (isNaN(num)) return 0;
   if (cleaned.endsWith('m')) return num * 1_000_000;

@@ -4,7 +4,7 @@
 **Capy Bench Leaderboard** is a static web application for tracking and comparing coding agent benchmark runs across stages (`S1`–`S7`), measuring completion, test pass rates, token efficiency, duration, and cost.
 
 ## Tech Stack
-- **Framework**: [Astro 5](https://astro.build/) (`output: 'static'`)
+- **Framework**: [Astro 7](https://astro.build/) (`output: 'static'`)
 - **Language**: TypeScript (`astro/tsconfigs/strict`)
 - **Data Layer**: Astro Content Collections (`src/content.config.ts`) using `glob` loader and Zod schemas over JSON files in `src/content/runs/`
 - **Styling**: Custom CSS (`src/styles/global.css`) + scoped Astro component styles

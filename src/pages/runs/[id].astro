@@ -30,7 +30,19 @@ const hasTokenSection =
   Boolean(d.contextWindow);
 const hasCallsSection =
   d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls !== undefined);
-const hasNotes = d.notes && d.notes.length > 0;
+const hasCommitLog = d.commitLog && d.commitLog.length > 0;
+const commitLogText = d.commitLog
+  ? d.commitLog
+      .map(
+        (c) =>
+          `* ${c.hash}  ${c.relativeTime ? `(${c.relativeTime})  ` : ''}${c.author ? `<${c.author}>   ` : ''}${c.message}`
+      )
+      .join('\n')
+  : '';
+const hasCostBreakdown = d.costBreakdown && d.costBreakdown.length > 0;
+const hasSliceBreakdown = d.sliceBreakdown && d.sliceBreakdown.length > 0;
+const hasNotesDetails = d.notesDetails && d.notesDetails.length > 0;
+const hasNotes = (d.notes && d.notes.length > 0) || hasNotesDetails;
 
 const maxToolCalls =
   d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0
@@ -96,7 +108,11 @@ const maxToolCalls =
               {d.tests.passed}/{d.tests.total}
             </div>
             <div class="kpi-sub">
-              {d.tests.passed === d.tests.total ? '100% tests passed' : 'Test suite results'}
+              {d.tests.durationSeconds
+                ? `100% passed (${d.tests.durationSeconds}s)`
+                : d.tests.passed === d.tests.total
+                  ? '100% tests passed'
+                  : 'Test suite results'}
             </div>
           </div>
         )
@@ -196,8 +212,15 @@ const maxToolCalls =
           <div class="kpi-grid">
             {d.tokens?.input && (
               <div class="kpi-box">
-                <div class="kpi-label">Input Tokens</div>
+                <div class="kpi-label">Input (Uncached)</div>
                 <div class="kpi-val">{d.tokens.input}</div>
+              </div>
+            )}
+
+            {d.tokens?.cachedInput && (
+              <div class="kpi-box">
+                <div class="kpi-label">Cached Input</div>
+                <div class="kpi-val">{d.tokens.cachedInput}</div>
               </div>
             )}
 
@@ -205,6 +228,17 @@ const maxToolCalls =
               <div class="kpi-box">
                 <div class="kpi-label">Output Tokens</div>
                 <div class="kpi-val">{d.tokens.output}</div>
+                {d.tokens?.thinking && (
+                  <div class="kpi-sub">incl. {d.tokens.thinking} thinking</div>
+                )}
+              </div>
+            )}
+
+            {d.tokens?.total && (
+              <div class="kpi-box">
+                <div class="kpi-label">Total Tokens</div>
+                <div class="kpi-val">{d.tokens.total}</div>
+                <div class="kpi-sub">incl. cached reads</div>
               </div>
             )}
 
@@ -306,6 +340,92 @@ const maxToolCalls =
       )
     }
 
+    <!-- Conditional: Cost Breakdown -->
+    {
+      hasCostBreakdown && (
+        <section class="card col-12">
+          <div class="card-title">
+            <span>Estimated Cost Breakdown</span>
+          </div>
+          <div class="table-wrapper" style="box-shadow: none;">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Tokens</th>
+                  <th>Rate (2026)</th>
+                  <th>Cost (2026 Rate)</th>
+                  <th>Rate (2027)</th>
+                  <th>Cost (2027 Rate)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.costBreakdown!.map((row) => (
+                  <tr style="cursor: default;">
+                    <td><strong>{row.component}</strong></td>
+                    <td class="mono">{row.tokens}</td>
+                    <td class="mono">{row.rate2026 ?? '—'}</td>
+                    <td class="mono"><strong>{row.cost2026}</strong></td>
+                    <td class="mono">{row.rate2027 ?? '—'}</td>
+                    <td class="mono">{row.cost2027 ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Conditional: Slice / Phase Breakdown -->
+    {
+      hasSliceBreakdown && (
+        <section class="card col-12">
+          <div class="card-title">
+            <span>Slice / Phase Breakdown</span>
+          </div>
+          <div class="table-wrapper" style="box-shadow: none;">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>Slice / Phase</th>
+                  <th>Step Range</th>
+                  <th>LLM Calls</th>
+                  <th>manage_task Polls</th>
+                  <th>Thinking Tokens</th>
+                  <th>Cost (2026 Rate)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.sliceBreakdown!.map((row) => (
+                  <tr style="cursor: default;">
+                    <td><strong>{row.slice}</strong></td>
+                    <td class="mono">{row.stepRange}</td>
+                    <td class="mono">{row.llmCalls}</td>
+                    <td class="mono">{row.manageTaskPolls ?? 0}</td>
+                    <td class="mono">{row.thinkingTokens?.toLocaleString() ?? '—'}</td>
+                    <td class="mono"><span class="cost-pill">{formatCost(row.costUsd)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Conditional: Git Commit Log -->
+    {
+      hasCommitLog && (
+        <section class="card col-12">
+          <div class="card-title">
+            <span>Git Commits ({d.commitLog!.length})</span>
+          </div>
+          <pre class="terminal-box"><code>{commitLogText}</code></pre>
+        </section>
+      )
+    }
+
     <!-- Conditional: Notes -->
     {
       hasNotes && (
@@ -314,14 +434,32 @@ const maxToolCalls =
             <span>Notes & Key Findings</span>
           </div>
 
-          <ol class="notes-list">
-            {d.notes!.map((note, idx) => (
-              <li class="note-item">
-                <span class="note-num">{idx + 1}</span>
-                <span>{note}</span>
-              </li>
-            ))}
-          </ol>
+          {hasNotesDetails ? (
+            <ol class="notes-list">
+              {d.notesDetails!.map((note, idx) => (
+                <li class="note-item" style="flex-direction: column; gap: 0.5rem;">
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="note-num">{idx + 1}</span>
+                    <strong style="font-size: 1rem;">{note.title}</strong>
+                  </div>
+                  <ul style="margin-left: 2.4rem; display: flex; flex-direction: column; gap: 0.35rem; font-weight: 500; font-size: 0.9rem; color: var(--text-espresso);">
+                    {note.bullets.map((b) => (
+                      <li>{b}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <ol class="notes-list">
+              {d.notes!.map((note, idx) => (
+                <li class="note-item">
+                  <span class="note-num">{idx + 1}</span>
+                  <span>{note}</span>
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
       )
     }

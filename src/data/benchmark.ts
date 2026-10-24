@@ -8,79 +8,79 @@ export interface StageDefinition {
 export const BENCHMARK_STAGES: StageDefinition[] = [
   {
     id: 'S1',
-    title: 'Project Scaffolding & Core Data Model',
+    title: 'Launch CLI & Resolve SIGINT Entry Point',
     description:
-      'Initialize the OTP / Mix project structure, configure dependencies, and implement the core state schemas and supervision tree.',
+      'Launch the cb CLI with help output and a resolved entry point capable of handling OS signals cleanly on BEAM.',
     deliverables: [
+      'Executable CLI entry point & help output',
+      'Resolved BEAM / POSIX signal handling entry point',
       'Clean project compilation with zero warnings',
-      'Core domain structs & validation logic',
-      'Unit tests for foundational state transitions',
     ],
   },
   {
     id: 'S2',
-    title: 'Process Runner & Task Execution Engine',
+    title: 'Validate CLI Arguments',
     description:
-      'Build the supervised worker pool capable of spawning, monitoring, and streaming stdout/stderr from background system tasks.',
+      'Parse and validate command-line flags and target URL arguments, returning exit code 2 on invalid input.',
     deliverables: [
-      'Non-blocking port/process orchestration',
-      'Structured event stream emission',
-      'Timeout and exit-code capture',
+      'Strict argument validation & error reporting',
+      'Exit code 2 on validation errors',
+      'Unit and CLI tests for invalid argument combinations',
     ],
   },
   {
     id: 'S3',
-    title: 'Signal Handling (SIGINT / Ctrl-C) & Graceful Shutdown',
+    title: 'Bounded GET (Mint, TLS, 2s Timeout)',
     description:
-      'Ensure child processes and Elixir/Erlang VM nodes trap OS signals cleanly without leaving orphan processes or corrupted state.',
+      'Send bounded HTTP/HTTPS GET requests using Mint with response streaming, TLS verification, and a 2-second timeout.',
     deliverables: [
-      'Deterministic SIGINT / SIGTERM propagation',
-      'Graceful state flush before exit',
-      'Zero zombie OS processes under stress tests',
+      'Streaming HTTP/HTTPS GET client via Mint',
+      'TLS certificate verification',
+      '2-second request timeout enforcement',
     ],
   },
   {
     id: 'S4',
-    title: 'Persistence & Event Log Streaming',
+    title: 'Paced 5-Second Loop',
     description:
-      'Record structured JSONL execution traces to disk with atomic writes and crash-recovery replay support.',
+      'Execute a paced 5-second benchmark loop with rate limiting and clean timeout cancellation.',
     deliverables: [
-      'Append-only JSONL telemetry writer',
-      'Session resume from partial logs',
-      'Backpressure-safe file I/O',
+      'Rate-limited request pacing over a 5-second window',
+      'In-flight request timeout cancellation',
+      'Deterministic loop termination',
     ],
   },
   {
     id: 'S5',
-    title: 'Interactive CLI & Stream Formatter',
+    title: 'Report HTTP Outcomes & Exit Codes',
     description:
-      'Expose the command-line interface flags, real-time progress rendering, and machine-readable output modes.',
+      'Aggregate and report HTTP status outcomes, connection/timeout errors, and return appropriate CLI exit codes.',
     deliverables: [
-      'CLI argument parser (--mode, --output-format, --print)',
-      'Clean ANSI progress display & summary table',
-      'End-to-end integration test suite (59 assertions)',
+      'HTTP status class & error outcome tallying',
+      'Formatted outcome summary output',
+      'Exit code determination based on benchmark results',
     ],
   },
   {
     id: 'S6',
-    title: 'Retry Policies & Fault Recovery',
+    title: 'Report Elapsed Time & Latency Percentiles',
     description:
-      'Handle transient rate-limits, tool execution errors, and corrupted workspace states with bounded exponential backoff.',
+      'Measure and report total elapsed benchmark wall-clock time along with request latency percentiles.',
     deliverables: [
-      'Configurable retry budget per step',
-      'Automatic rollback on failed file edits',
-      'Chaos test coverage for simulated failures',
+      'High-resolution request latency recording',
+      'Percentile calculation (p50, p95, p99, etc.)',
+      'Elapsed time and timing summary formatting',
     ],
   },
   {
     id: 'S7',
-    title: 'Final Polish, Benchmarks & Documentation',
+    title: 'Handle Terminal Ctrl-C (SIGINT)',
     description:
-      'Complete end-to-end verification, performance profiling, and comprehensive README usage docs.',
+      'Intercept terminal Ctrl-C (SIGINT) during an active benchmark run, print a partial summary, and exit with code 130.',
     deliverables: [
-      '100% test suite pass with zero leaked tasks',
-      'Sub-50ms startup overhead benchmark',
-      'Complete architecture & operator documentation',
+      'Graceful SIGINT interception without BEAM BREAK menu hang',
+      'Partial benchmark summary output on interrupt',
+      'Deterministic exit code 130 verified via PTY tests',
     ],
   },
 ];
