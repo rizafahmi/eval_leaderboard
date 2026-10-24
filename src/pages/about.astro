@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { BENCHMARK_STAGES, BENCHMARK_PROMPT } from '../data/benchmark';
+
+const sampleEndProductOutput = `$ mix test
+Running ExUnit with seed: 40812, max_cases: 16
+...........................................................
+Finished in 1.8 seconds (0.4s async, 1.4s sync)
+59 tests, 0 failures
+
+$ ./capy_runner --mode auto --print "Run healthcheck"
+[09:15:02.110] [S1] Supervision tree started (workers: 4)
+[09:15:02.450] [S2] Task spawned pid=#PID<0.241.0> os_pid=48192
+[09:15:03.012] [S4] Event stream flushed -> records/events.jsonl (14 events)
+✓ Completed in 902ms (0 orphan processes)`;
+---
+
+<BaseLayout title="About & Benchmark Plan" activeNav="about">
+  <section class="hero-card">
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span>📋</span>
+        <span>METHODOLOGY & TASK SPECIFICATION</span>
+      </div>
+      <h1 class="hero-title">About Capy Bench</h1>
+      <p class="hero-subtitle">
+        Capy Bench is a personal coding agent evaluation suite. Instead of isolated trivia
+        snippets, every Coding Harness + Model pair is given the exact same multi-stage
+        engineering plan (<code>S1</code>–<code>S7</code>) and judged on how far it gets, how
+        cleanly its tests pass, and how much time, tokens, and money it consumes.
+      </p>
+    </div>
+  </section>
+
+  <div class="section-grid">
+    <!-- The S1 - S7 Implementation Plan -->
+    <section class="card col-12" id="stages">
+      <div class="card-title">
+        <span>1. The Plan Checkpoints (S1 – S7)</span>
+        <span class="badge badge-effort">7 Stages • 59 Tests</span>
+      </div>
+      <p style="color: var(--text-mocha); margin-bottom: 1.25rem; font-size: 0.95rem;">
+        Agents are instructed to work sequentially through seven checkpoints. Each stage builds on
+        the previous one, testing process orchestration, OS signal handling (<code>SIGINT</code> /
+        <code>Ctrl-C</code>), persistence, and fault recovery.
+      </p>
+
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1rem;"
+      >
+        {
+          BENCHMARK_STAGES.map((stage) => (
+            <div
+              style="background: var(--bg-parchment); border: 1.5px solid var(--border-espresso); border-radius: var(--radius-md); padding: 1.1rem; box-shadow: var(--shadow-brutal-sm);"
+            >
+              <div
+                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;"
+              >
+                <span class="stage-pill done">{stage.id}</span>
+                <strong style="font-size: 0.98rem;">{stage.title}</strong>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-mocha); margin-bottom: 0.75rem;">
+                {stage.description}
+              </p>
+              <ul
+                style="list-style: none; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem;"
+              >
+                {stage.deliverables.map((item) => (
+                  <li style="display: flex; align-items: center; gap: 0.4rem;">
+                    <span style="color: var(--accent-forest); font-weight: 800;">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Glimpse of the End Product -->
+    <section class="card col-6">
+      <div class="card-title">
+        <span>2. Glimpse of the End Product</span>
+        <span class="badge badge-success">Target State</span>
+      </div>
+      <p style="color: var(--text-mocha); font-size: 0.92rem; margin-bottom: 1rem;">
+        A completed run produces a working CLI and supervised process engine that passes all 59
+        automated test assertions, handles <code>Ctrl-C</code> gracefully without leaking background
+        processes, and outputs structured JSONL telemetry:
+      </p>
+      <pre class="terminal-box"><code>{sampleEndProductOutput}</code></pre>
+    </section>
+
+    <!-- How We Judge & Calculate Metrics -->
+    <section class="card col-6">
+      <div class="card-title">
+        <span>3. How Runs Are Judged</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+        <div class="kpi-box">
+          <div class="kpi-label">Plan Completion (S1–S7) & Tests</div>
+          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+            Each checkpoint is marked <code>[x]</code> only when its implementation and unit/integration
+            tests pass cleanly.
+          </p>
+        </div>
+
+        <div class="kpi-box">
+          <div class="kpi-label">Cache Hit Rate Formula</div>
+          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+            Calculated as <code>CacheRead / (input + cacheRead + cacheWrite)</code>. High cache hit
+            rates drastically reduce cost on long multi-step agent runs.
+          </p>
+        </div>
+
+        <div class="kpi-box">
+          <div class="kpi-label">Interface Agnostic (CLI / Desktop / Web)</div>
+          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+            Whether an agent runs headless in a CLI, inside a Desktop IDE, or in a Web sandbox, all
+            detailed telemetry fields are optional so every run can be logged.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Instructions Given to the Coding Agent (PROMPT.md) -->
+    <section class="card col-12">
+      <div class="card-title">
+        <span>4. Instructions Given to the Coding Agent (PROMPT.md)</span>
+        <button
+          type="button"
+          class="copy-btn"
+          id="copy-prompt-btn"
+          data-prompt={BENCHMARK_PROMPT}
+        >
+          Copy PROMPT.md
+        </button>
+      </div>
+      <pre class="terminal-box"><code>{BENCHMARK_PROMPT}</code></pre>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const copyPromptBtn = document.getElementById('copy-prompt-btn') as HTMLButtonElement | null;
+  copyPromptBtn?.addEventListener('click', async () => {
+    const promptText = copyPromptBtn.dataset.prompt;
+    if (!promptText) return;
+    try {
+      await navigator.clipboard.writeText(promptText);
+      const original = copyPromptBtn.textContent;
+      copyPromptBtn.textContent = '✓ Copied PROMPT.md!';
+      setTimeout(() => {
+        copyPromptBtn.textContent = original;
+      }, 1800);
+    } catch {
+      copyPromptBtn.textContent = 'Failed to copy';
+    }
+  });
+</script>

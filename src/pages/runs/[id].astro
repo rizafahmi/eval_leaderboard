@@ -1,0 +1,347 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import {
+  formatDuration,
+  formatCost,
+  formatTimestamp,
+  getPlanStats,
+} from '../../utils/format';
+import { BENCHMARK_STAGES } from '../../data/benchmark';
+
+export async function getStaticPaths() {
+  const runs = await getCollection('runs');
+  return runs.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+const plan = getPlanStats(d.planCompletion);
+
+const stageMap = new Map(BENCHMARK_STAGES.map((s) => [s.id, s.title]));
+
+const hasInterface =
+  d.interface && (d.interface.command || d.interface.details || d.interface.type);
+const hasTokenSection =
+  (d.tokens && (d.tokens.input || d.tokens.output || d.tokens.cacheHitRate)) ||
+  Boolean(d.contextWindow);
+const hasCallsSection =
+  d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls !== undefined);
+const hasNotes = d.notes && d.notes.length > 0;
+
+const maxToolCalls =
+  d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0
+    ? Math.max(...d.calls.toolCalls.breakdown.map((b) => b.total))
+    : 1;
+---
+
+<BaseLayout title={`${d.codingHarness} — ${d.model}`}>
+  <a href="/" class="back-link">← Back to Leaderboard</a>
+
+  <!-- Top Summary Header -->
+  <section class="detail-header-card">
+    <div class="detail-top-row">
+      <div>
+        <div class="entry-meta" style="margin-top: 0; margin-bottom: 0.5rem;">
+          <span class="badge badge-provider">Provider: {d.provider}</span>
+          {d.effort && <span class="badge badge-effort">Effort: {d.effort}</span>}
+          {d.interface?.type && (
+            <span class="badge badge-interface">Interface: {d.interface.type}</span>
+          )}
+          <span class="badge">🕒 {formatTimestamp(d.timestamp)}</span>
+        </div>
+        <h1 class="detail-title">
+          <span>{d.codingHarness}</span>
+          <span style="color: var(--text-muted);">/</span>
+          <span style="color: var(--accent-capy);" class="mono">{d.model}</span>
+        </h1>
+      </div>
+
+      <div class="mono" style="font-size: 0.78rem; color: var(--text-mocha);">
+        Run ID: <code>{entry.id}</code>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-box">
+        <div class="kpi-label">Time Elapsed</div>
+        <div class="kpi-val">{formatDuration(d.durationMinutes)}</div>
+        <div class="kpi-sub">Total wall-clock duration</div>
+      </div>
+
+      <div class="kpi-box">
+        <div class="kpi-label">Estimated Cost</div>
+        <div class="kpi-val" style="color: var(--accent-forest);">
+          {formatCost(d.costUsd)}
+        </div>
+        <div class="kpi-sub">Total run cost (USD)</div>
+      </div>
+
+      <div class="kpi-box">
+        <div class="kpi-label">Plan Completion</div>
+        <div class="kpi-val">
+          {plan.completed}/{plan.total}
+        </div>
+        <div class="kpi-sub">{Math.round(plan.ratio * 100)}% of checkpoints done</div>
+      </div>
+
+      {
+        d.tests && (
+          <div class="kpi-box">
+            <div class="kpi-label">Number of Tests</div>
+            <div class="kpi-val">
+              {d.tests.passed}/{d.tests.total}
+            </div>
+            <div class="kpi-sub">
+              {d.tests.passed === d.tests.total ? '100% tests passed' : 'Test suite results'}
+            </div>
+          </div>
+        )
+      }
+
+      {
+        d.commits !== undefined && (
+          <div class="kpi-box">
+            <div class="kpi-label">Number of Commits</div>
+            <div class="kpi-val">{d.commits}</div>
+            <div class="kpi-sub">Git checkpoints recorded</div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <div class="section-grid">
+    <!-- Plan Completion Checklist -->
+    <section class="card col-12">
+      <div class="card-title">
+        <span>Plan Completion ({plan.completed}/{plan.total})</span>
+        <a href="/about#stages" class="mono" style="font-size: 0.78rem; color: var(--accent-capy);">
+          View Stage Specs →
+        </a>
+      </div>
+
+      <div class="plan-checklist">
+        {
+          plan.entries.map(([stageId, completed]) => (
+            <div class:list={['plan-item', completed ? 'completed' : 'incomplete']}>
+              <span class="plan-checkbox">{completed ? '[x]' : '[ ]'}</span>
+              <div>
+                <div class="mono" style="font-weight: 800; font-size: 0.9rem;">
+                  {stageId}
+                </div>
+                {stageMap.get(stageId) && (
+                  <div style="font-size: 0.8rem; color: var(--text-mocha); margin-top: 0.1rem;">
+                    {stageMap.get(stageId)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Conditional: Command / Interface Used -->
+    {
+      hasInterface && (
+        <section class="card col-12">
+          <div class="card-title">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span>Command / Interface Used</span>
+              {d.interface?.type && (
+                <span class="badge badge-interface">{d.interface.type}</span>
+              )}
+            </div>
+            {d.interface?.command && (
+              <button
+                type="button"
+                class="copy-btn"
+                id="copy-cmd-btn"
+                data-cmd={d.interface.command}
+              >
+                Copy Command
+              </button>
+            )}
+          </div>
+
+          {d.interface?.command && (
+            <pre class="terminal-box"><code>{d.interface.command}</code></pre>
+          )}
+
+          {d.interface?.details && (
+            <p
+              style={`color: var(--text-mocha); font-size: 0.92rem; ${
+                d.interface.command ? 'margin-top: 0.75rem;' : ''
+              }`}
+            >
+              {d.interface.details}
+            </p>
+          )}
+        </section>
+      )
+    }
+
+    <!-- Conditional: Token & Context Window Usage -->
+    {
+      hasTokenSection && (
+        <section class:list={['card', hasCallsSection ? 'col-6' : 'col-12']}>
+          <div class="card-title">
+            <span>Token & Context Usage</span>
+          </div>
+
+          <div class="kpi-grid">
+            {d.tokens?.input && (
+              <div class="kpi-box">
+                <div class="kpi-label">Input Tokens</div>
+                <div class="kpi-val">{d.tokens.input}</div>
+              </div>
+            )}
+
+            {d.tokens?.output && (
+              <div class="kpi-box">
+                <div class="kpi-label">Output Tokens</div>
+                <div class="kpi-val">{d.tokens.output}</div>
+              </div>
+            )}
+
+            {d.tokens?.cacheHitRate && (
+              <div class="kpi-box" style="grid-column: span 2;">
+                <div class="kpi-label">Cache Hit Rate</div>
+                <div class="kpi-val" style="color: var(--accent-forest);">
+                  {d.tokens.cacheHitRate}
+                </div>
+                <div class="kpi-sub">
+                  Formula: <code>CacheRead / (input + cacheRead + cacheWrite)</code>
+                </div>
+              </div>
+            )}
+
+            {d.contextWindow && (
+              <div class="kpi-box" style="grid-column: span 2;">
+                <div class="kpi-label">Context Window Usage</div>
+                <div class="kpi-val" style="font-size: 1.15rem;">
+                  {d.contextWindow}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Conditional: Calls (LLM & Tool Call Telemetry) -->
+    {
+      hasCallsSection && (
+        <section class:list={['card', hasTokenSection ? 'col-6' : 'col-12']}>
+          <div class="card-title">
+            <span>Calls & Tool Breakdown</span>
+          </div>
+
+          <div class="kpi-grid" style="margin-bottom: 1rem;">
+            {d.calls?.llmCalls !== undefined && (
+              <div class="kpi-box">
+                <div class="kpi-label">LLM API Calls</div>
+                <div class="kpi-val">{d.calls.llmCalls}</div>
+                <div class="kpi-sub">completed agent_response steps</div>
+              </div>
+            )}
+
+            {d.calls?.toolCalls?.total !== undefined && (
+              <div class="kpi-box">
+                <div class="kpi-label">Tool Calls</div>
+                <div class="kpi-val">{d.calls.toolCalls.total}</div>
+                <div class="kpi-sub">
+                  {d.calls.toolCalls.done !== undefined && (
+                    <span>{d.calls.toolCalls.done} DONE</span>
+                  )}
+                  {d.calls.toolCalls.error !== undefined && d.calls.toolCalls.error > 0 && (
+                    <span style="color: var(--accent-coral); font-weight: 700;">
+                      {' '}
+                      • {d.calls.toolCalls.error} ERROR
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0 && (
+            <div class="tool-list">
+              {d.calls.toolCalls.breakdown.map((item) => {
+                const doneCount = item.done ?? item.total - (item.error ?? 0);
+                const errCount = item.error ?? 0;
+                const donePct = Math.max((doneCount / maxToolCalls) * 100, 2);
+                const errPct = (errCount / maxToolCalls) * 100;
+
+                return (
+                  <div class="tool-row">
+                    <div class="tool-row-header">
+                      <span class="tool-name">• {item.tool}</span>
+                      <div class="tool-counts">
+                        <strong>{item.total}</strong>
+                        {(item.done !== undefined || (item.error && item.error > 0)) && (
+                          <span style="font-size: 0.74rem; color: var(--text-mocha);">
+                            ({doneCount} DONE
+                            {errCount > 0 ? `, ${errCount} ERROR` : ''})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div class="tool-bar-track">
+                      <div class="tool-bar-fill" style={`width: ${donePct}%;`} />
+                      {errCount > 0 && (
+                        <div class="tool-bar-error" style={`width: ${errPct}%;`} />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )
+    }
+
+    <!-- Conditional: Notes -->
+    {
+      hasNotes && (
+        <section class="card col-12">
+          <div class="card-title">
+            <span>Notes & Key Findings</span>
+          </div>
+
+          <ol class="notes-list">
+            {d.notes!.map((note, idx) => (
+              <li class="note-item">
+                <span class="note-num">{idx + 1}</span>
+                <span>{note}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<script>
+  const copyBtn = document.getElementById('copy-cmd-btn') as HTMLButtonElement | null;
+  copyBtn?.addEventListener('click', async () => {
+    const cmd = copyBtn.dataset.cmd;
+    if (!cmd) return;
+    try {
+      await navigator.clipboard.writeText(cmd);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = '✓ Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = original;
+      }, 1800);
+    } catch {
+      copyBtn.textContent = 'Failed to copy';
+    }
+  });
+</script>

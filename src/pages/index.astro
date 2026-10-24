@@ -1,0 +1,422 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import {
+  formatDuration,
+  formatCost,
+  formatTimestamp,
+  parseTokenString,
+  getPlanStats,
+} from '../utils/format';
+
+const allRuns = await getCollection('runs');
+
+const enrichedRuns = allRuns
+  .map((entry) => {
+    const d = entry.data;
+    const plan = getPlanStats(d.planCompletion);
+    const inputTokens = parseTokenString(d.tokens?.input);
+    const outputTokens = parseTokenString(d.tokens?.output);
+    const totalTokens = inputTokens + outputTokens;
+    const testsRatio =
+      d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
+    const timeMs = new Date(d.timestamp).getTime() || 0;
+
+    return {
+      id: entry.id,
+      data: d,
+      plan,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      testsRatio,
+      timeMs,
+    };
+  })
+  .sort((a, b) => {
+    if (b.plan.ratio !== a.plan.ratio) return b.plan.ratio - a.plan.ratio;
+    if (b.testsRatio !== a.testsRatio) return b.testsRatio - a.testsRatio;
+    if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
+    return a.data.durationMinutes - b.data.durationMinutes;
+  });
+
+const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort();
+const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort();
+
+const fastestMin =
+  enrichedRuns.length > 0
+    ? Math.min(...enrichedRuns.map((r) => r.data.durationMinutes))
+    : 0;
+const lowestCost =
+  enrichedRuns.length > 0
+    ? Math.min(...enrichedRuns.map((r) => r.data.costUsd))
+    : 0;
+---
+
+<BaseLayout title="Leaderboard" activeNav="leaderboard">
+  <section class="hero-card">
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span>🦫</span>
+        <span>PERSONAL CODING AGENT BENCHMARK</span>
+      </div>
+      <h1 class="hero-title">Capy Bench Leaderboard</h1>
+      <p class="hero-subtitle">
+        Evaluating coding harnesses and language models on an end-to-end multi-stage engineering
+        plan (<code>S1</code>–<code>S7</code>). Tracking completion, duration, token usage, cache
+        efficiency, and real cost.
+      </p>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-box">
+        <div class="stat-label">Total Runs</div>
+        <div class="stat-value">{enrichedRuns.length}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Harnesses</div>
+        <div class="stat-value">{harnesses.length}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Fastest Run</div>
+        <div class="stat-value">{formatDuration(fastestMin)}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Lowest Cost</div>
+        <div class="stat-value">{formatCost(lowestCost)}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Sort Controls -->
+  <section class="controls-bar" aria-label="Leaderboard Controls">
+    <div class="control-group">
+      <label class="control-label" for="search-input">Search</label>
+      <input
+        id="search-input"
+        type="search"
+        class="control-input"
+        placeholder="Harness, model, provider..."
+      />
+
+      <label class="control-label" for="harness-filter">Harness</label>
+      <select id="harness-filter" class="control-select">
+        <option value="all">All Harnesses</option>
+        {harnesses.map((h) => <option value={h}>{h}</option>)}
+      </select>
+
+      <label class="control-label" for="provider-filter">Provider</label>
+      <select id="provider-filter" class="control-select">
+        <option value="all">All Providers</option>
+        {providers.map((p) => <option value={p}>{p}</option>)}
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="sort-select">Sort By</label>
+      <select id="sort-select" class="control-select">
+        <option value="plan" selected>Plan Completion (S1–S7)</option>
+        <option value="duration">Duration (Time Elapsed)</option>
+        <option value="cost">Total Cost ($)</option>
+        <option value="tokens">Total Tokens (In + Out)</option>
+        <option value="tests">Tests Passed</option>
+        <option value="timestamp">Run Date</option>
+      </select>
+      <button
+        id="sort-dir-btn"
+        type="button"
+        class="sort-dir-btn"
+        data-dir="desc"
+        title="Toggle ascending / descending sort"
+      >
+        ↓ DESC
+      </button>
+    </div>
+  </section>
+
+  <!-- Leaderboard Table -->
+  <div class="table-wrapper">
+    <table class="leaderboard-table" id="leaderboard-table">
+      <thead>
+        <tr>
+          <th style="width: 64px;">Rank</th>
+          <th>Coding Harness & Model</th>
+          <th class="sortable active-sort" data-sort-col="plan">
+            Plan Completion <span class="sort-indicator">↓</span>
+          </th>
+          <th class="sortable" data-sort-col="tests">
+            Tests & Commits <span class="sort-indicator"></span>
+          </th>
+          <th class="sortable" data-sort-col="duration">
+            Duration <span class="sort-indicator"></span>
+          </th>
+          <th class="sortable" data-sort-col="tokens">
+            Token Usage <span class="sort-indicator"></span>
+          </th>
+          <th class="sortable" data-sort-col="cost">
+            Cost <span class="sort-indicator"></span>
+          </th>
+          <th style="width: 110px;">Details</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboard-tbody">
+        {
+          enrichedRuns.map((run, index) => {
+            const { data, plan } = run;
+            const rank = index + 1;
+            const hasTokens =
+              data.tokens && (data.tokens.input || data.tokens.output || data.tokens.cacheHitRate);
+
+            return (
+              <tr
+                class="run-row"
+                data-href={`/runs/${run.id}`}
+                data-harness={data.codingHarness}
+                data-provider={data.provider}
+                data-search={`${data.codingHarness} ${data.model} ${data.provider} ${data.effort ?? ''}`.toLowerCase()}
+                data-plan={plan.ratio}
+                data-duration={data.durationMinutes}
+                data-cost={data.costUsd}
+                data-tokens={run.totalTokens}
+                data-tests={run.testsRatio}
+                data-timestamp={run.timeMs}
+              >
+                <td>
+                  <span
+                    class:list={[
+                      'rank-badge',
+                      { 'rank-1': rank === 1, 'rank-2': rank === 2, 'rank-3': rank === 3 },
+                    ]}
+                  >
+                    #{rank}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="entry-title">
+                    <span>{data.codingHarness}</span>
+                    <span style="color: var(--text-muted);">/</span>
+                    <span class="entry-model">{data.model}</span>
+                  </div>
+                  <div class="entry-meta">
+                    <span class="badge badge-provider">{data.provider}</span>
+                    {data.effort && <span class="badge badge-effort">Effort: {data.effort}</span>}
+                    {data.interface?.type && (
+                      <span class="badge badge-interface">{data.interface.type}</span>
+                    )}
+                    <span class="metric-sub" style="margin-top: 0;">
+                      {formatTimestamp(data.timestamp)}
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="plan-cell">
+                    <div class="stage-strip">
+                      {plan.entries.map(([stageId, completed]) => (
+                        <span
+                          class:list={['stage-pill', completed ? 'done' : 'pending']}
+                          title={`${stageId}: ${completed ? 'Completed' : 'Incomplete'}`}
+                        >
+                          {stageId}
+                        </span>
+                      ))}
+                    </div>
+                    <span class="plan-summary-text">
+                      {plan.completed}/{plan.total} stages ({Math.round(plan.ratio * 100)}%)
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  {data.tests ? (
+                    <div class="metric-primary">
+                      {data.tests.passed}/{data.tests.total} passed
+                    </div>
+                  ) : (
+                    <div class="metric-empty">—</div>
+                  )}
+                  {data.commits !== undefined && (
+                    <div class="metric-sub">{data.commits} commits</div>
+                  )}
+                </td>
+
+                <td>
+                  <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
+                </td>
+
+                <td>
+                  {hasTokens ? (
+                    <div>
+                      <div class="metric-primary">
+                        {data.tokens?.input ?? '—'} in / {data.tokens?.output ?? '—'} out
+                      </div>
+                      <div class="metric-sub">
+                        {data.tokens?.cacheHitRate && (
+                          <span>Cache: {data.tokens.cacheHitRate}</span>
+                        )}
+                        {data.tokens?.cacheHitRate && data.contextWindow && <span> • </span>}
+                        {data.contextWindow && <span>Ctx: {data.contextWindow}</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <span class="metric-empty">—</span>
+                  )}
+                </td>
+
+                <td>
+                  <span class="cost-pill">{formatCost(data.costUsd)}</span>
+                </td>
+
+                <td>
+                  <a href={`/runs/${run.id}`} class="view-btn">
+                    Inspect →
+                  </a>
+                </td>
+              </tr>
+            );
+          })
+        }
+      </tbody>
+    </table>
+  </div>
+</BaseLayout>
+
+<script>
+  const tbody = document.getElementById('leaderboard-tbody') as HTMLTableSectionElement | null;
+  const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
+  const harnessFilter = document.getElementById('harness-filter') as HTMLSelectElement | null;
+  const providerFilter = document.getElementById('provider-filter') as HTMLSelectElement | null;
+  const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
+  const sortDirBtn = document.getElementById('sort-dir-btn') as HTMLButtonElement | null;
+  const sortableHeaders = document.querySelectorAll<HTMLTableCellElement>('th.sortable');
+
+  const defaultSortDirs: Record<string, 'asc' | 'desc'> = {
+    plan: 'desc',
+    tests: 'desc',
+    duration: 'asc',
+    cost: 'asc',
+    tokens: 'asc',
+    timestamp: 'desc',
+  };
+
+  function updateLeaderboard() {
+    if (!tbody || !sortSelect || !sortDirBtn) return;
+
+    const query = (searchInput?.value ?? '').trim().toLowerCase();
+    const harness = harnessFilter?.value ?? 'all';
+    const provider = providerFilter?.value ?? 'all';
+    const sortBy = sortSelect.value;
+    const sortDir = (sortDirBtn.dataset.dir as 'asc' | 'desc') || 'desc';
+
+    const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
+
+    // Filter rows
+    rows.forEach((row) => {
+      const rowSearch = row.dataset.search ?? '';
+      const rowHarness = row.dataset.harness ?? '';
+      const rowProvider = row.dataset.provider ?? '';
+
+      const matchesSearch = !query || rowSearch.includes(query);
+      const matchesHarness = harness === 'all' || rowHarness === harness;
+      const matchesProvider = provider === 'all' || rowProvider === provider;
+
+      row.style.display = matchesSearch && matchesHarness && matchesProvider ? '' : 'none';
+    });
+
+    // Sort rows
+    rows.sort((a, b) => {
+      const valA = parseFloat(a.dataset[sortBy] ?? '0');
+      const valB = parseFloat(b.dataset[sortBy] ?? '0');
+
+      if (valA !== valB) {
+        return sortDir === 'asc' ? valA - valB : valB - valA;
+      }
+      // Tie-breaker: higher plan ratio, then lower cost
+      const planDiff =
+        parseFloat(b.dataset.plan ?? '0') - parseFloat(a.dataset.plan ?? '0');
+      if (planDiff !== 0) return planDiff;
+      return parseFloat(a.dataset.cost ?? '0') - parseFloat(b.dataset.cost ?? '0');
+    });
+
+    // Re-append and re-rank visible rows
+    let visibleRank = 1;
+    rows.forEach((row) => {
+      tbody.appendChild(row);
+      if (row.style.display !== 'none') {
+        const badge = row.querySelector('.rank-badge');
+        if (badge) {
+          badge.textContent = `#${visibleRank}`;
+          badge.classList.remove('rank-1', 'rank-2', 'rank-3');
+          if (visibleRank === 1) badge.classList.add('rank-1');
+          if (visibleRank === 2) badge.classList.add('rank-2');
+          if (visibleRank === 3) badge.classList.add('rank-3');
+        }
+        visibleRank++;
+      }
+    });
+
+    // Update table header indicators
+    sortableHeaders.forEach((th) => {
+      const col = th.dataset.sortCol;
+      const indicator = th.querySelector('.sort-indicator');
+      if (col === sortBy) {
+        th.classList.add('active-sort');
+        if (indicator) indicator.textContent = sortDir === 'asc' ? '↑' : '↓';
+      } else {
+        th.classList.remove('active-sort');
+        if (indicator) indicator.textContent = '';
+      }
+    });
+  }
+
+  searchInput?.addEventListener('input', updateLeaderboard);
+  harnessFilter?.addEventListener('change', updateLeaderboard);
+  providerFilter?.addEventListener('change', updateLeaderboard);
+
+  sortSelect?.addEventListener('change', () => {
+    const col = sortSelect.value;
+    const defaultDir = defaultSortDirs[col] ?? 'desc';
+    if (sortDirBtn) {
+      sortDirBtn.dataset.dir = defaultDir;
+      sortDirBtn.textContent = defaultDir === 'asc' ? '↑ ASC' : '↓ DESC';
+    }
+    updateLeaderboard();
+  });
+
+  sortDirBtn?.addEventListener('click', () => {
+    const current = sortDirBtn.dataset.dir === 'asc' ? 'desc' : 'asc';
+    sortDirBtn.dataset.dir = current;
+    sortDirBtn.textContent = current === 'asc' ? '↑ ASC' : '↓ DESC';
+    updateLeaderboard();
+  });
+
+  sortableHeaders.forEach((th) => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sortCol;
+      if (!col || !sortSelect || !sortDirBtn) return;
+
+      if (sortSelect.value === col) {
+        const nextDir = sortDirBtn.dataset.dir === 'asc' ? 'desc' : 'asc';
+        sortDirBtn.dataset.dir = nextDir;
+        sortDirBtn.textContent = nextDir === 'asc' ? '↑ ASC' : '↓ DESC';
+      } else {
+        sortSelect.value = col;
+        const defaultDir = defaultSortDirs[col] ?? 'desc';
+        sortDirBtn.dataset.dir = defaultDir;
+        sortDirBtn.textContent = defaultDir === 'asc' ? '↑ ASC' : '↓ DESC';
+      }
+      updateLeaderboard();
+    });
+  });
+
+  // Row click navigation
+  document.querySelectorAll<HTMLTableRowElement>('tr.run-row').forEach((row) => {
+    row.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('a')) return;
+      const href = row.dataset.href;
+      if (href) window.location.href = href;
+    });
+  });
+</script>
