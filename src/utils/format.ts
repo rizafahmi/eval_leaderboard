@@ -95,23 +95,25 @@ export interface ParsedNoteBullet {
 
 const INLINE_CODE_PATTERN = new RegExp(
   [
-    '\\b(?:WaitMsBeforeAsync|cache_read_tokens|Overwrite|isError|thinkingLevel|stopReason):\\s*(?:"[^"]+"|[0-9]+|true|false)\\b',
+    '\\b(?:WaitMsBeforeAsync|cache_read_tokens|Overwrite|isError|thinkingLevel|stopReason|effort):\\s*(?:"[^"]+"|[0-9]+|true|false)\\b',
     '(?::[a-z_0-9]+\\.|\\b[A-Za-z0-9_.]+\\.)?[A-Za-z0-9_]+!?\\([^()]*\\)',
-    '\\b[A-Z][A-Za-z0-9_.]*\\.[a-z_0-9!?]+\\/[0-9]+',
+    '(?::[a-z_][a-z_0-9]*|\\b[A-Z][A-Za-z0-9_.]*)\\.[a-z_0-9!?]+\\/[0-9]+',
     '\\bmain\\/[01]\\b',
     '\\b[A-Z][A-Za-z0-9_]+\\.[a-z_0-9_]+\\b',
-    '\\bmix\\s+(?:test\\s+--only\\s+integration|format\\s+&&\\s+mix\\s+test|help\\s+escript\\.build|help\\s+compile|escript\\.build|deps\\.get|local\\.hex|compile|credo|test|format|help|type)\\b',
+    '\\bmix\\s+(?:compile\\s+--warnings-as-errors|credo\\s+--strict|test\\s+--only\\s+integration|format\\s+&&\\s+mix\\s+test|help\\s+escript\\.build|help\\s+compile|escript\\.build|deps\\.get|local\\.hex|compile|credo|test|format|help|type)\\b',
+    '\\bgit\\s+(?:add\\s+-A(?:\\s+&&\\s+git\\s+commit\\s+-q)?|commit\\s+-q(?:\\s+-m)?)\\b',
     '\\berl\\s+-help\\b',
     '\\bps\\s+-ef\\b',
     '\\/usr\\/bin\\/script\\s+-q\\s+\\/dev\\/null\\s+\\.\\/cb\\s+\\.\\.\\.',
     '\\/bin\\/cat(?:\\s+<fifo>)?',
     '\\/nix\\/store\\b',
-    '(?:\\b(?:test|lib)\\/[A-Za-z0-9_./-]*|\\b[A-Za-z0-9_]+\\.(?:exs?|md|dump)\\b|\\.\\/cb\\b)',
+    '\\/tmp(?:\\/[A-Za-z0-9_./-]+)?\\b',
+    '(?:\\b(?:test|lib)\\/[A-Za-z0-9_./-]*|\\b[A-Za-z0-9_]+\\.(?:exs?|md|dump)\\b|\\.gitignore\\b|\\.\\/cb\\b)',
     ':[a-z_][a-z_0-9]*\\b',
     '\\+Bi\\b',
     '\\\\x03',
     '\\[x\\]',
-    '\\b(?:run_command|manage_task|write_file|edit_file|search_web|system_message|cache_read_tokens|CB_[A-Z_]+|mkfifo|cacheRead|toolUse|oldText|context_edit)\\b',
+    '\\b(?:run_command|manage_task|write_file|edit_file|search_web|system_message|cache_read_tokens|CB_[A-Z_]+|SSL_CERT_FILE|mkfifo|cacheReadTokens|cacheRead|reasoningText|toolUse|oldText|context_edit)\\b',
   ].join('|'),
   'g'
 );
