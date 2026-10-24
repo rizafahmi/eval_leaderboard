@@ -495,6 +495,7 @@
 
   /* Hero Banner */
   .hero-card {
+    container: hero / inline-size;
     background: var(--bg-card);
     border: 2px solid var(--border-espresso);
     border-radius: var(--radius-lg);
@@ -504,14 +505,19 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
-    gap: 1.5rem;
+    align-items: safe center;
+    gap: 1.5rem 2rem;
     position: relative;
-    overflow: hidden;
   }
 
   .hero-content {
+    flex: 1 1 100%;
+    min-inline-size: 0;
     max-inline-size: 42.5rem;
+  }
+
+  .hero-content:only-child {
+    max-inline-size: 68ch;
   }
 
   .hero-eyebrow {
@@ -543,18 +549,77 @@
     max-inline-size: 62ch;
   }
 
-  .hero-stats {
+  .hero-note {
     display: flex;
-    gap: 0.85rem;
+    align-items: center;
     flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-block-start: 0.85rem;
+    padding-block-start: 0.85rem;
+    border-block-start: 1.5px dashed var(--border-soft);
+    font-size: 0.86rem;
+    color: var(--text-mocha);
+    max-inline-size: 62ch;
+  }
+
+  .hero-stats {
+    flex: 1 1 100%;
+    min-inline-size: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    gap: 0.85rem;
+  }
+
+  /* Fallback using media queries for older browsers */
+  @media (min-width: 54rem) {
+    .hero-content {
+      flex: 1 1 26rem;
+    }
+
+    .hero-stats {
+      flex: 1 1 20rem;
+      max-inline-size: 24rem;
+      grid-template-columns: repeat(2, minmax(8.5rem, 1fr));
+    }
+  }
+
+  /* Overwrite with container queries where supported */
+  @supports (container-type: inline-size) {
+    @media (min-width: 54rem) {
+      .hero-content,
+      .hero-stats {
+        flex: 1 1 100%;
+        max-inline-size: none;
+      }
+
+      .hero-content {
+        max-inline-size: 42.5rem;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+      }
+    }
+
+    @container hero (min-width: 50rem) {
+      .hero-content {
+        flex: 1 1 26rem;
+      }
+
+      .hero-stats {
+        flex: 1 1 20rem;
+        max-inline-size: 24rem;
+        grid-template-columns: repeat(2, minmax(8.5rem, 1fr));
+      }
+    }
   }
 
   .stat-box {
     background: var(--bg-sand);
     border: 1.5px solid var(--border-espresso);
     border-radius: var(--radius-md);
-    padding: 0.75rem 1.1rem;
-    min-inline-size: 7.5rem;
+    padding: 0.85rem 1.1rem;
+    min-inline-size: 0;
     box-shadow: var(--shadow-brutal-sm);
   }
 
@@ -1538,7 +1603,6 @@
     font-size: 0.92rem;
     line-height: 1.65;
     color: var(--text-espresso);
-    max-inline-size: 76ch;
   }
 
   .note-bullet-item {
