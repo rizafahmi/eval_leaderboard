@@ -16,13 +16,13 @@ $ ./capy_runner --mode auto --print "Run healthcheck"
 ---
 
 <BaseLayout title="About & Benchmark Plan" activeNav="about">
-  <section class="hero-card">
+  <section class="hero-card" aria-labelledby="about-hero-heading">
     <div class="hero-content">
       <div class="hero-eyebrow">
-        <span>📋</span>
+        <span aria-hidden="true">📋</span>
         <span>METHODOLOGY & TASK SPECIFICATION</span>
       </div>
-      <h1 class="hero-title">About Capy Bench</h1>
+      <h1 id="about-hero-heading" class="hero-title">About Capy Bench</h1>
       <p class="hero-subtitle">
         Capy Bench is a personal coding agent evaluation suite. Instead of isolated trivia
         snippets, every Coding Harness + Model pair is given the exact same multi-stage
@@ -34,116 +34,117 @@ $ ./capy_runner --mode auto --print "Run healthcheck"
 
   <div class="section-grid">
     <!-- The S1 - S7 Implementation Plan -->
-    <section class="card col-12" id="stages">
+    <section class="card col-12" id="stages" aria-labelledby="stages-heading">
       <div class="card-title">
-        <span>1. The Plan Checkpoints (S1 – S7)</span>
+        <h2 id="stages-heading" class="card-heading">1. The Plan Checkpoints (S1 – S7)</h2>
         <span class="badge badge-effort">7 Stages • 59 Tests</span>
       </div>
-      <p style="color: var(--text-mocha); margin-bottom: 1.25rem; font-size: 0.95rem;">
+      <p class="section-lead">
         Agents are instructed to work sequentially through seven checkpoints. Each stage builds on
         the previous one, testing process orchestration, OS signal handling (<code>SIGINT</code> /
         <code>Ctrl-C</code>), persistence, and fault recovery.
       </p>
 
-      <div
-        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 1rem;"
-      >
+      <ol class="stage-spec-grid" role="list">
         {
           BENCHMARK_STAGES.map((stage) => (
-            <div
-              style="background: var(--bg-parchment); border: 1.5px solid var(--border-espresso); border-radius: var(--radius-md); padding: 1.1rem; box-shadow: var(--shadow-brutal-sm);"
-            >
-              <div
-                style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;"
-              >
+            <li class="stage-spec-card">
+              <div class="stage-spec-header">
                 <span class="stage-pill done">{stage.id}</span>
-                <strong style="font-size: 0.98rem;">{stage.title}</strong>
+                <h3 class="stage-spec-title">{stage.title}</h3>
               </div>
-              <p style="font-size: 0.85rem; color: var(--text-mocha); margin-bottom: 0.75rem;">
-                {stage.description}
-              </p>
-              <ul
-                style="list-style: none; display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem;"
-              >
+              <p class="stage-spec-desc">{stage.description}</p>
+              <ul class="stage-deliverables-list" role="list">
                 {stage.deliverables.map((item) => (
-                  <li style="display: flex; align-items: center; gap: 0.4rem;">
-                    <span style="color: var(--accent-forest); font-weight: 800;">✓</span>
+                  <li class="stage-deliverable-item">
+                    <span class="check-icon" aria-hidden="true">✓</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
-            </div>
+            </li>
           ))
         }
-      </div>
+      </ol>
     </section>
 
     <!-- Glimpse of the End Product -->
-    <section class="card col-6">
+    <section class="card col-6" aria-labelledby="end-product-heading">
       <div class="card-title">
-        <span>2. Glimpse of the End Product</span>
+        <h2 id="end-product-heading" class="card-heading">2. Glimpse of the End Product</h2>
         <span class="badge badge-success">Target State</span>
       </div>
-      <p style="color: var(--text-mocha); font-size: 0.92rem; margin-bottom: 1rem;">
+      <p class="section-body-copy">
         A completed run produces a working CLI and supervised process engine that passes all 59
         automated test assertions, handles <code>Ctrl-C</code> gracefully without leaking background
         processes, and outputs structured JSONL telemetry:
       </p>
-      <pre class="terminal-box"><code>{sampleEndProductOutput}</code></pre>
+      <pre class="terminal-box" tabindex="0"><code>{sampleEndProductOutput}</code></pre>
     </section>
 
     <!-- How We Judge & Calculate Metrics -->
-    <section class="card col-6">
+    <section class="card col-6" aria-labelledby="judging-heading">
       <div class="card-title">
-        <span>3. How Runs Are Judged</span>
+        <h2 id="judging-heading" class="card-heading">3. How Runs Are Judged</h2>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+      <dl class="judging-list">
         <div class="kpi-box">
-          <div class="kpi-label">Plan Completion (S1–S7) & Tests</div>
-          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+          <dt class="kpi-label">Plan Completion (S1–S7) & Tests</dt>
+          <dd class="judging-desc">
             Each checkpoint is marked <code>[x]</code> only when its implementation and unit/integration
             tests pass cleanly.
-          </p>
+          </dd>
         </div>
 
         <div class="kpi-box">
-          <div class="kpi-label">Cache Hit Rate Formula</div>
-          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+          <dt class="kpi-label">Cache Hit Rate Formula</dt>
+          <dd class="judging-desc">
             Calculated as <code>CacheRead / (input + cacheRead + cacheWrite)</code>. High cache hit
             rates drastically reduce cost on long multi-step agent runs.
-          </p>
+          </dd>
         </div>
 
         <div class="kpi-box">
-          <div class="kpi-label">Interface Agnostic (CLI / Desktop / Web)</div>
-          <p style="color: var(--text-mocha); margin-top: 0.25rem;">
+          <dt class="kpi-label">Interface Agnostic (CLI / Desktop / Web)</dt>
+          <dd class="judging-desc">
             Whether an agent runs headless in a CLI, inside a Desktop IDE, or in a Web sandbox, all
             detailed telemetry fields are optional so every run can be logged.
-          </p>
+          </dd>
         </div>
-      </div>
+      </dl>
     </section>
 
     <!-- Instructions Given to the Coding Agent (PROMPT.md) -->
-    <section class="card col-12">
+    <section class="card col-12 deferred-section" aria-labelledby="prompt-spec-heading">
       <div class="card-title">
-        <span>4. Instructions Given to the Coding Agent (PROMPT.md)</span>
-        <button
-          type="button"
-          class="copy-btn"
-          id="copy-prompt-btn"
-          data-prompt={BENCHMARK_PROMPT}
-        >
-          Copy PROMPT.md
-        </button>
+        <h2 id="prompt-spec-heading" class="card-heading">
+          4. Instructions Given to the Coding Agent (PROMPT.md)
+        </h2>
+        <div>
+          <button
+            type="button"
+            class="copy-btn"
+            id="copy-prompt-btn"
+            data-prompt={BENCHMARK_PROMPT}
+          >
+            Copy PROMPT.md
+          </button>
+          <span
+            id="copy-prompt-status"
+            class="visually-hidden"
+            role="status"
+            aria-live="polite"
+          ></span>
+        </div>
       </div>
-      <pre class="terminal-box"><code>{BENCHMARK_PROMPT}</code></pre>
+      <pre class="terminal-box" tabindex="0"><code>{BENCHMARK_PROMPT}</code></pre>
     </section>
   </div>
 </BaseLayout>
 
 <script>
   const copyPromptBtn = document.getElementById('copy-prompt-btn') as HTMLButtonElement | null;
+  const copyPromptStatus = document.getElementById('copy-prompt-status') as HTMLElement | null;
   copyPromptBtn?.addEventListener('click', async () => {
     const promptText = copyPromptBtn.dataset.prompt;
     if (!promptText) return;
@@ -151,11 +152,14 @@ $ ./capy_runner --mode auto --print "Run healthcheck"
       await navigator.clipboard.writeText(promptText);
       const original = copyPromptBtn.textContent;
       copyPromptBtn.textContent = '✓ Copied PROMPT.md!';
+      if (copyPromptStatus) copyPromptStatus.textContent = 'PROMPT.md copied to clipboard.';
       setTimeout(() => {
         copyPromptBtn.textContent = original;
+        if (copyPromptStatus) copyPromptStatus.textContent = '';
       }, 1800);
     } catch {
       copyPromptBtn.textContent = 'Failed to copy';
+      if (copyPromptStatus) copyPromptStatus.textContent = 'Failed to copy PROMPT.md.';
     }
   });
 </script>

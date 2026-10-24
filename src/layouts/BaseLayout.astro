@@ -19,6 +19,8 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="text-scale" content="scale" />
     <title>{title} | Capy Bench</title>
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,8 +29,28 @@ const {
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@700;800&display=swap"
       rel="stylesheet"
     />
+    <script type="speculationrules" is:inline>
+      {
+        "prefetch": [
+          {
+            "tag": "capy-prefetch",
+            "where": { "href_matches": "/*" },
+            "eagerness": "eager"
+          }
+        ],
+        "prerender": [
+          {
+            "tag": "capy-prerender",
+            "where": { "href_matches": "/*" },
+            "eagerness": "moderate"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
+    <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
+
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="brand-link">
@@ -36,18 +58,26 @@ const {
           <span>Capy Bench</span>
           <span class="brand-tag">v1.0</span>
         </a>
-        <nav class="site-nav" aria-label="Main Navigation">
-          <a href="/" class:list={['nav-link', { active: activeNav === 'leaderboard' }]}>
+        <nav class="site-nav" aria-label="Main">
+          <a
+            href="/"
+            class:list={['nav-link', { active: activeNav === 'leaderboard' }]}
+            aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
+          >
             Leaderboard
           </a>
-          <a href="/about" class:list={['nav-link', { active: activeNav === 'about' }]}>
+          <a
+            href="/about"
+            class:list={['nav-link', { active: activeNav === 'about' }]}
+            aria-current={activeNav === 'about' ? 'page' : undefined}
+          >
             About & Tasks
           </a>
         </nav>
       </div>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <div class="container">
         <slot />
       </div>
@@ -59,7 +89,7 @@ const {
           <strong>🦫 Capy Bench Leaderboard</strong> — Real-world coding harness & LLM evaluation
           runs.
         </div>
-        <div class="mono" style="font-size: 0.78rem;">
+        <div class="mono footer-meta">
           Static Astro + TypeScript • Data in <code>src/content/runs/*.json</code>
         </div>
       </div>

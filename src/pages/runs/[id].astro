@@ -51,69 +51,72 @@ const maxToolCalls =
 ---
 
 <BaseLayout title={`${d.codingHarness} — ${d.model}`}>
-  <a href="/" class="back-link">← Back to Leaderboard</a>
+  <a href="/" class="back-link"><span aria-hidden="true">←</span> Back to Leaderboard</a>
 
   <!-- Top Summary Header -->
-  <section class="detail-header-card">
+  <section class="detail-header-card" aria-labelledby="run-detail-heading">
     <div class="detail-top-row">
       <div>
-        <div class="entry-meta" style="margin-top: 0; margin-bottom: 0.5rem;">
+        <div class="entry-meta detail-entry-meta">
           <span class="badge badge-provider">Provider: {d.provider}</span>
           {d.effort && <span class="badge badge-effort">Effort: {d.effort}</span>}
           {d.interface?.type && (
             <span class="badge badge-interface">Interface: {d.interface.type}</span>
           )}
-          <span class="badge">🕒 {formatTimestamp(d.timestamp)}</span>
+          <span class="badge">
+            <span aria-hidden="true">🕒</span>
+            <time datetime={d.timestamp}>{formatTimestamp(d.timestamp)}</time>
+          </span>
         </div>
-        <h1 class="detail-title">
+        <h1 id="run-detail-heading" class="detail-title">
           <span>{d.codingHarness}</span>
-          <span style="color: var(--text-muted);">/</span>
-          <span style="color: var(--accent-capy);" class="mono">{d.model}</span>
+          <span class="text-muted-sep" aria-hidden="true">/</span>
+          <span class="mono detail-model">{d.model}</span>
         </h1>
       </div>
 
-      <div class="mono" style="font-size: 0.78rem; color: var(--text-mocha);">
+      <div class="mono detail-run-id">
         Run ID: <code>{entry.id}</code>
       </div>
     </div>
 
-    <div class="kpi-grid">
+    <dl class="kpi-grid">
       <div class="kpi-box">
-        <div class="kpi-label">Time Elapsed</div>
-        <div class="kpi-val">{formatDuration(d.durationMinutes)}</div>
-        <div class="kpi-sub">Total wall-clock duration</div>
+        <dt class="kpi-label">Time Elapsed</dt>
+        <dd class="kpi-val">{formatDuration(d.durationMinutes)}</dd>
+        <dd class="kpi-sub">Total wall-clock duration</dd>
       </div>
 
       <div class="kpi-box">
-        <div class="kpi-label">Estimated Cost</div>
-        <div class="kpi-val" style="color: var(--accent-forest);">
+        <dt class="kpi-label">Estimated Cost</dt>
+        <dd class="kpi-val text-forest">
           {formatCost(d.costUsd)}
-        </div>
-        <div class="kpi-sub">Total run cost (USD)</div>
+        </dd>
+        <dd class="kpi-sub">Total run cost (USD)</dd>
       </div>
 
       <div class="kpi-box">
-        <div class="kpi-label">Plan Completion</div>
-        <div class="kpi-val">
+        <dt class="kpi-label" id="kpi-plan-label">Plan Completion</dt>
+        <dd class="kpi-val">
           {plan.completed}/{plan.total}
-        </div>
-        <div class="kpi-sub">{Math.round(plan.ratio * 100)}% of checkpoints done</div>
+        </dd>
+        <dd class="kpi-sub">{Math.round(plan.ratio * 100)}% of checkpoints done</dd>
       </div>
 
       {
         d.tests && (
           <div class="kpi-box">
-            <div class="kpi-label">Number of Tests</div>
-            <div class="kpi-val">
+            <dt class="kpi-label">Number of Tests</dt>
+            <dd class="kpi-val">
               {d.tests.passed}/{d.tests.total}
-            </div>
-            <div class="kpi-sub">
+            </dd>
+            <dd class="kpi-sub">
               {d.tests.durationSeconds
                 ? `100% passed (${d.tests.durationSeconds}s)`
                 : d.tests.passed === d.tests.total
                   ? '100% tests passed'
                   : 'Test suite results'}
-            </div>
+            </dd>
           </div>
         )
       }
@@ -121,79 +124,96 @@ const maxToolCalls =
       {
         d.commits !== undefined && (
           <div class="kpi-box">
-            <div class="kpi-label">Number of Commits</div>
-            <div class="kpi-val">{d.commits}</div>
-            <div class="kpi-sub">Git checkpoints recorded</div>
+            <dt class="kpi-label">Number of Commits</dt>
+            <dd class="kpi-val">{d.commits}</dd>
+            <dd class="kpi-sub">Git checkpoints recorded</dd>
           </div>
         )
       }
-    </div>
+    </dl>
   </section>
 
   <div class="section-grid">
     <!-- Plan Completion Checklist -->
-    <section class="card col-12">
+    <section class="card col-12" aria-labelledby="plan-completion-heading">
       <div class="card-title">
-        <span>Plan Completion ({plan.completed}/{plan.total})</span>
-        <a href="/about#stages" class="mono" style="font-size: 0.78rem; color: var(--accent-capy);">
-          View Stage Specs →
+        <h2 id="plan-completion-heading" class="card-heading">
+          Plan Completion ({plan.completed}/{plan.total})
+        </h2>
+        <a href="/about#stages" class="mono card-action-link">
+          View Stage Specs <span aria-hidden="true">→</span>
         </a>
       </div>
 
-      <div class="plan-checklist">
+      <progress
+        class="plan-progress"
+        value={plan.completed}
+        max={plan.total}
+        aria-labelledby="plan-completion-heading"
+      ></progress>
+
+      <ul class="plan-checklist" role="list">
         {
           plan.entries.map(([stageId, completed]) => (
-            <div class:list={['plan-item', completed ? 'completed' : 'incomplete']}>
-              <span class="plan-checkbox">{completed ? '[x]' : '[ ]'}</span>
+            <li class:list={['plan-item', completed ? 'completed' : 'incomplete']}>
+              <span class="plan-checkbox" aria-hidden="true">
+                {completed ? '[x]' : '[ ]'}
+              </span>
               <div>
-                <div class="mono" style="font-weight: 800; font-size: 0.9rem;">
+                <div class="mono plan-stage-id">
                   {stageId}
+                  <span class="visually-hidden">
+                    {' '}
+                    — {completed ? 'Completed' : 'Incomplete'}
+                  </span>
                 </div>
                 {stageMap.get(stageId) && (
-                  <div style="font-size: 0.8rem; color: var(--text-mocha); margin-top: 0.1rem;">
-                    {stageMap.get(stageId)}
-                  </div>
+                  <div class="plan-stage-title">{stageMap.get(stageId)}</div>
                 )}
               </div>
-            </div>
+            </li>
           ))
         }
-      </div>
+      </ul>
     </section>
 
     <!-- Conditional: Command / Interface Used -->
     {
       hasInterface && (
-        <section class="card col-12">
+        <section class="card col-12" aria-labelledby="interface-heading">
           <div class="card-title">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <span>Command / Interface Used</span>
+            <div class="card-title-group">
+              <h2 id="interface-heading" class="card-heading">Command / Interface Used</h2>
               {d.interface?.type && (
                 <span class="badge badge-interface">{d.interface.type}</span>
               )}
             </div>
             {d.interface?.command && (
-              <button
-                type="button"
-                class="copy-btn"
-                id="copy-cmd-btn"
-                data-cmd={d.interface.command}
-              >
-                Copy Command
-              </button>
+              <div>
+                <button
+                  type="button"
+                  class="copy-btn"
+                  id="copy-cmd-btn"
+                  data-cmd={d.interface.command}
+                >
+                  Copy Command
+                </button>
+                <span
+                  id="copy-cmd-status"
+                  class="visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                />
+              </div>
             )}
           </div>
 
           {d.interface?.command && (
-            <pre class="terminal-box"><code>{d.interface.command}</code></pre>
+            <pre class="terminal-box" tabindex="0"><code>{d.interface.command}</code></pre>
           )}
 
           {d.interface?.details && (
-            <p
-              style={`color: var(--text-mocha); font-size: 0.92rem; ${
-                d.interface.command ? 'margin-top: 0.75rem;' : ''
-              }`}
-            >
+            <p class:list={['interface-details', { 'has-cmd': Boolean(d.interface.command) }]}>
               {d.interface.details}
             </p>
           )}
@@ -204,65 +224,64 @@ const maxToolCalls =
     <!-- Conditional: Token & Context Window Usage -->
     {
       hasTokenSection && (
-        <section class:list={['card', hasCallsSection ? 'col-6' : 'col-12']}>
+        <section
+          class:list={['card', hasCallsSection ? 'col-6' : 'col-12']}
+          aria-labelledby="token-usage-heading"
+        >
           <div class="card-title">
-            <span>Token & Context Usage</span>
+            <h2 id="token-usage-heading" class="card-heading">Token & Context Usage</h2>
           </div>
 
-          <div class="kpi-grid">
+          <dl class="kpi-grid">
             {d.tokens?.input && (
               <div class="kpi-box">
-                <div class="kpi-label">Input (Uncached)</div>
-                <div class="kpi-val">{d.tokens.input}</div>
+                <dt class="kpi-label">Input (Uncached)</dt>
+                <dd class="kpi-val">{d.tokens.input}</dd>
               </div>
             )}
 
             {d.tokens?.cachedInput && (
               <div class="kpi-box">
-                <div class="kpi-label">Cached Input</div>
-                <div class="kpi-val">{d.tokens.cachedInput}</div>
+                <dt class="kpi-label">Cached Input</dt>
+                <dd class="kpi-val">{d.tokens.cachedInput}</dd>
               </div>
             )}
 
             {d.tokens?.output && (
               <div class="kpi-box">
-                <div class="kpi-label">Output Tokens</div>
-                <div class="kpi-val">{d.tokens.output}</div>
+                <dt class="kpi-label">Output Tokens</dt>
+                <dd class="kpi-val">{d.tokens.output}</dd>
                 {d.tokens?.thinking && (
-                  <div class="kpi-sub">incl. {d.tokens.thinking} thinking</div>
+                  <dd class="kpi-sub">incl. {d.tokens.thinking} thinking</dd>
                 )}
               </div>
             )}
 
             {d.tokens?.total && (
               <div class="kpi-box">
-                <div class="kpi-label">Total Tokens</div>
-                <div class="kpi-val">{d.tokens.total}</div>
-                <div class="kpi-sub">incl. cached reads</div>
+                <dt class="kpi-label">Total Tokens</dt>
+                <dd class="kpi-val">{d.tokens.total}</dd>
+                <dd class="kpi-sub">incl. cached reads</dd>
               </div>
             )}
 
             {d.tokens?.cacheHitRate && (
-              <div class="kpi-box" style="grid-column: span 2;">
-                <div class="kpi-label">Cache Hit Rate</div>
-                <div class="kpi-val" style="color: var(--accent-forest);">
-                  {d.tokens.cacheHitRate}
-                </div>
-                <div class="kpi-sub">
+              <div class="kpi-box kpi-span-2">
+                <dt class="kpi-label">Cache Hit Rate</dt>
+                <dd class="kpi-val text-forest">{d.tokens.cacheHitRate}</dd>
+                <dd class="kpi-sub">
                   Formula: <code>CacheRead / (input + cacheRead + cacheWrite)</code>
-                </div>
+                </dd>
               </div>
             )}
 
             {d.contextWindow && (
-              <div class="kpi-box" style="grid-column: span 2;">
-                <div class="kpi-label">Context Window Usage</div>
-                <div class="kpi-val" style="font-size: 1.15rem;">
-                  {d.contextWindow}
-                </div>
+              <div class="kpi-box kpi-span-2">
+                <dt class="kpi-label">Context Window Usage</dt>
+                <dd class="kpi-val kpi-val-compact">{d.contextWindow}</dd>
               </div>
             )}
-          </div>
+          </dl>
         </section>
       )
     }
@@ -270,71 +289,76 @@ const maxToolCalls =
     <!-- Conditional: Calls (LLM & Tool Call Telemetry) -->
     {
       hasCallsSection && (
-        <section class:list={['card', hasTokenSection ? 'col-6' : 'col-12']}>
+        <section
+          class:list={['card', hasTokenSection ? 'col-6' : 'col-12']}
+          aria-labelledby="calls-breakdown-heading"
+        >
           <div class="card-title">
-            <span>Calls & Tool Breakdown</span>
+            <h2 id="calls-breakdown-heading" class="card-heading">Calls & Tool Breakdown</h2>
           </div>
 
-          <div class="kpi-grid" style="margin-bottom: 1rem;">
+          <dl class="kpi-grid kpi-grid-spaced">
             {d.calls?.llmCalls !== undefined && (
               <div class="kpi-box">
-                <div class="kpi-label">LLM API Calls</div>
-                <div class="kpi-val">{d.calls.llmCalls}</div>
-                <div class="kpi-sub">completed agent_response steps</div>
+                <dt class="kpi-label">LLM API Calls</dt>
+                <dd class="kpi-val">{d.calls.llmCalls}</dd>
+                <dd class="kpi-sub">completed agent_response steps</dd>
               </div>
             )}
 
             {d.calls?.toolCalls?.total !== undefined && (
               <div class="kpi-box">
-                <div class="kpi-label">Tool Calls</div>
-                <div class="kpi-val">{d.calls.toolCalls.total}</div>
-                <div class="kpi-sub">
+                <dt class="kpi-label">Tool Calls</dt>
+                <dd class="kpi-val">{d.calls.toolCalls.total}</dd>
+                <dd class="kpi-sub">
                   {d.calls.toolCalls.done !== undefined && (
                     <span>{d.calls.toolCalls.done} DONE</span>
                   )}
                   {d.calls.toolCalls.error !== undefined && d.calls.toolCalls.error > 0 && (
-                    <span style="color: var(--accent-coral); font-weight: 700;">
+                    <span class="tool-err-inline">
                       {' '}
                       • {d.calls.toolCalls.error} ERROR
                     </span>
                   )}
-                </div>
+                </dd>
               </div>
             )}
-          </div>
+          </dl>
 
           {d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0 && (
-            <div class="tool-list">
-              {d.calls.toolCalls.breakdown.map((item) => {
+            <ul class="tool-list" role="list">
+              {d.calls.toolCalls.breakdown.map((item, idx) => {
                 const doneCount = item.done ?? item.total - (item.error ?? 0);
                 const errCount = item.error ?? 0;
-                const donePct = Math.max((doneCount / maxToolCalls) * 100, 2);
-                const errPct = (errCount / maxToolCalls) * 100;
+                const labelId = `tool-label-${idx}`;
 
                 return (
-                  <div class="tool-row">
+                  <li class="tool-row">
                     <div class="tool-row-header">
-                      <span class="tool-name">• {item.tool}</span>
+                      <span class="tool-name" id={labelId}>
+                        <span aria-hidden="true">• </span>
+                        {item.tool}
+                      </span>
                       <div class="tool-counts">
                         <strong>{item.total}</strong>
                         {(item.done !== undefined || (item.error && item.error > 0)) && (
-                          <span style="font-size: 0.74rem; color: var(--text-mocha);">
+                          <span class="tool-status-note">
                             ({doneCount} DONE
                             {errCount > 0 ? `, ${errCount} ERROR` : ''})
                           </span>
                         )}
                       </div>
                     </div>
-                    <div class="tool-bar-track">
-                      <div class="tool-bar-fill" style={`width: ${donePct}%;`} />
-                      {errCount > 0 && (
-                        <div class="tool-bar-error" style={`width: ${errPct}%;`} />
-                      )}
-                    </div>
-                  </div>
+                    <progress
+                      class:list={['tool-progress', { 'has-error': errCount > 0 }]}
+                      value={item.total}
+                      max={maxToolCalls}
+                      aria-labelledby={labelId}
+                    />
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
         </section>
       )
@@ -343,31 +367,46 @@ const maxToolCalls =
     <!-- Conditional: Cost Breakdown -->
     {
       hasCostBreakdown && (
-        <section class="card col-12">
+        <section
+          class="card col-12 deferred-section"
+          aria-labelledby="cost-breakdown-heading"
+        >
           <div class="card-title">
-            <span>Estimated Cost Breakdown</span>
+            <h2 id="cost-breakdown-heading" class="card-heading">Estimated Cost Breakdown</h2>
           </div>
-          <div class="table-wrapper" style="box-shadow: none;">
-            <table class="leaderboard-table">
+          <div
+            class="table-wrapper table-wrapper-flat"
+            tabindex="0"
+            role="region"
+            aria-labelledby="cost-breakdown-heading"
+          >
+            <table class="leaderboard-table static-table">
+              <caption class="visually-hidden">
+                Token volume and estimated cost breakdown comparing 2026 and 2027 pricing rates
+              </caption>
               <thead>
                 <tr>
-                  <th>Component</th>
-                  <th>Tokens</th>
-                  <th>Rate (2026)</th>
-                  <th>Cost (2026 Rate)</th>
-                  <th>Rate (2027)</th>
-                  <th>Cost (2027 Rate)</th>
+                  <th scope="col">Component</th>
+                  <th scope="col">Tokens</th>
+                  <th scope="col">Rate (2026)</th>
+                  <th scope="col">Cost (2026 Rate)</th>
+                  <th scope="col">Rate (2027)</th>
+                  <th scope="col">Cost (2027 Rate)</th>
                 </tr>
               </thead>
               <tbody>
                 {d.costBreakdown!.map((row) => (
-                  <tr style="cursor: default;">
-                    <td><strong>{row.component}</strong></td>
-                    <td class="mono">{row.tokens}</td>
-                    <td class="mono">{row.rate2026 ?? '—'}</td>
-                    <td class="mono"><strong>{row.cost2026}</strong></td>
-                    <td class="mono">{row.rate2027 ?? '—'}</td>
-                    <td class="mono">{row.cost2027 ?? '—'}</td>
+                  <tr>
+                    <th scope="row" data-cell="Component">
+                      <strong>{row.component}</strong>
+                    </th>
+                    <td class="mono" data-cell="Tokens">{row.tokens}</td>
+                    <td class="mono" data-cell="Rate (2026)">{row.rate2026 ?? '—'}</td>
+                    <td class="mono" data-cell="Cost (2026)">
+                      <strong>{row.cost2026}</strong>
+                    </td>
+                    <td class="mono" data-cell="Rate (2027)">{row.rate2027 ?? '—'}</td>
+                    <td class="mono" data-cell="Cost (2027)">{row.cost2027 ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -380,31 +419,49 @@ const maxToolCalls =
     <!-- Conditional: Slice / Phase Breakdown -->
     {
       hasSliceBreakdown && (
-        <section class="card col-12">
+        <section
+          class="card col-12 deferred-section"
+          aria-labelledby="slice-breakdown-heading"
+        >
           <div class="card-title">
-            <span>Slice / Phase Breakdown</span>
+            <h2 id="slice-breakdown-heading" class="card-heading">Slice / Phase Breakdown</h2>
           </div>
-          <div class="table-wrapper" style="box-shadow: none;">
-            <table class="leaderboard-table">
+          <div
+            class="table-wrapper table-wrapper-flat"
+            tabindex="0"
+            role="region"
+            aria-labelledby="slice-breakdown-heading"
+          >
+            <table class="leaderboard-table static-table">
+              <caption class="visually-hidden">
+                Per-stage slice breakdown of step ranges, LLM calls, task polls, thinking tokens, and
+                cost
+              </caption>
               <thead>
                 <tr>
-                  <th>Slice / Phase</th>
-                  <th>Step Range</th>
-                  <th>LLM Calls</th>
-                  <th>manage_task Polls</th>
-                  <th>Thinking Tokens</th>
-                  <th>Cost (2026 Rate)</th>
+                  <th scope="col">Slice / Phase</th>
+                  <th scope="col">Step Range</th>
+                  <th scope="col">LLM Calls</th>
+                  <th scope="col">manage_task Polls</th>
+                  <th scope="col">Thinking Tokens</th>
+                  <th scope="col">Cost (2026 Rate)</th>
                 </tr>
               </thead>
               <tbody>
                 {d.sliceBreakdown!.map((row) => (
-                  <tr style="cursor: default;">
-                    <td><strong>{row.slice}</strong></td>
-                    <td class="mono">{row.stepRange}</td>
-                    <td class="mono">{row.llmCalls}</td>
-                    <td class="mono">{row.manageTaskPolls ?? 0}</td>
-                    <td class="mono">{row.thinkingTokens?.toLocaleString() ?? '—'}</td>
-                    <td class="mono"><span class="cost-pill">{formatCost(row.costUsd)}</span></td>
+                  <tr>
+                    <th scope="row" data-cell="Slice / Phase">
+                      <strong>{row.slice}</strong>
+                    </th>
+                    <td class="mono" data-cell="Step Range">{row.stepRange}</td>
+                    <td class="mono" data-cell="LLM Calls">{row.llmCalls}</td>
+                    <td class="mono" data-cell="manage_task Polls">{row.manageTaskPolls ?? 0}</td>
+                    <td class="mono" data-cell="Thinking Tokens">
+                      {row.thinkingTokens?.toLocaleString() ?? '—'}
+                    </td>
+                    <td class="mono" data-cell="Cost (2026)">
+                      <span class="cost-pill">{formatCost(row.costUsd)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -417,11 +474,16 @@ const maxToolCalls =
     <!-- Conditional: Git Commit Log -->
     {
       hasCommitLog && (
-        <section class="card col-12">
+        <section
+          class="card col-12 deferred-section"
+          aria-labelledby="git-commits-heading"
+        >
           <div class="card-title">
-            <span>Git Commits ({d.commitLog!.length})</span>
+            <h2 id="git-commits-heading" class="card-heading">
+              Git Commits ({d.commitLog!.length})
+            </h2>
           </div>
-          <pre class="terminal-box"><code>{commitLogText}</code></pre>
+          <pre class="terminal-box" tabindex="0"><code>{commitLogText}</code></pre>
         </section>
       )
     }
@@ -429,20 +491,23 @@ const maxToolCalls =
     <!-- Conditional: Notes -->
     {
       hasNotes && (
-        <section class="card col-12">
+        <section
+          class="card col-12 deferred-section"
+          aria-labelledby="notes-findings-heading"
+        >
           <div class="card-title">
-            <span>Notes & Key Findings</span>
+            <h2 id="notes-findings-heading" class="card-heading">Notes & Key Findings</h2>
           </div>
 
           {hasNotesDetails ? (
-            <ol class="notes-list">
+            <ol class="notes-list" role="list">
               {d.notesDetails!.map((note, idx) => (
-                <li class="note-item" style="flex-direction: column; gap: 0.5rem;">
-                  <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span class="note-num">{idx + 1}</span>
-                    <strong style="font-size: 1rem;">{note.title}</strong>
+                <li class="note-item note-item-detailed">
+                  <div class="note-header">
+                    <span class="note-num" aria-hidden="true">{idx + 1}</span>
+                    <strong class="note-title">{note.title}</strong>
                   </div>
-                  <ul style="margin-left: 2.4rem; display: flex; flex-direction: column; gap: 0.35rem; font-weight: 500; font-size: 0.9rem; color: var(--text-espresso);">
+                  <ul class="note-bullets">
                     {note.bullets.map((b) => (
                       <li>{b}</li>
                     ))}
@@ -451,10 +516,10 @@ const maxToolCalls =
               ))}
             </ol>
           ) : (
-            <ol class="notes-list">
+            <ol class="notes-list" role="list">
               {d.notes!.map((note, idx) => (
                 <li class="note-item">
-                  <span class="note-num">{idx + 1}</span>
+                  <span class="note-num" aria-hidden="true">{idx + 1}</span>
                   <span>{note}</span>
                 </li>
               ))}
@@ -468,6 +533,7 @@ const maxToolCalls =
 
 <script>
   const copyBtn = document.getElementById('copy-cmd-btn') as HTMLButtonElement | null;
+  const copyStatus = document.getElementById('copy-cmd-status') as HTMLElement | null;
   copyBtn?.addEventListener('click', async () => {
     const cmd = copyBtn.dataset.cmd;
     if (!cmd) return;
@@ -475,11 +541,14 @@ const maxToolCalls =
       await navigator.clipboard.writeText(cmd);
       const original = copyBtn.textContent;
       copyBtn.textContent = '✓ Copied!';
+      if (copyStatus) copyStatus.textContent = 'Command copied to clipboard.';
       setTimeout(() => {
         copyBtn.textContent = original;
+        if (copyStatus) copyStatus.textContent = '';
       }, 1800);
     } catch {
       copyBtn.textContent = 'Failed to copy';
+      if (copyStatus) copyStatus.textContent = 'Failed to copy command.';
     }
   });
 </script>
