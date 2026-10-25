@@ -18,7 +18,7 @@
     "S2": true,
     "S3": true,
     "S4": true,
-    "S5": true,
+    "S5": false,
     "S6": true,
     "S7": true
   },
@@ -193,7 +193,8 @@
     }
   ],
   "notes": [
-    "91.5% Cost Reduction vs. GLM-5.3 High ($1.10 vs. $12.90) with Full S1–S7 Completion",
+    "91.5% Cost Reduction vs. GLM-5.3 High ($1.10 vs. $12.90) with 6/7 Slices Verified (S5 Incomplete on Live Chunked 301)",
+    "S5 Verification Failure on './cb http://rizafahmi.com': Chunked-Body Buffer Drop Causes ':closed' Transport Failures",
     "Upstream Stream Instability in S1–S3: 29 'TypeError: terminated' Aborts & 58 Multi-Attempt Retries (~21m Lost)",
     "S3 Consumed 46.5% of Active Time (51.7m, 156 LLM Calls) Due to Five OTP/GenServer Traps",
     "5.5 MB erl_crash.dump Committed Four Times via 'git add -A' (877k Diff Lines)",
@@ -203,11 +204,19 @@
   ],
   "notesDetails": [
     {
-      "title": "91.5% Cost Reduction vs. GLM-5.3 High ($1.10 vs. $12.90) with Full S1–S7 Completion",
+      "title": "91.5% Cost Reduction vs. GLM-5.3 High ($1.10 vs. $12.90) with 6/7 Slices Verified (S5 Incomplete on Live Chunked 301)",
       "bullets": [
-        "$1.10 Total Run Cost: Running GLM-5.3-Flash with effort: \"low\" completed all 7 slices and release verification for $1.10 ($1.1025)—a 91.5% cost reduction compared to GLM-5.3 High ($12.90) on the same ZCode harness.",
+        "$1.10 Total Run Cost: Running GLM-5.3-Flash with effort: \"low\" completed the benchmark workflow for $1.10 ($1.1025)—a 91.5% cost reduction compared to GLM-5.3 High ($12.90) on the same ZCode harness.",
         "99.52% Prefix Cache Hit Rate Saved $4.11 (78.8%): Out of 34,374,813 total input tokens across 344 successful turns, 34,210,176 were served from cache (cacheReadTokens) with zero cache invalidations as context grew monotonically from 26,398 to 167,669 tokens.",
-        "Strict Outside-In TDD & Clean Checks: The agent progressed strictly one slice at a time (S1→S7 + release verification), finishing with 42/42 passing async ExUnit tests in 41.4s and zero warnings under both mix compile --warnings-as-errors and mix credo --strict."
+        "Outside-In TDD Suite (42/42 Local Tests), but S5 Fails Against Live Chunked 301 Responses: While the agent's 42 local ExUnit tests passed in 41.4s with zero warnings under mix compile --warnings-as-errors and mix credo --strict, manual S5 verification with ./cb http://rizafahmi.com failed due to a chunked transfer-encoding buffer bug in lib/capy_bench/http.ex."
+      ]
+    },
+    {
+      "title": "S5 Verification Failure on './cb http://rizafahmi.com': Chunked-Body Buffer Drop Causes ':closed' Transport Failures",
+      "bullets": [
+        "Failing Live 301 Redirect Check: Running ./cb http://rizafahmi.com (which returns a Cloudflare HTTP/1.1 301 Moved Permanently response with Transfer-Encoding: chunked) fails 40 of 41 requests with Transport failures: 40 (Failure reasons: :closed: 40 on stderr) instead of counting completed 301 responses.",
+        "Root Cause in CapyBench.HTTP.read_chunk/5 (lib/capy_bench/http.ex): When reading a chunked body, read_chunk/5 calls read_n(socket, transport, String.to_integer(line, 16) + 2, rest, deadline), which consumes the chunk payload from rest and returns bare :ok—discarding the remaining bytes in rest (including the terminating 0\\r\\n\\r\\n chunk that arrived in the same TCP segment)—before calling read_chunked(socket, transport, \"\", deadline), which then blocks on transport.recv/3 until the server closes the connection ({:error, :closed}).",
+        "Skipped TodoWrite Updates on S5 & S6: In ZCode's TodoWrite state, the agent marked S5 in_progress at line 273 and never updated TodoWrite after committing S5 (line 290) or S6 (line 317), leaving S5 marked incomplete in the UI todo list until line 362."
       ]
     },
     {
