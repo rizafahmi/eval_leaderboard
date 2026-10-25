@@ -190,7 +190,7 @@
     "High-Effort Efficiency Paradox: 21% Cheaper ($0.87 vs. $1.10) & 36% Faster (71m vs. 111m) Than GLM-5.3-Flash Low",
     "Single-Turn 10.8-Minute Reasoning Monolith at Line 3 (30,440 Output Tokens, +30.8k Context Jump)",
     "Linting Shortcut: Using 'mix compile --warnings-as-errors' Instead of Credo or mix check",
-    "Adopting ':mint' (v1.11.0) in S3 & In-Process-Only Trusted HTTPS Verification",
+    "Adopting ':mint' (v1.11.0) in S3: Passing './cb http://rizafahmi.com' Chunked 301 & In-Process HTTPS",
     "22-Turn S2 Bisect of a POSIX 'if wait' Exit-Status Bug & Committed 2.89 MB erl_crash.dump",
     "Release Verification Caught a Raw Failure-Tuple Bug & a zsh 'MULTIOS' Redirection Quirk",
     "ZCode File-State Guard Friction (10 Edit/Write Errors) & 7 Clean Slice Commits"
@@ -220,9 +220,9 @@
       ]
     },
     {
-      "title": "Adopting ':mint' (v1.11.0) in S3 & In-Process-Only Trusted HTTPS Verification",
+      "title": "Adopting ':mint' (v1.11.0) in S3: Passing './cb http://rizafahmi.com' Chunked 301 & In-Process HTTPS",
       "bullets": [
-        "Adding {:mint, \"~> 1.7\"} Instead of Raw Socket HTTP Framing: Unlike GLM-5.3 High and GLM-5.3-Flash Low (which remained zero-dependency and built custom HTTP/1.1 clients over :gen_tcp and :ssl), GLM-5.3-Flash High added {:mint, \"~> 1.7\"} (resolving mint 1.11.0 and hpax 1.1.0) in S3 (line 56), justifying it in mix.exs for incremental body streaming, deterministic connection-close cancellation, and no automatic redirects or retries.",
+        "Adding {:mint, \"~> 1.7\"} Prevented the S5 Chunked-Encoding Bugs Seen in Low & Max: Unlike GLM-5.3-Flash Low and GLM-5.3-Flash Max (both of which wrote custom HTTP/1.1 socket parsers that broke on live Transfer-Encoding: chunked responses during ./cb http://rizafahmi.com), GLM-5.3-Flash High added {:mint, \"~> 1.7\"} (resolving mint 1.11.0 and hpax 1.1.0) in S3 (line 56), enabling it to pass ./cb http://rizafahmi.com cleanly with 41/41 301 responses and 0 failures (the only 7/7 GLM-5.3-Flash run).",
         "In-Process Workaround for macOS SSL_CERT_FILE (Lines 55–56): After confirming at line 55 that :public_key.cacerts_get/0 on macOS reads the system Keychain and ignores SSL_CERT_FILE, the agent chose not to read SSL_CERT_FILE in production code (stating in PLAN.md that \"the CLI process cannot be pointed at the test CA without adding a configuration surface\"). Instead, it tested trusted-CA HTTPS acceptance only in-process via CapyBench.Request.run/2 with injected cacerts while testing untrusted/mismatched HTTPS rejection through the built ./cb CLI.",
         "OTP 28 :ssl.handshake/3 {:dtls_upgrade, :notsup} Socket-Ownership Trap (Lines 78–92): In test/support/test_server.ex, spawning a child process to run :ssl.handshake/3 on a socket accepted by the parent accept_loop failed with {:error, {:dtls_upgrade, :notsup}} because OTP's internal TCP-to-TLS upgrade requires the caller to be the socket's controlling process. After 14 turns of isolation, transferring ownership in the acceptor via :gen_tcp.controlling_process(tcp_socket, pid) before sending :go fixed the handshake (line 91)."
       ]
