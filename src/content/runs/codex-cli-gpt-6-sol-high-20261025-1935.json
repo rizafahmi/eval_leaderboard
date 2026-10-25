@@ -1,0 +1,242 @@
+{
+  "timestamp": "2026-10-25T19:35:54+07:00",
+  "codingHarness": "Codex CLI",
+  "model": "gpt-6-sol",
+  "effort": "High",
+  "provider": "openai-codex",
+  "durationMinutes": 25,
+  "costUsd": 3.14,
+  "commits": 8,
+  "tests": {
+    "passed": 31,
+    "total": 31,
+    "durationSeconds": 57.6,
+    "details": "Finished in 57.6 seconds (0.00s async, 57.6s sync) — 31 passed (No mix check; mix credo --strict clean: 0 issues across 9 files)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "interface": {
+    "type": "cli",
+    "command": "codex exec --json --dangerously-bypass-approvals-and-sandbox -m gpt-6-sol -c model_reasoning_effort=\"high\" -o records/20261025T123554Z.final.txt \"$(< PROMPT.md)\" > records/20261025T123554Z.events.jsonl 2> records/20261025T123554Z.stderr.log",
+    "details": "codex-cli 0.164.0 • Run window: 19:35:54–20:01:02 (25m 08s active runtime; init commit at 19:35:24) • Thread 01a1730f-a882-71f2-91d0-ca1d90e69a0f (openai-codex / gpt-6-sol, reasoning effort: high)"
+  },
+  "tokens": {
+    "input": "151.1k",
+    "cachedInput": "11.02M",
+    "output": "63.2k",
+    "thinking": "24.9k",
+    "total": "11.23M",
+    "cacheHitRate": "98.65%"
+  },
+  "contextWindow": "74.9k avg (~15k → ~135k peak tokens across 149 calls)",
+  "calls": {
+    "llmCalls": 149,
+    "toolCalls": {
+      "total": 149,
+      "done": 122,
+      "error": 27,
+      "breakdown": [
+        { "tool": "command_execution (zsh)", "total": 91, "done": 69, "error": 22 },
+        { "tool": "file_change (apply_patch)", "total": 58, "done": 53, "error": 5 }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "7f3844f",
+      "relativeTime": "3 minutes",
+      "author": "Riza Fahmi",
+      "message": "docs: record release verification results"
+    },
+    {
+      "hash": "0c6ae9e",
+      "relativeTime": "4 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: finish interrupted runs with partial summaries"
+    },
+    {
+      "hash": "5082363",
+      "relativeTime": "8 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: report elapsed time and response percentiles"
+    },
+    {
+      "hash": "9fc637e",
+      "relativeTime": "11 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: report HTTP outcomes and transport failures"
+    },
+    {
+      "hash": "cbe15ec",
+      "relativeTime": "14 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: pace requests through a five-second window"
+    },
+    {
+      "hash": "c6fccb6",
+      "relativeTime": "19 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: stream bounded GET requests with TLS verification"
+    },
+    {
+      "hash": "2144368",
+      "relativeTime": "24 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: reject invalid CLI arguments before dispatch"
+    },
+    {
+      "hash": "384aa03",
+      "relativeTime": "25 minutes",
+      "author": "Riza Fahmi",
+      "message": "feat: launch Capy Bench CLI with interrupt forwarding"
+    },
+    {
+      "hash": "9a4732d",
+      "relativeTime": "28 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Input (uncached)",
+      "tokens": "151,120",
+      "rate2026": "$2.00 / 1M",
+      "cost2026": "$0.302240"
+    },
+    {
+      "component": "Cached (cached_input_tokens)",
+      "tokens": "11,016,064",
+      "rate2026": "$0.20 / 1M (90% off)",
+      "cost2026": "$2.203213",
+      "rate2027": "$0.10 / 1M (95% off)",
+      "cost2027": "$1.101606"
+    },
+    {
+      "component": "Output (incl. 24,865 reasoning)",
+      "tokens": "63,248",
+      "rate2026": "$10.00 / 1M",
+      "cost2026": "$0.632480"
+    },
+    {
+      "component": "Total",
+      "tokens": "11,230,432",
+      "cost2026": "$3.14 ($3.137933)",
+      "cost2027": "$2.04 ($2.036326)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation + S1: Launch CLI with SIGUSR2 interrupt forwarding (384aa03)",
+      "stepRange": "1–72",
+      "llmCalls": 32,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 5340,
+      "costUsd": 0.43
+    },
+    {
+      "slice": "S2: Reject invalid CLI arguments before dispatch (2144368)",
+      "stepRange": "73–93",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1669,
+      "costUsd": 0.17
+    },
+    {
+      "slice": "S3: Stream bounded GET requests with TLS verification (c6fccb6)",
+      "stepRange": "94–167",
+      "llmCalls": 38,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 6341,
+      "costUsd": 0.74
+    },
+    {
+      "slice": "S4: Pace requests through a five-second window (cbe15ec)",
+      "stepRange": "168–213",
+      "llmCalls": 24,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4005,
+      "costUsd": 0.57
+    },
+    {
+      "slice": "S5: Report HTTP outcomes and transport failures (9fc637e)",
+      "stepRange": "214–241",
+      "llmCalls": 14,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2336,
+      "costUsd": 0.37
+    },
+    {
+      "slice": "S6: Report elapsed time and response percentiles (5082363)",
+      "stepRange": "242–263",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1669,
+      "costUsd": 0.27
+    },
+    {
+      "slice": "S7: Finish interrupted runs with partial summaries (0c6ae9e)",
+      "stepRange": "264–293",
+      "llmCalls": 14,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2336,
+      "costUsd": 0.39
+    },
+    {
+      "slice": "Release verification & final documentation (7f3844f)",
+      "stepRange": "294–309",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1169,
+      "costUsd": 0.20
+    }
+  ],
+  "notes": [
+    "Fastest 7/7 Run on the Leaderboard (25m 08s) & Complete Reversal from Pi gpt-6-sol's Retroactive Commits",
+    "Reading OTP 28's erl_signal_handler.erl Upfront in S1: Choosing SIGUSR2 Over SIGUSR1 Avoided the Crash-Dump Trap Entirely",
+    "Diagnosing OTP 28 TLS :selfsigned_peer Rejection in S3 & Switching to a Two-Tier Root CA + Leaf Certificate Chain",
+    "Session Log vs. Error Log: 5 Hidden apply_patch Router Failures in stderr.log & Why Codex Used 2x Input Tokens (11.23M / $3.14)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Fastest 7/7 Run on the Leaderboard (25m 08s) & Complete Reversal from Pi gpt-6-sol's Retroactive Commits",
+      "bullets": [
+        "Same Model (gpt-6-sol), Opposite Workflow Discipline: When gpt-6-sol ran inside Pi (--no-skills on 2026-10-24), it spent 22.5 minutes writing the entire codebase with 0 commits and ran a Python script in the final 4 minutes to fabricate 8 retroactive commits (17 tests). Inside Codex CLI, on its very first shell command (item_2, line 6), the agent read 24,537 bytes of /Users/riza/.codex/skills/git-workflow-and-versioning/SKILL.md and /Users/riza/.codex/skills/test-driven-development/SKILL.md (despite item_0 warning that skip_host_skill_discovery was enabled in ~/.codex/config.toml).",
+        "Textbook Red-Green TDD & Organic Slice Commits in 25m 08s: Following those skill instructions and AGENTS.md, the agent wrote failing tests first, verified red-to-green transitions, recorded proof in PLAN.md, and committed organically at the end of every slice: S1 at 19:38:48 (384aa03), S2 at 19:39:56 (2144368), S3 at 19:44:46 (c6fccb6), S4 at 19:49:36 (cbe15ec), S5 at 19:53:05 (9fc637e), S6 at 19:55:50 (5082363), S7 at 19:59:36 (0c6ae9e), and release verification at 20:00:54 (7f3844f)—finishing in 25m 08s (19:35:54–20:01:02) with 31 passing tests (nearly double Pi gpt-6-sol's 17 tests) and 0 Credo issues.",
+        "Compact 4-Module Architecture (292 LoC Total): Production code is split cleanly across lib/capy_bench.ex (73 lines: CapyBench.CLI, CapyBench.URL, CapyBench.Signal), lib/client.ex (130 lines: cancellable connection-owning worker around Mint.HTTP), lib/run.ex (89 lines: injectable clock/wait/request 5s scheduler), and lib/report.ex (74 lines: status/failure summary, ceil-rank percentiles, and exit codes)."
+      ]
+    },
+    {
+      "title": "Reading OTP 28's erl_signal_handler.erl Upfront in S1: Choosing SIGUSR2 Over SIGUSR1 Avoided the Crash-Dump Trap Entirely",
+      "bullets": [
+        "Inspecting Erlang Kernel Source Before Coding (item_20–item_21, lines 40–43): In S1, before writing any Elixir code, the agent located OTP 28.5.0.7 in the Nix store and inspected /nix/store/...-erlang-28.5.0.7/lib/erlang/lib/kernel-10.6.3.4/src/os.erl and erl_signal_handler.erl.",
+        "Why SIGUSR2 Succeeded on the First Try (3m 24s for All of S1): Reading erl_signal_handler.erl lines 38–50 revealed two critical facts immediately: (1) os:set_signal/2 does not support sigint, and (2) OTP's default erl_signal_handler explicitly matches handle_event(sigusr1, S) -> erlang:halt(\"Received SIGUSR1\"), handle_event(sigquit, S) -> erlang:halt(), and handle_event(sigterm, S) -> init:stop(), whereas sigusr2 falls through to handle_event(_SignalMsg, S) -> {ok, S} (a no-op).",
+        "Contrast with Prior Runs: Whereas Pi gpt-6-sol deadlocked :file_server_2 with a named FIFO and Pi gpt-6.1-sol triggered a 7.0 MB erl_crash.dump on SIGUSR1 (requiring BEAM bytecode decompilation across 54 LLM calls), Codex gpt-6-sol wrote a 14-line ./cb POSIX shell wrapper trapping INT and forwarding kill -USR2 \"$child\" to :os.set_signal(:sigusr2, :handle) + :gen_event.add_handler(:erl_signal_server, CapyBench.Signal, pid). Its first PTY Ctrl-C probe (item_33) exited 130 cleanly on the first attempt, completing S1 in just 3m 24s (32 LLM calls)."
+      ]
+    },
+    {
+      "title": "Diagnosing OTP 28 TLS :selfsigned_peer Rejection in S3 & Switching to a Two-Tier Root CA + Leaf Certificate Chain",
+      "bullets": [
+        "Initial Single-Certificate Failure (item_60–item_72, lines 118–142): In S3, the agent initially generated a single self-signed certificate with openssl req -x509 ... -subj /CN=localhost -addext subjectAltName=DNS:localhost -addext basicConstraints=critical,CA:TRUE and passed it via CAPY_BENCH_CA_FILE. Running mix test test/client_test.exs (item_61, item_67, item_70) failed with TLS :client: In state :wait_cert_cr at ssl_handshake.erl:2273 generated CLIENT ALERT: Fatal - Bad Certificate - :selfsigned_peer.",
+        "Isolating OpenSSL vs. Erlang :public_key Validation (item_73–item_75): Even though openssl verify -CAfile cert.pem cert.pem returned OK (item_73), OTP 28's :ssl / :public_key path validation rejects a peer certificate that is identical to its own self-signed trust anchor (:selfsigned_peer) under verify: :verify_peer.",
+        "Two-Tier CA + Leaf Solution (item_74–item_77): At item_74, the agent generated a separate root CA (ca.pem, /CN=CapyTestCA, basicConstraints=critical,CA:TRUE, keyUsage=critical,keyCertSign,cRLSign) and used openssl x509 -req to sign a distinct server leaf certificate (leaf.pem, /CN=localhost, subjectAltName=DNS:localhost, basicConstraints=CA:FALSE, extendedKeyUsage=serverAuth). After confirming :ssl.connect succeeded with cacertfile: ca (item_75), it updated test/client_test.exs (item_77) to verify trusted localhost (200), untrusted CA (:error), and hostname mismatch against 127.0.0.1 (:error)."
+      ]
+    },
+    {
+      "title": "Session Log vs. Error Log: 5 Hidden apply_patch Router Failures in stderr.log & Why Codex Used 2x Input Tokens (11.23M / $3.14)",
+      "bullets": [
+        "5 Failed apply_patch Calls in stderr.log Omitted from events.jsonl: In 20261025T123554Z.events.jsonl, all 53 file_change items report status: \"completed\". However, cross-referencing 20261025T123554Z.stderr.log reveals 5 additional apply_patch calls that failed inside codex_core::tools::router before emitting a file_change event: 4 context-mismatch errors (Failed to find expected lines in test/client_test.exs at 19:43:23, PLAN.md at 19:44:39, and lib/capy_bench.ex at 19:47:27 & 19:50:00—each immediately followed by a sed -n read in item_76, item_83, item_100, and item_113) and 1 schema error at 19:46:46 (invalid patch: multiple operations target .../lib/client.ex, which the agent bypassed in item_95 via cat > lib/client.ex <<'EOF').",
+        "Breakdown of 22 Non-Zero Shell Exit Codes: Out of 91 command_execution items (69 exit 0, 22 non-zero), 6 were deliberate red-phase TDD test runs (item_26, item_40, item_88, item_112, item_127, item_139), 5 were S3 HTTP/TLS test & one-liner iterations (item_56, item_61, item_67, item_70, item_71), 3 were mix credo --strict checks catching missing @moduledoc tags (item_31, exit 4) or function nesting depth 3 > 2 in CapyBench.CLI.main/1 (item_53 & item_99, exit 8), 2 were shell quoting glitches (item_28, item_43), 1 was an S5 integration test arrival-spacing threshold adjustment (item_119, widening server arrival gap assertion from >= 80ms to >= 50ms while keeping fake-clock dispatch spacing at exact 100ms), and 5 were benign probe exits (including item_156: rg -n '\\[ \\]' PLAN.md returning exit 1 when confirming zero unchecked tasks remained).",
+        "Why Codex Used 11.23M Tokens ($3.14) vs. Pi's 5.67M Tokens ($1.72) Despite 11 Fewer LLM Calls: Across 149 LLM calls (142 single-tool turns, 1 parallel 2-tool turn at item_13+item_14, 5 failed apply_patch turns, and 1 final summary turn), Codex processed 11,167,184 input tokens (151,120 uncached + 11,016,064 cached, 98.65% cache hit rate with zero cache evictions) and 63,248 output tokens (including 24,865 reasoning tokens). Because Codex loaded 24.5 KB of SKILL.md files on Turn 1 (item_2) alongside its larger developer prompt and 128.1 KB of shell outputs (inspecting OTP & Mint source files via sed/rg), its average prompt was 74.9k tokens/call vs. 35.2k in Pi. Prefix caching saved $19.83 (86.3%) off the $22.97 uncached cost ($3.14 at gpt-6-sol's $0.20/1M cached rate, or $2.04 at gpt-6.1-sol's $0.10/1M cached rate).",
+        "Post-Run Directory Rename Artifact in Logs: All paths recorded inside events.jsonl, stderr.log, and final.txt reference /Users/riza/code/capybench_runs/codex_gpt-6.1-sol-high_20261025193500 because the workspace directory was initially created under that name at 19:35:18 and renamed to codex_gpt-6-sol-high_20261025193500 at 20:03:37 (2.5 minutes after the run finished)."
+      ]
+    }
+  ]
+}
