@@ -13,7 +13,7 @@ import {
 import { BENCHMARK_STAGES } from '../../data/benchmark';
 
 export async function getStaticPaths() {
-  const runs = await getCollection('runs');
+  const runs = await getCollection('runs', ({ data }) => data.published !== false);
   return runs.map((entry) => ({
     params: { id: entry.id },
     props: { entry },

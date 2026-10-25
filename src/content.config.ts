@@ -4,6 +4,7 @@ import { glob } from 'astro/loaders';
 const runs = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/runs' }),
   schema: z.object({
+    published: z.boolean().optional(),
     timestamp: z.string(),
     codingHarness: z.string(),
     model: z.string(),

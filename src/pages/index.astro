@@ -9,7 +9,7 @@ import {
   getPlanStats,
 } from '../utils/format';
 
-const allRuns = await getCollection('runs');
+const allRuns = await getCollection('runs', ({ data }) => data.published !== false);
 
 const enrichedRuns = allRuns
   .map((entry) => {
