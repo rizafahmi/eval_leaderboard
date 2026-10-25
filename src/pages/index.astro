@@ -18,6 +18,11 @@ const enrichedRuns = allRuns
     const inputTokens = parseTokenString(d.tokens?.input);
     const outputTokens = parseTokenString(d.tokens?.output);
     const totalTokens = inputTokens + outputTokens;
+    const hasCalls =
+      d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls?.total !== undefined);
+    const totalCalls = hasCalls
+      ? (d.calls?.llmCalls ?? 0) + (d.calls?.toolCalls?.total ?? 0)
+      : undefined;
     const testsRatio =
       d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
     const timeMs = new Date(d.timestamp).getTime() || 0;
@@ -29,6 +34,7 @@ const enrichedRuns = allRuns
       inputTokens,
       outputTokens,
       totalTokens,
+      totalCalls,
       testsRatio,
       timeMs,
     };
@@ -252,21 +258,8 @@ const lowestCost =
                 </th>
 
                 <td data-cell="Plan Completion">
-                  <div class="plan-cell">
-                    <div class="stage-strip">
-                      {plan.entries.map(([stageId, completed]) => (
-                        <span class:list={['stage-pill', completed ? 'done' : 'pending']}>
-                          <span aria-hidden="true">{completed ? '✓ ' : ''}</span>
-                          {stageId}
-                          <span class="visually-hidden">
-                            : {completed ? 'completed' : 'incomplete'}
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                    <span class="plan-summary-text">
-                      {plan.completed}/{plan.total} stages ({Math.round(plan.ratio * 100)}%)
-                    </span>
+                  <div class="metric-primary">
+                    {plan.completed}/{plan.total} stages ({Math.round(plan.ratio * 100)}%)
                   </div>
                 </td>
 
@@ -285,6 +278,9 @@ const lowestCost =
 
                 <td data-cell="Duration">
                   <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
+                  {run.totalCalls !== undefined && (
+                    <div class="metric-sub">{run.totalCalls.toLocaleString()} calls</div>
+                  )}
                 </td>
 
                 <td data-cell="Token Usage">
