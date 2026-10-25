@@ -95,7 +95,7 @@ export interface ParsedNoteBullet {
 
 const INLINE_CODE_PATTERN = new RegExp(
   [
-    '\\b(?:WaitMsBeforeAsync|cache_read_tokens|Overwrite|isError|thinkingLevel|stopReason|effort):\\s*(?:"[^"]+"|[0-9]+|true|false)\\b',
+    '\\b(?:WaitMsBeforeAsync|cache_read_tokens|Overwrite|isError|thinkingLevel|stopReason|effort|attempt):\\s*(?:"[^"]+"|[0-9]+|true|false)\\b',
     '(?::[a-z_0-9]+\\.|\\b[A-Za-z0-9_.]+\\.)?[A-Za-z0-9_]+!?\\([^()]*\\)',
     '(?::[a-z_][a-z_0-9]*|\\b[A-Z][A-Za-z0-9_.]*)\\.[a-z_0-9!?]+\\/[0-9]+',
     '\\bmain\\/[01]\\b',
@@ -105,6 +105,9 @@ const INLINE_CODE_PATTERN = new RegExp(
     '\\berl\\s+-help\\b',
     '\\bps\\s+-ef\\b',
     '\\/usr\\/bin\\/script\\s+-q\\s+\\/dev\\/null\\s+\\.\\/cb\\s+\\.\\.\\.',
+    '\\.\\/cb\\s+https?:\\/\\/[A-Za-z0-9_.:/-]+',
+    '\\bTransfer-Encoding:\\s*chunked\\b',
+    '\\bContent-Length\\b',
     '\\/bin\\/cat(?:\\s+<fifo>)?',
     '\\/nix\\/store\\b',
     '\\/tmp(?:\\/[A-Za-z0-9_./-]+)?\\b',
