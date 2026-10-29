@@ -96,6 +96,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   background-color: var(--bg-canvas);
   color: var(--text-primary);
@@ -441,6 +445,10 @@ mark[data-hl] {
   margin: 0;
 }
 
+.app-breadcrumbs .hl {
+  font-size: 0.75rem;
+}
+
 .app-breadcrumbs a {
   color: var(--text-primary);
   text-decoration: none;
@@ -595,6 +603,12 @@ mark[data-hl] {
   width: 100%;
 }
 
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
 .input:focus,
 .select:focus,
 .textarea:focus {
@@ -706,6 +720,7 @@ mark[data-hl] {
   font-weight: 800;
   font-size: clamp(1.75rem, 3.5vw, 2.5rem);
   line-height: 1.05;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Brutalist Image / Media Figure */
