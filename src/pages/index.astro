@@ -49,108 +49,152 @@ const enrichedRuns = allRuns
 const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort();
 const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort();
 
-const fastestMin =
-  enrichedRuns.length > 0
-    ? Math.min(...enrichedRuns.map((r) => r.data.durationMinutes))
-    : 0;
-const lowestCost =
-  enrichedRuns.length > 0
-    ? Math.min(...enrichedRuns.map((r) => r.data.costUsd))
-    : 0;
+const durations = enrichedRuns.map((r) => r.data.durationMinutes);
+const costs = enrichedRuns.map((r) => r.data.costUsd);
+const fastestMin = durations.length > 0 ? Math.min(...durations) : 0;
+const slowestMin = durations.length > 0 ? Math.max(...durations) : 0;
+const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
+const highestCost = costs.length > 0 ? Math.max(...costs) : 0;
+const fullPassCount = enrichedRuns.filter((r) => r.plan.ratio === 1).length;
 ---
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
-  <section class="hero-card" aria-labelledby="hero-heading">
-    <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span aria-hidden="true">🦫</span>
-        <span>PERSONAL CODING AGENT BENCHMARK</span>
-      </div>
-      <h1 id="hero-heading" class="hero-title">Capy Bench Leaderboard</h1>
-      <p class="hero-subtitle">
-        Evaluating coding harnesses and language models on an end-to-end, backend-focused CLI
-        engineering plan (<code>S1</code>–<code>S7</code>) in Elixir/OTP. Tracking completion,
-        duration, token usage, cache efficiency, and real cost.
-      </p>
-      <p class="hero-note">
-        <span class="badge badge-effort">Personal Code Evaluation</span>
-        <span class="badge badge-provider">Backend &amp; CLI</span>
-        <span>
-          Independent, hands-on runs on a real backend/CLI workflow (HTTP/TLS, concurrency,
-          timeouts, and signal handling) — meant as practical field notes rather than a formal
-          academic benchmark.
-        </span>
-      </p>
+  <!-- 01. NEO-ACID HERO & TWO-TONE UNBOUNDED TYPOGRAPHY -->
+  <section class="hero-box" aria-labelledby="hero-heading">
+    <div class="pixel-mosaic" aria-hidden="true">
+      <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
+      <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
+      <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
+      <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
+      <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+      <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
     </div>
 
-    <dl class="hero-stats">
-      <div class="stat-box">
-        <dt class="stat-label">Total Runs</dt>
-        <dd class="stat-value">{enrichedRuns.length}</dd>
+    <div class="row-wrap hero-kicker-row">
+      <span class="hl hl-acid hero-cmd-pill">/eval ./cb &lt;S1–S7&gt;</span>
+      <span class="section-kicker hero-kicker-inline">PERSONAL CODING AGENT BENCHMARK</span>
+    </div>
+
+    <h1 id="hero-heading" class="headline-two-tone">
+      Capy Bench Leaderboard.
+      <span class="muted">
+        End-to-end Elixir/OTP CLI agent runs, ranked by completion and cost.
+      </span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Evaluating coding harnesses and language models on a 7-stage Outside-In TDD engineering plan
+      (<code>S1</code>–<code>S7</code>: HTTP/TLS, monotonic rate pacing, 2s timeouts, percentile
+      latencies, and <code>SIGINT</code> handling).
+    </p>
+
+    <div class="callout callout-acid hero-callout">
+      <div class="row-wrap">
+        <span class="hl hl-violet">spec: S1–S7</span>
+        <span class="hl hl-mint">verify: mix test</span>
+        <span class="hl hl-sky">stack: Elixir/OTP</span>
+        <span class="hero-callout-copy">
+          Independent field notes on a real backend/CLI workflow — measuring completion, duration,
+          token efficiency, cache hit rate, and actual API cost.
+        </span>
       </div>
-      <div class="stat-box">
-        <dt class="stat-label">Harnesses</dt>
-        <dd class="stat-value">{harnesses.length}</dd>
-      </div>
-      <div class="stat-box">
-        <dt class="stat-label">Fastest Run</dt>
-        <dd class="stat-value">{formatDuration(fastestMin)}</dd>
-      </div>
-      <div class="stat-box">
-        <dt class="stat-label">Lowest Cost</dt>
-        <dd class="stat-value">{formatCost(lowestCost)}</dd>
-      </div>
-    </dl>
+    </div>
   </section>
 
-  <!-- Filter & Sort Controls -->
-  <search class="controls-bar" aria-label="Leaderboard filters and sorting">
-    <div class="control-group">
-      <label class="control-label" for="search-input">Search</label>
-      <input
-        id="search-input"
-        name="q"
-        type="search"
-        class="control-input"
-        placeholder="Harness, model, provider..."
-        autocomplete="off"
-        autocorrect="off"
-        autocapitalize="off"
-        spellcheck="false"
-      />
-
-      <label class="control-label" for="harness-filter">Harness</label>
-      <select id="harness-filter" name="harness" class="control-select">
-        <option value="all">All Harnesses</option>
-        {harnesses.map((h) => <option value={h}>{h}</option>)}
-      </select>
-
-      <label class="control-label" for="provider-filter">Provider</label>
-      <select id="provider-filter" name="provider" class="control-select">
-        <option value="all">All Providers</option>
-        {providers.map((p) => <option value={p}>{p}</option>)}
-      </select>
+  <!-- 02. EVIDENCE-BACKED METRIC CARDS -->
+  <dl class="hero-stats-grid" aria-label="Benchmark summary statistics">
+    <div class="card stat-card">
+      <dt class="section-kicker">01 · BENCHMARK RUNS</dt>
+      <dd class="stat-value">{enrichedRuns.length}</dd>
+      <dd class="stat-meta">
+        {fullPassCount}/{enrichedRuns.length} completed 7/7 slices · {providers.length} providers
+      </dd>
     </div>
 
-    <div class="control-group">
-      <label class="control-label" for="sort-select">Sort By</label>
-      <select id="sort-select" name="sort" class="control-select">
-        <option value="plan" selected>Plan Completion (S1–S7)</option>
-        <option value="duration">Duration (Time Elapsed)</option>
-        <option value="cost">Total Cost ($)</option>
-        <option value="tokens">Total Tokens (In + Out)</option>
-        <option value="tests">Tests Passed</option>
-        <option value="timestamp">Run Date</option>
-      </select>
-      <button
-        id="sort-dir-btn"
-        type="button"
-        class="sort-dir-btn"
-        data-dir="desc"
-        aria-label="Sort direction: descending. Activate to switch to ascending"
-      >
-        <span aria-hidden="true">↓</span> DESC
-      </button>
+    <div class="card stat-card">
+      <dt class="section-kicker">02 · CODING HARNESSES</dt>
+      <dd class="stat-value">{harnesses.length}</dd>
+      <dd class="stat-meta">
+        CLI, Desktop &amp; Web harnesses · S1–S7 TDD
+      </dd>
+    </div>
+
+    <div class="card stat-card">
+      <dt class="section-kicker">03 · FASTEST RUN</dt>
+      <dd class="stat-value">{formatDuration(fastestMin)}</dd>
+      <dd class="stat-meta">
+        n={enrichedRuns.length} runs · range {formatDuration(fastestMin)}–{formatDuration(slowestMin)}
+      </dd>
+    </div>
+
+    <div class="card stat-card">
+      <dt class="section-kicker">04 · LOWEST COST</dt>
+      <dd class="stat-value">{formatCost(lowestCost)}</dd>
+      <dd class="stat-meta">
+        n={enrichedRuns.length} runs · range {formatCost(lowestCost)}–{formatCost(highestCost)}
+      </dd>
+    </div>
+  </dl>
+
+  <!-- 03. FILTER & SORT COMMAND BAR -->
+  <search class="controls-bar" aria-label="Leaderboard filters and sorting">
+    <div class="controls-search-col">
+      <label class="field-label" for="search-input">Filter Playbook Runs</label>
+      <div class="command-input-wrap">
+        <span class="command-input-prefix">/filter</span>
+        <input
+          id="search-input"
+          name="q"
+          type="search"
+          class="input"
+          placeholder="Harness, model, provider, effort..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+      </div>
+    </div>
+
+    <div class="controls-select-row">
+      <div class="control-field">
+        <label class="field-label" for="harness-filter">Harness</label>
+        <select id="harness-filter" name="harness" class="select control-select">
+          <option value="all">All Harnesses</option>
+          {harnesses.map((h) => <option value={h}>{h}</option>)}
+        </select>
+      </div>
+
+      <div class="control-field">
+        <label class="field-label" for="provider-filter">Provider</label>
+        <select id="provider-filter" name="provider" class="select control-select">
+          <option value="all">All Providers</option>
+          {providers.map((p) => <option value={p}>{p}</option>)}
+        </select>
+      </div>
+
+      <div class="control-field">
+        <label class="field-label" for="sort-select">Sort Metric</label>
+        <div class="sort-control-pair">
+          <select id="sort-select" name="sort" class="select control-select">
+            <option value="plan" selected>Plan Completion (S1–S7)</option>
+            <option value="duration">Duration (Time Elapsed)</option>
+            <option value="cost">Total Cost ($)</option>
+            <option value="tokens">Total Tokens (In + Out)</option>
+            <option value="tests">Tests Passed</option>
+            <option value="timestamp">Run Date</option>
+          </select>
+          <button
+            id="sort-dir-btn"
+            type="button"
+            class="btn btn-sm btn-secondary sort-dir-btn"
+            data-dir="desc"
+            aria-label="Sort direction: descending. Activate to switch to ascending"
+          >
+            <span aria-hidden="true">↓</span> DESC
+          </button>
+        </div>
+      </div>
     </div>
 
     <div
@@ -162,9 +206,9 @@ const lowestCost =
     ></div>
   </search>
 
-  <!-- Leaderboard Table -->
+  <!-- 04. LEADERBOARD DATA TABLE -->
   <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
-    <table class="leaderboard-table" id="leaderboard-table">
+    <table class="app-table leaderboard-table" id="leaderboard-table">
       <caption id="leaderboard-caption" class="visually-hidden">
         Capy Bench evaluation runs ranked by plan completion, tests passed, duration, token usage,
         and cost
@@ -172,7 +216,7 @@ const lowestCost =
       <thead>
         <tr>
           <th scope="col" class="col-rank">Rank</th>
-          <th scope="col">Coding Harness & Model</th>
+          <th scope="col">Coding Harness &amp; Model</th>
           <th scope="col" class="sortable active-sort" data-sort-col="plan" aria-sort="descending">
             <button type="button" class="sort-header-btn">
               <span>Plan Completion</span>
@@ -181,7 +225,7 @@ const lowestCost =
           </th>
           <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
             <button type="button" class="sort-header-btn">
-              <span>Tests & Commits</span>
+              <span>Tests &amp; Commits</span>
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
           </th>
@@ -203,7 +247,7 @@ const lowestCost =
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
           </th>
-          <th scope="col" class="col-details">Details</th>
+          <th scope="col" class="col-details">Action</th>
         </tr>
       </thead>
       <tbody id="leaderboard-tbody">
@@ -248,10 +292,10 @@ const lowestCost =
                     <span class="entry-model">{data.model}</span>
                   </div>
                   <div class="entry-meta">
-                    <span class="badge badge-provider">{data.provider}</span>
-                    {data.effort && <span class="badge badge-effort">Effort: {data.effort}</span>}
+                    <span class="hl hl-sky">{data.provider}</span>
+                    {data.effort && <span class="hl hl-violet">effort:{data.effort}</span>}
                     {data.interface?.type && (
-                      <span class="badge badge-interface">{data.interface.type}</span>
+                      <span class="tag-outline badge-tag">{data.interface.type}</span>
                     )}
                     <time datetime={data.timestamp} class="metric-sub metric-inline">
                       {formatTimestamp(data.timestamp)}
@@ -260,8 +304,28 @@ const lowestCost =
                 </th>
 
                 <td data-cell="Plan Completion">
-                  <div class="metric-primary">
-                    {plan.completed}/{plan.total} stages ({Math.round(plan.ratio * 100)}%)
+                  <div class="plan-cell">
+                    <div class="plan-primary-row">
+                      <span class="metric-primary">
+                        {plan.completed}/{plan.total} stages
+                      </span>
+                      <span
+                        class:list={[
+                          'hl',
+                          'plan-pct-badge',
+                          plan.ratio === 1 ? 'hl-mint' : 'hl-acid',
+                        ]}
+                      >
+                        {Math.round(plan.ratio * 100)}%
+                      </span>
+                    </div>
+                    <div class="stage-strip" aria-hidden="true">
+                      {plan.entries.map(([stageId, done]) => (
+                        <span class:list={['stage-pill', done ? 'done' : 'pending']}>
+                          {stageId}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </td>
 
@@ -296,7 +360,7 @@ const lowestCost =
                           <span>Cache: {data.tokens.cacheHitRate}</span>
                         )}
                         {data.tokens?.cacheHitRate && data.contextWindow && (
-                          <span aria-hidden="true"> • </span>
+                          <span aria-hidden="true"> · </span>
                         )}
                         {data.contextWindow && <span>Ctx: {data.contextWindow}</span>}
                       </div>
@@ -307,11 +371,11 @@ const lowestCost =
                 </td>
 
                 <td data-cell="Cost">
-                  <span class="cost-pill">{formatCost(data.costUsd)}</span>
+                  <span class="hl hl-mint cost-pill">{formatCost(data.costUsd)}</span>
                 </td>
 
-                <td data-cell="Details">
-                  <a href={`/runs/${run.id}`} class="view-btn">
+                <td data-cell="Action">
+                  <a href={`/runs/${run.id}`} class="btn btn-sm btn-secondary view-btn">
                     <span>Inspect</span>
                     <span class="visually-hidden">
                       {' '}

@@ -1,11 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Code } from 'astro:components';
 import {
   BENCHMARK_STAGES,
   BENCHMARK_PLAN,
   BENCHMARK_README_CONTRACT,
   BENCHMARK_PROMPT,
 } from '../data/benchmark';
+
+const shikiResetTransformer = {
+  pre(node: { properties: Record<string, unknown> }) {
+    delete node.properties.style;
+  },
+};
 
 const sampleEndProductOutput = `$ mix deps.get
 $ mix escript.build
@@ -26,57 +33,86 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   description="Methodology, V1 CLI product contract, and S1–S7 Outside-In TDD implementation slices for the Capy Bench Elixir/OTP coding agent benchmark."
   activeNav="about"
 >
-  <section class="hero-card" aria-labelledby="about-hero-heading">
-    <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span aria-hidden="true">📋</span>
-        <span>METHODOLOGY & V1 CLI CONTRACT</span>
-      </div>
-      <h1 id="about-hero-heading" class="hero-title">About Capy Bench</h1>
-      <p class="hero-subtitle">
-        Capy Bench is a backend-focused Elixir/OTP command-line HTTP benchmark (<code>./cb</code>)
-        for macOS and Linux. Every Coding Harness + Model pair is given the same starter repository
-        (<code>README.md</code> V1 product contract, <code>PLAN.md</code> implementation slices{' '}
-        <code>S1</code>–<code>S7</code>, and <code>AGENTS.md</code> conventions) and judged on how
-        cleanly it builds, tests, and verifies the CLI, plus how much time, tokens, and money it
-        consumes.
-      </p>
-      <p class="hero-note">
-        <span class="badge badge-provider">Backend &amp; CLI Focus</span>
-        <span>
+  <!-- 01. NEO-ACID HERO -->
+  <section class="hero-box" aria-labelledby="about-hero-heading">
+    <div class="pixel-mosaic" aria-hidden="true">
+      <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
+      <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
+      <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
+      <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
+      <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+      <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+    </div>
+
+    <div class="row-wrap hero-kicker-row">
+      <span class="hl hl-violet hero-cmd-pill">/spec ./cb &lt;README + PLAN&gt;</span>
+      <span class="section-kicker hero-kicker-inline">METHODOLOGY &amp; V1 CLI CONTRACT</span>
+    </div>
+
+    <h1 id="about-hero-heading" class="headline-two-tone">
+      One starter repo, seven TDD slices.
+      <span class="muted">
+        The rest is the coding agent shipping a real HTTP benchmark CLI.
+      </span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Capy Bench is a backend-focused Elixir/OTP command-line HTTP benchmark (<code>./cb</code>)
+      for macOS and Linux. Every Coding Harness + Model pair receives the identical starter
+      repository (<code>README.md</code> V1 product contract, <code>PLAN.md</code> implementation
+      slices <code>S1</code>–<code>S7</code>, and <code>AGENTS.md</code> conventions) and is judged
+      on completion, test rigor, wall-clock duration, token efficiency, and cost.
+    </p>
+
+    <div class="callout callout-violet hero-callout">
+      <div class="row-wrap">
+        <span class="hl hl-sky">Backend &amp; CLI Focus</span>
+        <span class="hl hl-mint">Outside-In TDD</span>
+        <span class="hero-callout-copy">
           Zero UI/frontend boilerplate — evaluates core backend engineering fundamentals including
           HTTP/TLS networking, local test servers, monotonic rate pacing, in-flight timeout
           cancellation, and OS signal handling (<code>Ctrl-C</code>).
         </span>
-      </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02. CONTRACT PARAMETERS -->
+  <dl class="hero-stats-grid" aria-label="Benchmark specification parameters">
+    <div class="card stat-card">
+      <dt class="section-kicker">01 · CHECKPOINTS</dt>
+      <dd class="stat-value">S1–S7</dd>
+      <dd class="stat-meta">Preparation + 7 sequential TDD slices</dd>
     </div>
 
-    <dl class="hero-stats">
-      <div class="stat-box">
-        <dt class="stat-label">Checkpoints</dt>
-        <dd class="stat-value">S1–S7</dd>
-      </div>
-      <div class="stat-box">
-        <dt class="stat-label">Window / Timeout</dt>
-        <dd class="stat-value">5s / 2s</dd>
-      </div>
-      <div class="stat-box">
-        <dt class="stat-label">Max Requests</dt>
-        <dd class="stat-value">50</dd>
-      </div>
-      <div class="stat-box">
-        <dt class="stat-label">Target Stack</dt>
-        <dd class="stat-value">Elixir</dd>
-      </div>
-    </dl>
-  </section>
+    <div class="card stat-card">
+      <dt class="section-kicker">02 · WINDOW / TIMEOUT</dt>
+      <dd class="stat-value">5s / 2s</dd>
+      <dd class="stat-meta">5s pacing window · 2s per-request cap</dd>
+    </div>
+
+    <div class="card stat-card">
+      <dt class="section-kicker">03 · MAX REQUESTS</dt>
+      <dd class="stat-value">50</dd>
+      <dd class="stat-meta">10 req/sec single-flight GET pacing</dd>
+    </div>
+
+    <div class="card stat-card">
+      <dt class="section-kicker">04 · TARGET STACK</dt>
+      <dd class="stat-value">Elixir</dd>
+      <dd class="stat-meta">OTP escript ./cb · macOS &amp; Linux</dd>
+    </div>
+  </dl>
 
   <div class="section-grid">
     <!-- The S1 - S7 Implementation Plan -->
     <section class="card col-12" id="stages" aria-labelledby="stages-heading">
       <div class="card-title">
-        <h2 id="stages-heading" class="card-heading">1. The Implementation Slices (S1 – S7)</h2>
-        <span class="badge badge-effort">Preparation + 7 Slices • Outside-In TDD</span>
+        <div>
+          <span class="section-kicker">01 · OUTSIDE-IN TDD SLICES</span>
+          <h2 id="stages-heading" class="card-heading">The Implementation Slices (S1 – S7)</h2>
+        </div>
+        <span class="hl hl-violet">Preparation + 7 Slices · Outside-In TDD</span>
       </div>
       <p class="section-lead">
         With <strong>Preparation</strong> (establishing the <code>README.md</code> contract) already
@@ -91,7 +127,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           BENCHMARK_STAGES.map((stage) => (
             <li class="stage-spec-card">
               <div class="stage-spec-header">
-                <span class="stage-pill done">{stage.id}</span>
+                <span class="hl hl-violet">{stage.id}</span>
                 <h3 class="stage-spec-title">{stage.title}</h3>
               </div>
               <p class="stage-spec-desc">{stage.description}</p>
@@ -112,8 +148,11 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     <!-- Glimpse of the End Product -->
     <section class="card col-6" aria-labelledby="end-product-heading">
       <div class="card-title">
-        <h2 id="end-product-heading" class="card-heading">2. Glimpse of the End Product</h2>
-        <span class="badge badge-success">Target State</span>
+        <div>
+          <span class="section-kicker">02 · TARGET CLI OUTPUT</span>
+          <h2 id="end-product-heading" class="card-heading">Glimpse of the End Product</h2>
+        </div>
+        <span class="hl hl-mint">Target State</span>
       </div>
       <p class="section-body-copy">
         A completed run produces the <code>./cb</code> escript executable that paces single-flight
@@ -122,17 +161,28 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
         <code>ceil(p * count)</code>, and handles foreground <code>Ctrl-C</code> gracefully (exit{' '}
         <code>130</code> with a partial summary):
       </p>
-      <pre class="terminal-box" tabindex="0"><code>{sampleEndProductOutput}</code></pre>
+      <Code
+        code={sampleEndProductOutput}
+        lang="bash"
+        theme="ayu-dark"
+        wrap={null}
+        transformers={[shikiResetTransformer]}
+        class="terminal-box"
+      />
     </section>
 
     <!-- How We Judge & Calculate Metrics -->
     <section class="card col-6" aria-labelledby="judging-heading">
       <div class="card-title">
-        <h2 id="judging-heading" class="card-heading">3. How Runs Are Judged</h2>
+        <div>
+          <span class="section-kicker">03 · EVALUATION RUBRIC</span>
+          <h2 id="judging-heading" class="card-heading">How Runs Are Judged</h2>
+        </div>
+        <span class="hl hl-acid">verification rules</span>
       </div>
       <dl class="judging-list">
-        <div class="kpi-box">
-          <dt class="kpi-label">Slice Verification & Release Checks</dt>
+        <div class="callout callout-mint">
+          <dt class="section-kicker callout-kicker">SLICE VERIFICATION &amp; RELEASE CHECKS</dt>
           <dd class="judging-desc">
             Deterministic unit tests verify exact timing rules and percentile ranks, while actual CLI
             tests run against local HTTP/HTTPS servers. After <code>S7</code>, agents must verify{' '}
@@ -141,16 +191,16 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           </dd>
         </div>
 
-        <div class="kpi-box">
-          <dt class="kpi-label">Cache Hit Rate Formula</dt>
+        <div class="callout callout-sky">
+          <dt class="section-kicker callout-kicker">CACHE HIT RATE FORMULA</dt>
           <dd class="judging-desc">
             Calculated as <code>CacheRead / (input + cacheRead + cacheWrite)</code>. High cache hit
             rates drastically reduce cost on long multi-step agent runs.
           </dd>
         </div>
 
-        <div class="kpi-box">
-          <dt class="kpi-label">V1 Discipline & Non-Goals</dt>
+        <div class="callout callout-magenta">
+          <dt class="section-kicker callout-kicker">V1 DISCIPLINE &amp; NON-GOALS</dt>
           <dd class="judging-desc">
             V1 excludes configurable duration/timeout/concurrency, distributed execution, non-GET
             workloads, and dashboards — agents are expected to avoid premature architecture and keep
@@ -163,13 +213,16 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     <!-- Implementation Plan (PLAN.md) -->
     <section class="card col-12 deferred-section" aria-labelledby="plan-spec-heading">
       <div class="card-title">
-        <h2 id="plan-spec-heading" class="card-heading">
-          4. Implementation Plan (PLAN.md)
-        </h2>
+        <div>
+          <span class="section-kicker">04 · IMPLEMENTATION PLAN</span>
+          <h2 id="plan-spec-heading" class="card-heading">
+            Implementation Plan (PLAN.md)
+          </h2>
+        </div>
         <div>
           <button
             type="button"
-            class="copy-btn"
+            class="btn btn-sm btn-secondary"
             id="copy-plan-btn"
             data-prompt={BENCHMARK_PLAN}
           >
@@ -183,19 +236,29 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
-      <pre class="terminal-box" tabindex="0"><code>{BENCHMARK_PLAN}</code></pre>
+      <Code
+        code={BENCHMARK_PLAN}
+        lang="markdown"
+        theme="ayu-dark"
+        wrap={null}
+        transformers={[shikiResetTransformer]}
+        class="terminal-box"
+      />
     </section>
 
     <!-- V1 CLI Contract (README.md) -->
     <section class="card col-12 deferred-section" aria-labelledby="contract-spec-heading">
       <div class="card-title">
-        <h2 id="contract-spec-heading" class="card-heading">
-          5. V1 CLI Product Contract (README.md)
-        </h2>
+        <div>
+          <span class="section-kicker">05 · V1 PRODUCT CONTRACT</span>
+          <h2 id="contract-spec-heading" class="card-heading">
+            V1 CLI Product Contract (README.md)
+          </h2>
+        </div>
         <div>
           <button
             type="button"
-            class="copy-btn"
+            class="btn btn-sm btn-secondary"
             id="copy-contract-btn"
             data-prompt={BENCHMARK_README_CONTRACT}
           >
@@ -209,19 +272,29 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
-      <pre class="terminal-box" tabindex="0"><code>{BENCHMARK_README_CONTRACT}</code></pre>
+      <Code
+        code={BENCHMARK_README_CONTRACT}
+        lang="markdown"
+        theme="ayu-dark"
+        wrap={null}
+        transformers={[shikiResetTransformer]}
+        class="terminal-box"
+      />
     </section>
 
     <!-- Instructions Given to the Coding Agent (PROMPT.md) -->
     <section class="card col-12 deferred-section" aria-labelledby="prompt-spec-heading">
       <div class="card-title">
-        <h2 id="prompt-spec-heading" class="card-heading">
-          6. Instructions Given to the Coding Agent (PROMPT.md)
-        </h2>
+        <div>
+          <span class="section-kicker">06 · AGENT DISPATCH PROMPT</span>
+          <h2 id="prompt-spec-heading" class="card-heading">
+            Instructions Given to the Coding Agent (PROMPT.md)
+          </h2>
+        </div>
         <div>
           <button
             type="button"
-            class="copy-btn"
+            class="btn btn-sm btn-secondary"
             id="copy-prompt-btn"
             data-prompt={BENCHMARK_PROMPT}
           >
@@ -235,7 +308,14 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
-      <pre class="terminal-box" tabindex="0"><code>{BENCHMARK_PROMPT}</code></pre>
+      <Code
+        code={BENCHMARK_PROMPT}
+        lang="markdown"
+        theme="ayu-dark"
+        wrap={null}
+        transformers={[shikiResetTransformer]}
+        class="terminal-box"
+      />
     </section>
   </div>
 </BaseLayout>

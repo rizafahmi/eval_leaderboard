@@ -55,54 +55,66 @@ const maxToolCalls =
 const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.model} by ${d.provider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
 ---
 
-<BaseLayout title={`${d.codingHarness} — ${d.model}`} description={runDescription} ogType="article">
-  <a href="/" class="back-link"><span aria-hidden="true">←</span> Back to Leaderboard</a>
+<BaseLayout
+  title={`${d.codingHarness} — ${d.model}`}
+  breadcrumbLabel={`${d.codingHarness} / ${d.model}`}
+  description={runDescription}
+  ogType="article"
+>
+  <div class="detail-nav-row">
+    <a href="/" class="btn btn-sm btn-secondary">
+      <span aria-hidden="true">←</span> Back to Leaderboard
+    </a>
+    <span class="mono detail-run-id">
+      RUN ID: <code>{entry.id}</code>
+    </span>
+  </div>
 
   <!-- Top Summary Header -->
-  <section class="detail-header-card" aria-labelledby="run-detail-heading">
+  <section class="card detail-header-card" aria-labelledby="run-detail-heading">
     <div class="detail-top-row">
       <div>
         <div class="entry-meta detail-entry-meta">
-          <span class="badge badge-provider">Provider: {d.provider}</span>
-          {d.effort && <span class="badge badge-effort">Effort: {d.effort}</span>}
+          <span class="hl hl-sky">provider:{d.provider}</span>
+          {d.effort && <span class="hl hl-violet">effort:{d.effort}</span>}
           {d.interface?.type && (
-            <span class="badge badge-interface">Interface: {d.interface.type}</span>
+            <span class="hl hl-acid">interface:{d.interface.type}</span>
           )}
-          <span class="badge">
-            <span aria-hidden="true">🕒</span>
+          <span class="tag-outline">
             <time datetime={d.timestamp}>{formatTimestamp(d.timestamp)}</time>
           </span>
         </div>
-        <h1 id="run-detail-heading" class="detail-title">
-          <span>{d.codingHarness}</span>
-          <span class="text-muted-sep" aria-hidden="true">/</span>
-          <span class="mono detail-model">{d.model}</span>
+        <h1 id="run-detail-heading" class="headline-two-tone">
+          {d.codingHarness}
+          <span class="muted">/ {d.model}</span>
         </h1>
       </div>
 
-      <div class="mono detail-run-id">
-        Run ID: <code>{entry.id}</code>
+      <div>
+        <span class:list={['hl', plan.ratio === 1 ? 'hl-mint' : 'hl-acid']}>
+          {plan.ratio === 1 ? 'ALL 7 SLICES PASSED' : `${plan.completed}/${plan.total} SLICES`}
+        </span>
       </div>
     </div>
 
     <dl class="kpi-grid">
       <div class="kpi-box">
-        <dt class="kpi-label">Time Elapsed</dt>
-        <dd class="kpi-val">{formatDuration(d.durationMinutes)}</dd>
+        <dt class="section-kicker">TIME ELAPSED</dt>
+        <dd class="stat-value kpi-val">{formatDuration(d.durationMinutes)}</dd>
         <dd class="kpi-sub">Total wall-clock duration</dd>
       </div>
 
       <div class="kpi-box">
-        <dt class="kpi-label">Estimated Cost</dt>
-        <dd class="kpi-val text-forest">
-          {formatCost(d.costUsd)}
+        <dt class="section-kicker">ESTIMATED COST</dt>
+        <dd class="stat-value kpi-val">
+          <span class="hl hl-mint">{formatCost(d.costUsd)}</span>
         </dd>
         <dd class="kpi-sub">Total run cost (USD)</dd>
       </div>
 
       <div class="kpi-box">
-        <dt class="kpi-label" id="kpi-plan-label">Plan Completion</dt>
-        <dd class="kpi-val">
+        <dt class="section-kicker" id="kpi-plan-label">PLAN COMPLETION</dt>
+        <dd class="stat-value kpi-val">
           {plan.completed}/{plan.total}
         </dd>
         <dd class="kpi-sub">{Math.round(plan.ratio * 100)}% of checkpoints done</dd>
@@ -111,8 +123,8 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
       {
         d.tests && (
           <div class="kpi-box">
-            <dt class="kpi-label">Number of Tests</dt>
-            <dd class="kpi-val">
+            <dt class="section-kicker">TEST SUITE</dt>
+            <dd class="stat-value kpi-val">
               {d.tests.passed}/{d.tests.total}
             </dd>
             <dd class="kpi-sub">
@@ -129,8 +141,8 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
       {
         d.commits !== undefined && (
           <div class="kpi-box">
-            <dt class="kpi-label">Number of Commits</dt>
-            <dd class="kpi-val">{d.commits}</dd>
+            <dt class="section-kicker">GIT COMMITS</dt>
+            <dd class="stat-value kpi-val">{d.commits}</dd>
             <dd class="kpi-sub">Git checkpoints recorded</dd>
           </div>
         )
@@ -142,10 +154,13 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
     <!-- Plan Completion Checklist -->
     <section class="card col-12" aria-labelledby="plan-completion-heading">
       <div class="card-title">
-        <h2 id="plan-completion-heading" class="card-heading">
-          Plan Completion ({plan.completed}/{plan.total})
-        </h2>
-        <a href="/about#stages" class="mono card-action-link">
+        <div>
+          <span class="section-kicker">01 · CHECKPOINT VERIFICATION</span>
+          <h2 id="plan-completion-heading" class="card-heading">
+            Plan Completion ({plan.completed}/{plan.total})
+          </h2>
+        </div>
+        <a href="/about#stages" class="action-link">
           View Stage Specs <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -161,8 +176,8 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
         {
           plan.entries.map(([stageId, completed]) => (
             <li class:list={['plan-item', completed ? 'completed' : 'incomplete']}>
-              <span class="plan-checkbox" aria-hidden="true">
-                {completed ? '[x]' : '[ ]'}
+              <span class:list={['hl', completed ? 'hl-mint' : 'hl-magenta']} aria-hidden="true">
+                {completed ? 'PASS' : 'MISS'}
               </span>
               <div>
                 <div class="mono plan-stage-id">
@@ -187,17 +202,20 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
       hasInterface && (
         <section class="card col-12" aria-labelledby="interface-heading">
           <div class="card-title">
-            <div class="card-title-group">
-              <h2 id="interface-heading" class="card-heading">Command / Interface Used</h2>
-              {d.interface?.type && (
-                <span class="badge badge-interface">{d.interface.type}</span>
-              )}
+            <div>
+              <span class="section-kicker">02 · DISPATCH COMMAND</span>
+              <div class="card-title-group">
+                <h2 id="interface-heading" class="card-heading">Command / Interface Used</h2>
+                {d.interface?.type && (
+                  <span class="hl hl-sky">{d.interface.type}</span>
+                )}
+              </div>
             </div>
             {d.interface?.command && (
               <div>
                 <button
                   type="button"
-                  class="copy-btn"
+                  class="btn btn-sm btn-secondary"
                   id="copy-cmd-btn"
                   data-cmd={d.interface.command}
                 >
@@ -217,7 +235,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
             <Code
               code={d.interface.command}
               lang="bash"
-              theme="gruvbox-dark-medium"
+              theme="ayu-dark"
               wrap={null}
               transformers={[
                 {
@@ -247,27 +265,31 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="token-usage-heading"
         >
           <div class="card-title">
-            <h2 id="token-usage-heading" class="card-heading">Token & Context Usage</h2>
+            <div>
+              <span class="section-kicker">03 · TELEMETRY &amp; CONTEXT</span>
+              <h2 id="token-usage-heading" class="card-heading">Token &amp; Context Usage</h2>
+            </div>
+            <span class="hl hl-violet">token telemetry</span>
           </div>
 
           <dl class="kpi-grid">
             {d.tokens?.input && (
               <div class="kpi-box">
-                <dt class="kpi-label">Input (Uncached)</dt>
+                <dt class="section-kicker">INPUT (UNCACHED)</dt>
                 <dd class="kpi-val">{d.tokens.input}</dd>
               </div>
             )}
 
             {d.tokens?.cachedInput && (
               <div class="kpi-box">
-                <dt class="kpi-label">Cached Input</dt>
+                <dt class="section-kicker">CACHED INPUT</dt>
                 <dd class="kpi-val">{d.tokens.cachedInput}</dd>
               </div>
             )}
 
             {d.tokens?.output && (
               <div class="kpi-box">
-                <dt class="kpi-label">Output Tokens</dt>
+                <dt class="section-kicker">OUTPUT TOKENS</dt>
                 <dd class="kpi-val">{d.tokens.output}</dd>
                 {d.tokens?.thinking && (
                   <dd class="kpi-sub">incl. {d.tokens.thinking} thinking</dd>
@@ -277,7 +299,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
 
             {d.tokens?.total && (
               <div class="kpi-box">
-                <dt class="kpi-label">Total Tokens</dt>
+                <dt class="section-kicker">TOTAL TOKENS</dt>
                 <dd class="kpi-val">{d.tokens.total}</dd>
                 <dd class="kpi-sub">incl. cached reads</dd>
               </div>
@@ -285,8 +307,10 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
 
             {d.tokens?.cacheHitRate && (
               <div class="kpi-box kpi-span-2">
-                <dt class="kpi-label">Cache Hit Rate</dt>
-                <dd class="kpi-val text-forest">{d.tokens.cacheHitRate}</dd>
+                <dt class="section-kicker">CACHE HIT RATE</dt>
+                <dd class="kpi-val">
+                  <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
+                </dd>
                 <dd class="kpi-sub">
                   Formula: <code>CacheRead / (input + cacheRead + cacheWrite)</code>
                 </dd>
@@ -295,7 +319,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
 
             {d.contextWindow && (
               <div class="kpi-box kpi-span-2">
-                <dt class="kpi-label">Context Window Usage</dt>
+                <dt class="section-kicker">CONTEXT WINDOW USAGE</dt>
                 <dd class="kpi-val kpi-val-compact">{d.contextWindow}</dd>
               </div>
             )}
@@ -312,13 +336,17 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="calls-breakdown-heading"
         >
           <div class="card-title">
-            <h2 id="calls-breakdown-heading" class="card-heading">Calls & Tool Breakdown</h2>
+            <div>
+              <span class="section-kicker">04 · AGENT LOOP CALLS</span>
+              <h2 id="calls-breakdown-heading" class="card-heading">Calls &amp; Tool Breakdown</h2>
+            </div>
+            <span class="hl hl-sky">tool loop</span>
           </div>
 
           <dl class="kpi-grid kpi-grid-spaced">
             {d.calls?.llmCalls !== undefined && (
               <div class="kpi-box">
-                <dt class="kpi-label">LLM API Calls</dt>
+                <dt class="section-kicker">LLM API CALLS</dt>
                 <dd class="kpi-val">{d.calls.llmCalls}</dd>
                 <dd class="kpi-sub">completed agent_response steps</dd>
               </div>
@@ -326,16 +354,15 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
 
             {d.calls?.toolCalls?.total !== undefined && (
               <div class="kpi-box">
-                <dt class="kpi-label">Tool Calls</dt>
+                <dt class="section-kicker">TOOL CALLS</dt>
                 <dd class="kpi-val">{d.calls.toolCalls.total}</dd>
                 <dd class="kpi-sub">
                   {d.calls.toolCalls.done !== undefined && (
                     <span>{d.calls.toolCalls.done} DONE</span>
                   )}
                   {d.calls.toolCalls.error !== undefined && d.calls.toolCalls.error > 0 && (
-                    <span class="tool-err-inline">
-                      {' '}
-                      • {d.calls.toolCalls.error} ERROR
+                    <span class="hl hl-magenta tool-err-pill">
+                      {d.calls.toolCalls.error} ERROR
                     </span>
                   )}
                 </dd>
@@ -344,18 +371,20 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           </dl>
 
           {d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0 && (
-            <ul class="tool-list" role="list">
+            <ul class="command-list tool-list" role="list">
               {d.calls.toolCalls.breakdown.map((item, idx) => {
                 const doneCount = item.done ?? item.total - (item.error ?? 0);
                 const errCount = item.error ?? 0;
                 const labelId = `tool-label-${idx}`;
 
                 return (
-                  <li class="tool-row">
+                  <li class="command-row tool-row">
                     <div class="tool-row-header">
                       <span class="tool-name" id={labelId}>
-                        <span aria-hidden="true">• </span>
-                        {item.tool}
+                        <span class="prefix">tool/</span>
+                        <span class:list={['hl', errCount > 0 ? 'hl-magenta' : 'hl-acid']}>
+                          {item.tool}
+                        </span>
                       </span>
                       <div class="tool-counts">
                         <strong>{item.total}</strong>
@@ -390,7 +419,11 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="cost-breakdown-heading"
         >
           <div class="card-title">
-            <h2 id="cost-breakdown-heading" class="card-heading">Estimated Cost Breakdown</h2>
+            <div>
+              <span class="section-kicker">05 · COST MATRIX</span>
+              <h2 id="cost-breakdown-heading" class="card-heading">Estimated Cost Breakdown</h2>
+            </div>
+            <span class="hl hl-mint">USD pricing</span>
           </div>
           <div
             class="table-wrapper table-wrapper-flat"
@@ -398,7 +431,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
             role="region"
             aria-labelledby="cost-breakdown-heading"
           >
-            <table class="leaderboard-table static-table">
+            <table class="app-table leaderboard-table static-table">
               <caption class="visually-hidden">
                 Token volume and estimated cost breakdown comparing 2026 and 2027 pricing rates
               </caption>
@@ -421,7 +454,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
                     <td class="mono" data-cell="Tokens">{row.tokens}</td>
                     <td class="mono" data-cell="Rate (2026)">{row.rate2026 ?? '—'}</td>
                     <td class="mono" data-cell="Cost (2026)">
-                      <strong>{row.cost2026}</strong>
+                      <span class="hl hl-mint">{row.cost2026}</span>
                     </td>
                     <td class="mono" data-cell="Rate (2027)">{row.rate2027 ?? '—'}</td>
                     <td class="mono" data-cell="Cost (2027)">{row.cost2027 ?? '—'}</td>
@@ -442,7 +475,11 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="slice-breakdown-heading"
         >
           <div class="card-title">
-            <h2 id="slice-breakdown-heading" class="card-heading">Slice / Phase Breakdown</h2>
+            <div>
+              <span class="section-kicker">06 · SLICE TELEMETRY</span>
+              <h2 id="slice-breakdown-heading" class="card-heading">Slice / Phase Breakdown</h2>
+            </div>
+            <span class="hl hl-violet">per-stage metrics</span>
           </div>
           <div
             class="table-wrapper table-wrapper-flat"
@@ -450,7 +487,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
             role="region"
             aria-labelledby="slice-breakdown-heading"
           >
-            <table class="leaderboard-table static-table">
+            <table class="app-table leaderboard-table static-table">
               <caption class="visually-hidden">
                 Per-stage slice breakdown of step ranges, LLM calls, task polls, thinking tokens, and
                 cost
@@ -478,7 +515,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
                       {row.thinkingTokens?.toLocaleString() ?? '—'}
                     </td>
                     <td class="mono" data-cell="Cost (2026)">
-                      <span class="cost-pill">{formatCost(row.costUsd)}</span>
+                      <span class="hl hl-mint cost-pill">{formatCost(row.costUsd)}</span>
                     </td>
                   </tr>
                 ))}
@@ -497,9 +534,13 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="git-commits-heading"
         >
           <div class="card-title">
-            <h2 id="git-commits-heading" class="card-heading">
-              Git Commits ({d.commitLog!.length})
-            </h2>
+            <div>
+              <span class="section-kicker">07 · GIT CHECKPOINTS</span>
+              <h2 id="git-commits-heading" class="card-heading">
+                Git Commits ({d.commitLog!.length})
+              </h2>
+            </div>
+            <span class="hl hl-acid">git log</span>
           </div>
           <pre class="terminal-box" tabindex="0"><code>{commitLogText}</code></pre>
         </section>
@@ -515,16 +556,19 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           aria-labelledby="notes-findings-heading"
         >
           <div class="card-title">
-            <div class="card-title-group">
-              <h2 id="notes-findings-heading" class="card-heading">Notes & Key Findings</h2>
-              <span class="badge badge-effort">
-                {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} findings
-              </span>
+            <div>
+              <span class="section-kicker">08 · FIELD NOTES</span>
+              <div class="card-title-group">
+                <h2 id="notes-findings-heading" class="card-heading">Notes &amp; Key Findings</h2>
+                <span class="hl hl-violet">
+                  {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} findings
+                </span>
+              </div>
             </div>
             {hasNotesDetails && d.notesDetails!.length > 1 && (
               <button
                 type="button"
-                class="copy-btn"
+                class="btn btn-sm btn-secondary"
                 id="toggle-notes-btn"
                 aria-expanded="false"
               >
@@ -539,7 +583,9 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
                 <li class="note-card">
                   <details class="note-disclosure" open={idx === 0}>
                     <summary class="note-summary">
-                      <span class="note-num" aria-hidden="true">{idx + 1}</span>
+                      <span class="hl hl-acid note-num" aria-hidden="true">
+                        {String(idx + 1).padStart(2, '0')}
+                      </span>
                       <strong class="note-title">
                         {tokenizeNoteText(note.title).map((seg) =>
                           seg.type === 'code' ? (
@@ -550,7 +596,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
                         )}
                       </strong>
                       <span class="note-summary-meta">
-                        <span class="badge note-count-badge">
+                        <span class="tag-outline note-count-badge">
                           {note.bullets.length} {note.bullets.length === 1 ? 'point' : 'points'}
                         </span>
                         <span class="note-chevron" aria-hidden="true">▸</span>
@@ -608,7 +654,9 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
             <ol class="notes-list" role="list">
               {d.notes!.map((note, idx) => (
                 <li class="note-item">
-                  <span class="note-num" aria-hidden="true">{idx + 1}</span>
+                  <span class="hl hl-acid note-num" aria-hidden="true">
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
                   <span>
                     {tokenizeNoteText(note).map((seg) =>
                       seg.type === 'code' ? (

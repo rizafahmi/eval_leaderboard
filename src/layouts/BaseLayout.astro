@@ -1,10 +1,17 @@
 ---
+import '@fontsource/unbounded/latin-800.css';
+import '@fontsource/schibsted-grotesk/latin-400.css';
+import '@fontsource/schibsted-grotesk/latin-700.css';
+import '@fontsource/martian-mono/latin-400.css';
+import '@fontsource/martian-mono/latin-700.css';
+import '../styles/tokens.css';
 import '../styles/global.css';
 
 interface Props {
   title: string;
   description?: string;
   activeNav?: 'leaderboard' | 'about';
+  breadcrumbLabel?: string;
   ogType?: 'website' | 'article';
   ogImage?: string;
   ogImageAlt?: string;
@@ -17,6 +24,7 @@ const {
   title,
   description = DEFAULT_DESCRIPTION,
   activeNav,
+  breadcrumbLabel,
   ogType = 'website',
   ogImage = '/og-image.png',
   ogImageAlt = 'Capy Bench Leaderboard — Personal coding agent and LLM benchmark for Elixir/OTP CLI engineering (S1–S7)',
@@ -49,15 +57,24 @@ const jsonLd = {
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      try {
+        const saved = localStorage.getItem('neo-acid-theme');
+        const theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        const meta = document.querySelector('meta[name="color-scheme"]');
+        if (meta) meta.setAttribute('content', theme);
+      } catch {}
+    </script>
     <meta name="text-scale" content="scale" />
-    <meta name="theme-color" content="#c86d51" />
-    <meta name="theme-color" content="#fbf8f3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#121519" />
+    <meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121519" media="(prefers-color-scheme: dark)" />
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -96,12 +113,6 @@ const jsonLd = {
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@700;800&display=swap"
-      rel="stylesheet"
-    />
     <script type="speculationrules" is:inline>
       {
         "prefetch": [
@@ -124,46 +135,183 @@ const jsonLd = {
   <body>
     <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>
 
-    <header class="site-header">
-      <div class="container header-inner">
-        <a href="/" class="brand-link">
-          <span class="brand-logo" aria-hidden="true">🦫</span>
-          <span>Capy Bench</span>
-          <span class="brand-tag">Personal Eval</span>
+    <div class="app-shell">
+      <header class="app-navbar">
+        <a href="/" class="app-brand">
+          <span class="app-brand-mark" aria-hidden="true">
+            <span class="mark-cell mark-acid"></span>
+            <span class="mark-cell mark-ebony"></span>
+            <span class="mark-cell mark-mint"></span>
+            <span class="mark-cell mark-violet"></span>
+          </span>
+          <span>CAPY.BENCH</span>
+          <span class="hl hl-acid brand-pill">S1–S7</span>
         </a>
-        <nav class="site-nav" aria-label="Main">
-          <a
-            href="/"
-            class:list={['nav-link', { active: activeNav === 'leaderboard' }]}
-            aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
-          >
-            Leaderboard
-          </a>
-          <a
-            href="/about"
-            class:list={['nav-link', { active: activeNav === 'about' }]}
-            aria-current={activeNav === 'about' ? 'page' : undefined}
-          >
-            About & Tasks
-          </a>
+
+        <nav aria-label="Main">
+          <ul class="app-nav-links">
+            <li>
+              <a
+                href="/"
+                class:list={['app-nav-item', { 'is-active': activeNav === 'leaderboard' }]}
+                aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
+              >
+                Leaderboard
+              </a>
+            </li>
+            <li>
+              <a
+                href="/about"
+                class:list={['app-nav-item', { 'is-active': activeNav === 'about' }]}
+                aria-current={activeNav === 'about' ? 'page' : undefined}
+              >
+                About &amp; Specs
+              </a>
+            </li>
+          </ul>
         </nav>
-      </div>
-    </header>
 
-    <main id="main-content" tabindex="-1">
-      <div class="container">
-        <slot />
-      </div>
-    </main>
-
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <div>
-          <strong>🦫 Capy Bench Leaderboard</strong> — A personal coding agent & LLM evaluation
-          project. Results reflect single-task runs on an opinionated personal benchmark, not a
-          scientific or industry-wide study.
+        <div class="row-wrap">
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            id="toggle-theme"
+            aria-label="Toggle color theme"
+          >
+            Theme: <span id="theme-label">Dark</span>
+          </button>
         </div>
+      </header>
+
+      <!-- Sub-nav: Breadcrumbs + Spec Telemetry Bar -->
+      <div class="subnav-bar">
+        <ol class="app-breadcrumbs" aria-label="Breadcrumb">
+          <li><a href="/">eval.rizafahmi.com</a></li>
+          <li aria-hidden="true">/</li>
+          {
+            activeNav === 'leaderboard' ? (
+              <li>
+                <span class="hl hl-acid">Leaderboard</span>
+              </li>
+            ) : activeNav === 'about' ? (
+              <li>
+                <span class="hl hl-violet">About &amp; S1–S7 Contract</span>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <a href="/">Runs</a>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <span class="hl hl-mint">{breadcrumbLabel ?? title}</span>
+                </li>
+              </>
+            )
+          }
+        </ol>
+        <span class="subnav-meta">
+          Elixir/OTP CLI · Outside-In TDD · Neo-Acid v1.0
+        </span>
       </div>
-    </footer>
+
+      <main id="main-content" tabindex="-1">
+        <slot />
+      </main>
+
+      <footer class="app-footer">
+        <div class="app-footer-grid">
+          <div>
+            <a href="/" class="app-brand footer-brand">
+              <span class="app-brand-mark" aria-hidden="true">
+                <span class="mark-cell mark-acid"></span>
+                <span class="mark-cell mark-ebony"></span>
+                <span class="mark-cell mark-mint"></span>
+                <span class="mark-cell mark-violet"></span>
+              </span>
+              <span>CAPY.BENCH</span>
+            </a>
+            <p class="footer-blurb">
+              Personal coding agent &amp; LLM evaluation harness tracking end-to-end Elixir/OTP CLI
+              engineering across stages S1–S7.
+            </p>
+            <div class="footer-status">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span>ALL BENCHMARK TELEMETRY VERIFIED</span>
+            </div>
+          </div>
+
+          <div class="app-footer-col">
+            <span class="section-kicker">NAVIGATION</span>
+            <ul>
+              <li><a href="/">Leaderboard Table</a></li>
+              <li><a href="/about">Methodology &amp; Judging</a></li>
+              <li><a href="/about#stages">Slices S1–S7</a></li>
+              <li><a href="/about#contract-spec-heading">V1 CLI Contract</a></li>
+            </ul>
+          </div>
+
+          <div class="app-footer-col">
+            <span class="section-kicker">BENCHMARK SLICES</span>
+            <ul>
+              <li><a href="/about#stages">/cb S1–S2 CLI &amp; HTTP</a></li>
+              <li><a href="/about#stages">/cb S3–S4 Pacing &amp; TLS</a></li>
+              <li><a href="/about#stages">/cb S5–S6 Timeout &amp; p95</a></li>
+              <li><a href="/about#stages">/cb S7 SIGINT Ctrl-C</a></li>
+            </ul>
+          </div>
+
+          <div class="app-footer-col">
+            <span class="section-kicker">COLOPHON</span>
+            <ul>
+              <li><a href="https://rizafahmi.com">rizafahmi.com</a></li>
+              <li><a href="/about#prompt-spec-heading">Agent Prompt (PROMPT.md)</a></li>
+              <li><a href="/about#plan-spec-heading">TDD Plan (PLAN.md)</a></li>
+              <li><a href="#main-content">Back to top ↑</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="app-footer-colophon">
+          <span>capy-bench · single-task field evaluations (S1–S7)</span>
+          <span>rizafahmi.com · Neo-Acid Design System</span>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      const html = document.documentElement;
+      const toggleBtn = document.getElementById('toggle-theme');
+      const themeLabel = document.getElementById('theme-label');
+      const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+
+      function syncThemeUI(theme: string) {
+        if (themeLabel) {
+          themeLabel.textContent = theme === 'light' ? 'Light' : 'Dark';
+        }
+        if (metaColorScheme) {
+          metaColorScheme.setAttribute('content', theme);
+        }
+      }
+
+      syncThemeUI(html.getAttribute('data-theme') || 'dark');
+
+      toggleBtn?.addEventListener('click', () => {
+        const current = html.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        syncThemeUI(next);
+        try {
+          localStorage.setItem('neo-acid-theme', next);
+        } catch {}
+      });
+
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'neo-acid-theme' && (e.newValue === 'light' || e.newValue === 'dark')) {
+          html.setAttribute('data-theme', e.newValue);
+          syncThemeUI(e.newValue);
+        }
+      });
+    </script>
   </body>
 </html>
