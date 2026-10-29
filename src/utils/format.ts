@@ -71,6 +71,50 @@ export function parseTokenString(val?: string): number {
   return num;
 }
 
+export function formatCompactContextWindow(val?: string): string | null {
+  if (!val) return null;
+  const peakMatch = val.match(/(~?[0-9]+(?:\.[0-9]+)?[kKmM])\s*peak/i);
+  if (peakMatch) {
+    return `${peakMatch[1]} peak`;
+  }
+  const withoutParens = val.replace(/\s*\([^)]*\)/g, '').trim();
+  return withoutParens || val;
+}
+
+const HARNESS_DISPLAY_MAP: Record<string, string> = {
+  antigravity: 'Antigravity',
+  'antigravity cli': 'Antigravity CLI',
+  'codex cli': 'Codex CLI',
+  'cursor-agent cli': 'Cursor Agent CLI',
+  pi: 'Pi',
+  zcode: 'ZCode',
+};
+
+export function formatHarnessName(name: string): string {
+  const key = name.trim().toLowerCase();
+  if (HARNESS_DISPLAY_MAP[key]) {
+    return HARNESS_DISPLAY_MAP[key];
+  }
+  return name.replace(/\bcli\b/gi, 'CLI');
+}
+
+const PROVIDER_DISPLAY_MAP: Record<string, string> = {
+  cursor: 'Cursor',
+  gemini: 'Gemini',
+  meta: 'Meta',
+  'openai-codex': 'OpenAI Codex',
+  openrouter: 'OpenRouter',
+  'z.ai': 'Z.ai',
+};
+
+export function formatProviderName(name: string): string {
+  const key = name.trim().toLowerCase();
+  if (PROVIDER_DISPLAY_MAP[key]) {
+    return PROVIDER_DISPLAY_MAP[key];
+  }
+  return name;
+}
+
 export function getPlanStats(planCompletion: Record<string, boolean>) {
   const entries = Object.entries(planCompletion).sort(([a], [b]) =>
     a.localeCompare(b, undefined, { numeric: true })
