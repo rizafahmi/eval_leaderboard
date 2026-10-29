@@ -7,7 +7,7 @@
 - **Framework**: [Astro 7](https://astro.build/) (`output: 'static'`)
 - **Language**: TypeScript (`astro/tsconfigs/strict`)
 - **Data Layer**: Astro Content Collections (`src/content.config.ts`) using `glob` loader and Zod schemas over JSON files in `src/content/runs/`
-- **Styling**: Custom CSS (`src/styles/global.css`) + scoped Astro component styles
+- **Design System**: [Neo-Acid](./DESIGN.md) (`src/styles/tokens.css` + `src/styles/global.css`) — Dark-first Obsidian Clay (`#121519`) / Raw Gallery Plaster (`#f7f7f5`), `Unbounded 800` two-tone headlines, 5 semantic highlighter swatches (`--hl-*`), dual `2px`/`4px` + `1px` borders, `0px` radius, zero shadows/gradients
 - **Package Manager**: `pnpm`
 
 ## Operating the Project

@@ -5,14 +5,15 @@
 **Personal coding agent & LLM benchmark evaluating end-to-end Elixir/OTP CLI engineering (`S1`–`S7`) on plan completion, test pass rates, token efficiency, wall-clock duration, and real cost.**
 
 [![CI Build & Deploy](https://github.com/rizafahmi/eval_leaderboard/actions/workflows/ci.yml/badge.svg)](https://github.com/rizafahmi/eval_leaderboard/actions/workflows/ci.yml)
-[![Live Leaderboard](https://img.shields.io/badge/Live_Site-eval.rizafahmi.com-c86d51?logo=googlechrome&logoColor=white)](https://eval.rizafahmi.com)
+[![Live Leaderboard](https://img.shields.io/badge/Live_Site-eval.rizafahmi.com-c5f82a?logo=googlechrome&logoColor=0a0b0d&labelColor=121519)](https://eval.rizafahmi.com)
+[![Design System](https://img.shields.io/badge/Design_System-Neo--Acid-a984ff?labelColor=121519)](./DESIGN.md)
 [![Astro](https://img.shields.io/badge/Astro-7.4.2-ff5d01?logo=astro&logoColor=white)](https://astro.build/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Schema Validation](https://img.shields.io/badge/Schema-Zod-3e67b1?logo=zod&logoColor=white)](https://zod.dev/)
-[![Syntax Highlighting](https://img.shields.io/badge/Shiki-4.5.0-1f2937?logo=markdown&logoColor=white)](https://shiki.style/)
+[![Syntax Highlighting](https://img.shields.io/badge/Shiki-ayu--dark-121519?logo=markdown&logoColor=c5f82a)](https://shiki.style/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Package Manager](https://img.shields.io/badge/pnpm-12-f69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
-[![Deploy](https://img.shields.io/badge/Deploy-GitHub_Pages-222222?logo=githubpages&logoColor=white)](https://eval.rizafahmi.com)
+[![Deploy](https://img.shields.io/badge/Deploy-GitHub_Pages-121519?logo=githubpages&logoColor=white)](https://eval.rizafahmi.com)
 [![Benchmark Target](https://img.shields.io/badge/Target_Stack-Elixir_%2F_OTP_CLI-4b275f?logo=elixir&logoColor=white)](https://eval.rizafahmi.com/about)
 
 [🌐 **Live Leaderboard**](https://eval.rizafahmi.com) • [📋 **Methodology & Specs**](https://eval.rizafahmi.com/about) • [🚀 **Getting Started**](#-getting-started) • [➕ **Add a Run**](#-adding-a-benchmark-run) • [📂 **Project Structure**](#-project-structure)
@@ -51,7 +52,7 @@
 - 🏆 **Interactive Leaderboard (`/`)** — Client-side search across harness, model, provider, and effort level; dropdown filters for **Coding Harness** and **Model Provider**; and multi-column sorting (**Plan Completion**, **Tests & Commits**, **Duration**, **Token Usage**, **Cost**, and **Run Date**) powered by the View Transitions API and DOM state preservation (`moveBefore`).
 - 🔍 **Detailed Run Inspection (`/runs/[id]`)** — Deep-dive telemetry for each run:
   - `S1`–`S7` progress bar and stage completion checklist
-  - Copyable CLI invocation command and harness environment details (highlighted with Shiki `gruvbox-dark-medium`)
+  - Copyable CLI invocation command and harness environment details (highlighted with Shiki `ayu-dark`)
   - Uncached input, cached input, output, thinking tokens, cache hit rate, and peak context window usage
   - LLM API call counts and per-tool call breakdown (`DONE` vs `ERROR` progress bars)
   - Token volume and estimated cost tables comparing **2026** and **2027** pricing rates
@@ -147,8 +148,8 @@ Complete all @PLAN.md work in this conversation.
 | ⚡ **Framework** | [Astro 7.4](https://astro.build/) (`output: 'static'`) | Zero-JS-by-default static site generation |
 | 🔷 **Language** | [TypeScript 5.9](https://www.typescriptlang.org/) (`astro/tsconfigs/strict`) | Type-safe templates, utilities, and content schemas |
 | 🗃️ **Content Layer** | Astro Content Collections + [Zod](https://zod.dev/) | Build-time `glob` loading & schema validation of `src/content/runs/*.json` |
-| 🎨 **Syntax Highlighting** | [Shiki 4.5](https://shiki.style/) | Server-rendered command highlighting (`gruvbox-dark-medium`) |
-| 💅 **Styling & UI** | Custom CSS (`src/styles/global.css`) | Neo-brutalist theme, CSS Cascade Layers, `light-dark()` palette, Container Queries, View Transitions |
+| 🎨 **Syntax Highlighting** | [Shiki 4.5](https://shiki.style/) | Server-rendered command & markdown highlighting (`ayu-dark`) |
+| 💅 **Design System** | [Neo-Acid](./DESIGN.md) (`src/styles/tokens.css` + `src/styles/global.css`) | Dark-first Obsidian Clay (`#121519`) / Raw Plaster (`#f7f7f5`), `Unbounded 800` two-tone headlines, 5 semantic highlighter swatches (`--hl-*`), `0px` radius |
 | 🚀 **Navigation & Perf** | Speculation Rules API + View Transitions | Eager prefetching, moderate prerendering, and smooth table sorting/page transitions |
 | 📦 **Package Manager** | [pnpm 12](https://pnpm.io/) | Fast, deterministic dependency management (`--frozen-lockfile` in CI) |
 | 🌐 **Deployment** | GitHub Actions → GitHub Pages | Automated build, schema validation, and deployment to [`eval.rizafahmi.com`](https://eval.rizafahmi.com) |
