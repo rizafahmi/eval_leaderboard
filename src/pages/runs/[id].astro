@@ -51,9 +51,11 @@ const maxToolCalls =
   d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0
     ? Math.max(...d.calls.toolCalls.breakdown.map((b) => b.total))
     : 1;
+
+const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.model} by ${d.provider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
 ---
 
-<BaseLayout title={`${d.codingHarness} — ${d.model}`}>
+<BaseLayout title={`${d.codingHarness} — ${d.model}`} description={runDescription} ogType="article">
   <a href="/" class="back-link"><span aria-hidden="true">←</span> Back to Leaderboard</a>
 
   <!-- Top Summary Header -->

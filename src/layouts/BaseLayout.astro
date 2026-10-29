@@ -5,13 +5,47 @@ interface Props {
   title: string;
   description?: string;
   activeNav?: 'leaderboard' | 'about';
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  ogImageAlt?: string;
 }
+
+const DEFAULT_DESCRIPTION =
+  'Capy Bench — Personal coding agent & LLM benchmark evaluating end-to-end Elixir/OTP CLI engineering (S1–S7) on completion, tests, tokens, and cost.';
 
 const {
   title,
-  description = 'Capy Bench — Personal Coding Agent & LLM Evaluation Leaderboard',
+  description = DEFAULT_DESCRIPTION,
   activeNav,
+  ogType = 'website',
+  ogImage = '/og-image.png',
+  ogImageAlt = 'Capy Bench Leaderboard — Personal coding agent and LLM benchmark for Elixir/OTP CLI engineering (S1–S7)',
 } = Astro.props;
+
+const siteOrigin = (Astro.site ?? new URL('https://eval.rizafahmi.com')).origin;
+const pathname = Astro.url.pathname.replace(/\/+$/, '');
+const canonicalUrl = pathname ? `${siteOrigin}${pathname}` : siteOrigin;
+const fullTitle = `${title} | Capy Bench`;
+const ogImageUrl = new URL(ogImage, siteOrigin).toString();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: fullTitle,
+  description,
+  url: canonicalUrl,
+  inLanguage: 'en-US',
+  isPartOf: {
+    '@type': 'WebSite',
+    name: 'Capy Bench',
+    url: siteOrigin,
+  },
+  author: {
+    '@type': 'Person',
+    name: 'Riza Fahmi',
+    url: 'https://rizafahmi.com',
+  },
+};
 ---
 
 <!doctype html>
@@ -21,8 +55,47 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="text-scale" content="scale" />
-    <title>{title} | Capy Bench</title>
+    <meta name="theme-color" content="#c86d51" />
+    <meta name="theme-color" content="#fbf8f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)" />
+
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Favicons & Web App Manifest -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="Capy Bench" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogImageAlt} />
+
+    <!-- X / Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@rizafahmi" />
+    <meta name="twitter:creator" content="@rizafahmi" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
