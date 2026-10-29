@@ -6,6 +6,8 @@ import {
   formatDuration,
   formatCost,
   formatTimestamp,
+  formatHarnessName,
+  formatProviderName,
   getPlanStats,
   parseNoteBullet,
   tokenizeNoteText,
@@ -52,12 +54,14 @@ const maxToolCalls =
     ? Math.max(...d.calls.toolCalls.breakdown.map((b) => b.total))
     : 1;
 
-const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.model} by ${d.provider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
+const displayHarness = formatHarnessName(d.codingHarness);
+const displayProvider = formatProviderName(d.provider);
+const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.model} by ${displayProvider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
 ---
 
 <BaseLayout
-  title={`${d.codingHarness} — ${d.model}`}
-  breadcrumbLabel={`${d.codingHarness} / ${d.model}`}
+  title={`${displayHarness} — ${d.model}`}
+  breadcrumbLabel={`${displayHarness} / ${d.model}`}
   description={runDescription}
   ogType="article"
 >
@@ -75,7 +79,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
     <div class="detail-top-row">
       <div>
         <div class="entry-meta detail-entry-meta">
-          <span class="hl hl-sky">provider:{d.provider}</span>
+          <span class="hl hl-sky">provider:{displayProvider}</span>
           {d.effort && <span class="hl hl-violet">effort:{d.effort}</span>}
           {d.interface?.type && (
             <span class="hl hl-acid">interface:{d.interface.type}</span>
@@ -85,7 +89,7 @@ const runDescription = `Capy Bench evaluation run for ${d.codingHarness} (${d.mo
           </span>
         </div>
         <h1 id="run-detail-heading" class="headline-two-tone">
-          {d.codingHarness}
+          {displayHarness}
           <span class="muted">/ {d.model}</span>
         </h1>
       </div>
