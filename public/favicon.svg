@@ -1,35 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <style>
-    .bg { fill: #c86d51; stroke: #2c221e; }
-    .shadow { fill: #2c221e; }
-    .ear { fill: #754632; stroke: #2c221e; }
-    .head { fill: #a96846; stroke: #2c221e; }
-    .snout { fill: #8c5236; stroke: #2c221e; }
-    .eye, .nostril { fill: #241c18; }
-    .highlight { fill: #fffdf9; }
-    @media (prefers-color-scheme: dark) {
-      .bg { fill: #ee8462; stroke: #f5f2eb; }
-      .shadow { fill: #080807; }
-      .ear { fill: #693d2b; stroke: #141413; }
-      .head { fill: #b57350; stroke: #141413; }
-      .snout { fill: #915538; stroke: #141413; }
-    }
-  </style>
-  <!-- Neo-brutalist offset shadow -->
-  <rect class="shadow" x="8" y="8" width="50" height="50" rx="14" />
-  <!-- Badge background -->
-  <rect class="bg" x="5" y="5" width="50" height="50" rx="14" stroke-width="3.5" />
-  <!-- Capybara ears -->
-  <circle class="ear" cx="20" cy="19" r="5.5" stroke-width="2.5" />
-  <circle class="ear" cx="38" cy="19" r="5.5" stroke-width="2.5" />
-  <!-- Capybara head -->
-  <rect class="head" x="15" y="18" width="30" height="25" rx="11" stroke-width="2.8" />
-  <!-- Snout -->
-  <rect class="snout" x="28" y="24" width="19" height="15" rx="7" stroke-width="2.5" />
-  <!-- Eye -->
-  <circle class="eye" cx="23" cy="26" r="2.4" />
-  <circle class="highlight" cx="22.3" cy="25.2" r="0.8" />
-  <!-- Nostrils & mouth -->
-  <ellipse class="nostril" cx="41" cy="29" rx="1.6" ry="2.2" />
-  <path d="M 39 35 Q 41 37 43 35" fill="none" stroke="#241c18" stroke-width="2" stroke-linecap="round" />
+  <rect x="2" y="2" width="60" height="60" fill="#121519" stroke="#434a56" stroke-width="4" />
+  <rect x="6" y="6" width="26" height="26" fill="#c5f82a" />
+  <rect x="32" y="6" width="26" height="26" fill="#0a0b0d" />
+  <rect x="6" y="32" width="26" height="26" fill="#5ae67a" />
+  <rect x="32" y="32" width="26" height="26" fill="#a984ff" />
 </svg>

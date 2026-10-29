@@ -4,8 +4,8 @@
   "description": "Capy Bench — Personal coding agent & LLM benchmark evaluating end-to-end Elixir/OTP CLI engineering (S1–S7) on completion, tests, tokens, and cost.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbf8f3",
-  "theme_color": "#c86d51",
+  "background_color": "#121519",
+  "theme_color": "#c5f82a",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
