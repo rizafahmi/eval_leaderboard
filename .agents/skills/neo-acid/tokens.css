@@ -1,0 +1,858 @@
+/* ==========================================================================
+   NEO-ACID × LEVER — PERSONAL APP DESIGN SYSTEM (tokens.css)
+   Foundation: rizafahmi.com "Neo-Acid Gallery"
+   Palette & Density: github/lever "Utilitarian Highlighter"
+   Fonts: Unbounded 800, Schibsted Grotesk 400/700, Martian Mono 400/700
+   ========================================================================== */
+
+:root {
+  /* ------------------------------------------------------------------------
+     1. PRIMITIVES (Raw Palette)
+     ------------------------------------------------------------------------ */
+  --raw-plaster: #f7f7f5;
+  --raw-plaster-alt: #ecece6;
+  --raw-plaster-elevated: #ffffff;
+  --raw-ebony: #0a0b0d;
+  --raw-obsidian: #121519;
+  --raw-obsidian-alt: #1b2026;
+  --raw-obsidian-elevated: #222831;
+  --raw-silver: #e7ecf2;
+  --raw-slate-light: #6e7882;
+  --raw-slate-dark: #8c96a3;
+
+  /* Signature & Semantic Highlighter Swatches (WCAG AAA with --raw-ebony) */
+  --hl-acid: #c5f82a;     /* 16.4:1 — Primary / Hero / Active */
+  --hl-violet: #a984ff;   /* 7.2:1  — Build / Create / Architecture */
+  --hl-mint: #5ae67a;     /* 12.5:1 — Loop / Success / Shipped */
+  --hl-sky: #8ce0ff;      /* 13.6:1 — Run / Info / Automation */
+  --hl-magenta: #ff6ed4;  /* 7.8:1  — You / Alert / Personal */
+  --accent-cobalt: #1a3bf5; /* 8.6:1 with #fff — Structural interactive accent */
+
+  /* ------------------------------------------------------------------------
+     2. SEMANTIC TOKENS (Dark Mode Default — Obsidian Clay)
+     ------------------------------------------------------------------------ */
+  --bg-canvas: var(--raw-obsidian);
+  --bg-surface: var(--raw-obsidian-alt);
+  --bg-elevated: var(--raw-obsidian-elevated);
+
+  --text-primary: var(--raw-silver);
+  --text-secondary: #c2cad6;
+  --text-muted: var(--raw-slate-dark);
+  --hl-ink: var(--raw-ebony);
+
+  /* Dual Border System: Brutalist frames (2px/4px) + Whisper-quiet rows (1px) */
+  --border-strong-color: #434a56;
+  --border-subtle-color: #262c36;
+  --border-frame: 2px solid var(--border-strong-color);
+  --border-split: 4px solid var(--border-strong-color);
+  --border-row: 1px solid var(--border-subtle-color);
+  --border-dashed: 1px dashed var(--border-strong-color);
+
+  /* Links */
+  --link-color: var(--hl-acid);
+  --link-hover-bg: var(--hl-acid);
+  --link-hover-text: var(--raw-obsidian);
+
+  /* Focus ring */
+  --focus-ring: 3px solid var(--hl-acid);
+
+  /* ------------------------------------------------------------------------
+     3. TYPOGRAPHY & LAYOUT (5-Face 87KB Budget)
+     ------------------------------------------------------------------------ */
+  --font-display: "Unbounded", system-ui, -apple-system, sans-serif;
+  --font-body: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "Martian Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-none: 0px;
+  --container-narrow: 720px;
+  --container-wide: 1080px;
+}
+
+[data-theme="light"] {
+  --bg-canvas: var(--raw-plaster);
+  --bg-surface: var(--raw-plaster-alt);
+  --bg-elevated: var(--raw-plaster-elevated);
+
+  --text-primary: var(--raw-ebony);
+  --text-secondary: #3f454d;
+  --text-muted: var(--raw-slate-light);
+
+  --border-strong-color: var(--raw-ebony);
+  --border-subtle-color: #d8dad3;
+
+  --link-color: var(--accent-cobalt);
+  --link-hover-bg: var(--accent-cobalt);
+  --link-hover-text: #ffffff;
+
+  --focus-ring: 3px solid var(--accent-cobalt);
+}
+
+/* ==========================================================================
+   BASE RESET & TYPOGRAPHY
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  margin: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Display Headings (Always Unbounded 800) */
+h1, h2, h3, .h1, .h2, .h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+}
+
+.headline-two-tone {
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 3.6vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.headline-two-tone .muted {
+  color: var(--text-muted);
+  font-weight: 800; /* Preserves single-weight Unbounded 800 budget */
+}
+
+.section-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+  display: block;
+}
+
+/* ==========================================================================
+   1. LINKS (In-Text, Action, and Card-Safe)
+   ========================================================================== */
+.prose-link,
+.prose a {
+  color: var(--link-color);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.prose-link:hover,
+.prose a:hover {
+  background-color: var(--link-hover-bg);
+  color: var(--link-hover-text);
+  text-decoration: none;
+}
+
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 2px solid var(--border-strong-color);
+  padding-bottom: 0.15rem;
+}
+
+.action-link:hover {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-bottom-color: var(--raw-ebony);
+}
+
+/* ==========================================================================
+   2. HIGHLIGHTER BADGES & TAGS
+   ========================================================================== */
+.hl,
+mark[data-hl] {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1.25;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-none);
+  color: var(--hl-ink);
+  background-color: var(--hl-acid);
+  white-space: nowrap;
+}
+
+.hl-acid,    mark[data-hl="acid"]    { background-color: var(--hl-acid); }
+.hl-violet,  mark[data-hl="violet"]  { background-color: var(--hl-violet); }
+.hl-mint,    mark[data-hl="mint"]    { background-color: var(--hl-mint); }
+.hl-sky,     mark[data-hl="sky"]     { background-color: var(--hl-sky); }
+.hl-magenta, mark[data-hl="magenta"] { background-color: var(--hl-magenta); }
+
+.tag-outline {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border: var(--border-frame);
+  color: var(--text-primary);
+  background: transparent;
+  text-decoration: none;
+}
+
+.tag-outline:hover {
+  background: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+/* ==========================================================================
+   3. BUTTONS & SEGMENTED CONTROLS
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0.75rem 1.25rem;
+  border: var(--border-frame);
+  border-radius: var(--radius-none);
+  background-color: var(--text-primary);
+  color: var(--bg-canvas);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.btn-cobalt {
+  background-color: var(--accent-cobalt);
+  color: #ffffff;
+  border-color: var(--accent-cobalt);
+}
+
+.btn-cobalt:hover:not(:disabled) {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.btn-acid {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.btn-acid:hover:not(:disabled) {
+  background-color: var(--raw-ebony);
+  color: var(--hl-acid);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--text-primary);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--hl-magenta);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.btn-lg {
+  font-size: 0.95rem;
+  padding: 1rem 1.6rem;
+}
+
+/* Segmented Button Group */
+.btn-group {
+  display: inline-flex;
+  border: var(--border-frame);
+}
+
+.btn-group .btn {
+  border: none;
+  border-right: var(--border-frame);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.btn-group .btn:last-child {
+  border-right: none;
+}
+
+.btn-group .btn.is-active,
+.btn-group .btn:hover {
+  background: var(--hl-acid);
+  color: var(--hl-ink);
+}
+
+/* ==========================================================================
+   4. NAVIGATION (App Header, Tabs, Breadcrumbs, Sidebar)
+   ========================================================================== */
+.app-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: var(--border-split);
+}
+
+.app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.app-brand-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 10px);
+  grid-template-rows: repeat(2, 10px);
+  border: 2px solid var(--border-strong-color);
+}
+
+.app-nav-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app-nav-item {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.45rem 0.8rem;
+  border: 2px solid transparent;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.1s ease;
+}
+
+.app-nav-item:hover,
+.app-nav-item.is-active {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+/* Tabs */
+.app-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: var(--border-frame);
+  gap: 0;
+}
+
+.app-tab {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-right: var(--border-frame);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.app-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+.app-tab.is-active {
+  background: var(--hl-acid);
+  color: var(--hl-ink);
+}
+
+/* Breadcrumbs */
+.app-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.app-breadcrumbs a {
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong-color);
+}
+
+.app-breadcrumbs a:hover {
+  background: var(--hl-acid);
+  color: var(--hl-ink);
+}
+
+/* ==========================================================================
+   5. MENUS & DROPDOWNS (Action Menu, Sidebar Menu, Lever Command List)
+   ========================================================================== */
+.menu-dropdown {
+  width: 100%;
+  max-width: 320px;
+  border: var(--border-frame);
+  background-color: var(--bg-elevated);
+  padding: 0.35rem;
+}
+
+.menu-header {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 0.45rem 0.65rem 0.25rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.menu-item:hover,
+.menu-item.is-active {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+}
+
+.menu-item-danger:hover {
+  background-color: var(--hl-magenta);
+  color: var(--hl-ink);
+}
+
+.menu-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle-color);
+  padding: 0.1rem 0.35rem;
+}
+
+.menu-item:hover .menu-kbd {
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: var(--border-subtle-color);
+  margin: 0.35rem 0;
+}
+
+/* Lever Command List (1px subtle rows) */
+.command-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: var(--border-row);
+}
+
+.command-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem 1.5rem;
+  padding: 0.65rem 0.4rem;
+  border-bottom: var(--border-row);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  transition: background-color 0.1s ease;
+}
+
+.command-row:hover {
+  background-color: var(--bg-surface);
+}
+
+.command-row .prefix {
+  color: var(--text-muted);
+}
+
+.command-row .note {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   6. FORMS & INPUTS
+   ========================================================================== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.field-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.field-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.input,
+.select,
+.textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border: var(--border-frame);
+  border-radius: var(--radius-none);
+  padding: 0.65rem 0.85rem;
+  width: 100%;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--hl-acid);
+  box-shadow: inset 0 0 0 2px var(--hl-acid);
+}
+
+[data-theme="light"] .input:focus,
+[data-theme="light"] .select:focus,
+[data-theme="light"] .textarea:focus {
+  border-color: var(--accent-cobalt);
+  box-shadow: inset 0 0 0 2px var(--accent-cobalt);
+}
+
+/* Command Prompt Input Bar */
+.command-input-wrap {
+  display: flex;
+  align-items: stretch;
+  border: var(--border-frame);
+  background: var(--bg-elevated);
+}
+
+.command-input-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--hl-acid);
+  color: var(--hl-ink);
+  border-right: var(--border-frame);
+}
+
+.command-input-wrap .input {
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+/* Brutalist Checkboxes & Radios */
+.check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.check-input {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: var(--border-frame);
+  background: var(--bg-elevated);
+  display: grid;
+  place-content: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.check-input:checked {
+  background-color: var(--hl-acid);
+  border-color: var(--raw-ebony);
+}
+
+.check-input:checked::before {
+  content: "✓";
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--hl-ink);
+}
+
+/* ==========================================================================
+   7. CARDS, IMAGES & MEDIA FRAMES
+   ========================================================================== */
+.card {
+  border: var(--border-frame);
+  background-color: transparent;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card-interactive {
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.card-interactive:hover {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.card-interactive:hover .text-muted,
+.card-interactive:hover .section-kicker {
+  color: var(--hl-ink);
+}
+
+/* Stat / Metric Card */
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.05;
+}
+
+/* Brutalist Image / Media Figure */
+.media-frame {
+  margin: 0;
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+}
+
+.media-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--raw-obsidian);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 2;
+}
+
+.media-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-top: var(--border-frame);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background-color: var(--bg-canvas);
+}
+
+/* ==========================================================================
+   8. TABLES & CALLOUT ALERTS
+   ========================================================================== */
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--border-frame);
+  font-size: 0.9375rem;
+}
+
+.app-table th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-surface);
+  border-bottom: var(--border-frame);
+}
+
+.app-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: var(--border-row);
+}
+
+.app-table tr:hover td {
+  background-color: var(--bg-surface);
+}
+
+.callout {
+  border: var(--border-frame);
+  border-left-width: 8px;
+  padding: 1rem 1.25rem;
+  background-color: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.callout-acid    { border-left-color: var(--hl-acid); }
+.callout-violet  { border-left-color: var(--hl-violet); }
+.callout-mint    { border-left-color: var(--hl-mint); }
+.callout-sky     { border-left-color: var(--hl-sky); }
+.callout-magenta { border-left-color: var(--hl-magenta); }
+
+/* ==========================================================================
+   9. APP FOOTER
+   ========================================================================== */
+.app-footer {
+  margin-top: 4rem;
+  padding-top: 2.5rem;
+  border-top: var(--border-split);
+}
+
+.app-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr repeat(3, 1fr);
+  gap: 2rem;
+  padding-bottom: 2.5rem;
+  border-bottom: var(--border-row);
+}
+
+.app-footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.app-footer-col a {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.app-footer-col a:hover {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+}
+
+.app-footer-colophon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: var(--hl-mint);
+  border: 1.5px solid var(--raw-ebony);
+  margin-right: 0.4rem;
+}
+
+@media (max-width: 768px) {
+  .app-footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
