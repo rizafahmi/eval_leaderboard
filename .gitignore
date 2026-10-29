@@ -17,3 +17,9 @@ pnpm-debug.log*
 
 # macOS
 .DS_Store
+
+# local agent skills, hooks, and critique state
+.agents/
+.codex/
+.github/
+.impeccable/
