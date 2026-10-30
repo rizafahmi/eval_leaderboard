@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { Code } from 'astro:components';
 import { getCollection } from 'astro:content';
+import { createCssVariablesTheme } from 'shiki';
 import {
   formatDuration,
   formatCost,
@@ -9,24 +10,116 @@ import {
   formatHarnessName,
   formatProviderName,
   getPlanStats,
+  matchSliceStageId,
+  matchCommitStageId,
+  getStepRangeCount,
+  splitContextWindow,
+  splitCostString,
   parseNoteBullet,
   tokenizeNoteText,
 } from '../../utils/format';
 import { BENCHMARK_STAGES } from '../../data/benchmark';
 
+const neoAcidCodeTheme = createCssVariablesTheme({
+  name: 'neo-acid',
+  variablePrefix: '--code-',
+});
+
 export async function getStaticPaths() {
   const runs = await getCollection('runs', ({ data }) => data.published !== false);
-  return runs.map((entry) => ({
-    params: { id: entry.id },
-    props: { entry },
-  }));
+  const sorted = [...runs].sort((a, b) => {
+    const planA = getPlanStats(a.data.planCompletion);
+    const planB = getPlanStats(b.data.planCompletion);
+    if (planB.ratio !== planA.ratio) return planB.ratio - planA.ratio;
+    const testsA =
+      a.data.tests && a.data.tests.total > 0 ? a.data.tests.passed / a.data.tests.total : -1;
+    const testsB =
+      b.data.tests && b.data.tests.total > 0 ? b.data.tests.passed / b.data.tests.total : -1;
+    if (testsB !== testsA) return testsB - testsA;
+    if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
+    return a.data.durationMinutes - b.data.durationMinutes;
+  });
+
+  const durations = sorted.map((r) => r.data.durationMinutes);
+  const costs = sorted.map((r) => r.data.costUsd);
+  const fastestMin = durations.length > 0 ? Math.min(...durations) : 0;
+  const slowestMin = durations.length > 0 ? Math.max(...durations) : 0;
+  const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
+  const highestCost = costs.length > 0 ? Math.max(...costs) : 0;
+  const totalRuns = sorted.length;
+
+  const toNavSummary = (r: (typeof sorted)[number], rIdx: number) => {
+    const rPlan = getPlanStats(r.data.planCompletion);
+    return {
+      id: r.id,
+      rank: rIdx + 1,
+      harness: formatHarnessName(r.data.codingHarness),
+      model: r.data.model,
+      effort: r.data.effort,
+      costUsd: r.data.costUsd,
+      durationMinutes: r.data.durationMinutes,
+      completed: rPlan.completed,
+      total: rPlan.total,
+      ratio: rPlan.ratio,
+    };
+  };
+
+  return sorted.map((entry, idx) => {
+    const prevRun = idx > 0 ? toNavSummary(sorted[idx - 1], idx - 1) : null;
+    const nextRun = idx < sorted.length - 1 ? toNavSummary(sorted[idx + 1], idx + 1) : null;
+    const sameModel = sorted
+      .map((r, i) => ({ r, i }))
+      .filter(({ r, i }) => i !== idx && r.data.model.toLowerCase() === entry.data.model.toLowerCase())
+      .map(({ r, i }) => ({ ...toNavSummary(r, i), relation: 'same-model' as const }));
+    const sameHarness = sorted
+      .map((r, i) => ({ r, i }))
+      .filter(
+        ({ r, i }) =>
+          i !== idx &&
+          r.data.model.toLowerCase() !== entry.data.model.toLowerCase() &&
+          formatHarnessName(r.data.codingHarness) === formatHarnessName(entry.data.codingHarness)
+      )
+      .map(({ r, i }) => ({ ...toNavSummary(r, i), relation: 'same-harness' as const }));
+    const siblingRuns = [...sameModel, ...sameHarness].slice(0, 4);
+
+    return {
+      params: { id: entry.id },
+      props: {
+        entry,
+        rank: idx + 1,
+        totalRuns,
+        fastestMin,
+        slowestMin,
+        lowestCost,
+        highestCost,
+        prevRun,
+        nextRun,
+        siblingRuns,
+      },
+    };
+  });
 }
 
-const { entry } = Astro.props;
+const {
+  entry,
+  rank,
+  totalRuns,
+  fastestMin,
+  slowestMin,
+  lowestCost,
+  highestCost,
+  prevRun,
+  nextRun,
+  siblingRuns,
+} = Astro.props;
 const d = entry.data;
 const plan = getPlanStats(d.planCompletion);
 
 const stageMap = new Map(BENCHMARK_STAGES.map((s) => [s.id, s.title]));
+const sliceByStage = new Map<
+  string,
+  { llmCalls: number; costUsd: number; isPeak: boolean }
+>();
 
 const hasInterface =
   d.interface && (d.interface.command || d.interface.details || d.interface.type);
@@ -36,16 +129,94 @@ const hasTokenSection =
 const hasCallsSection =
   d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls !== undefined);
 const hasCommitLog = d.commitLog && d.commitLog.length > 0;
+const uniqueCommitAuthors = hasCommitLog
+  ? Array.from(new Set(d.commitLog!.map((c) => c.author).filter(Boolean)))
+  : [];
+const singleCommitAuthor = uniqueCommitAuthors.length === 1 ? uniqueCommitAuthors[0] : null;
+const hasRelativeCommitTimes = Boolean(d.commitLog?.some((c) => Boolean(c.relativeTime)));
 const commitLogText = d.commitLog
   ? d.commitLog
-      .map(
-        (c) =>
-          `* ${c.hash}  ${c.relativeTime ? `(${c.relativeTime})  ` : ''}${c.author ? `<${c.author}>   ` : ''}${c.message}`
-      )
+      .map((c) => {
+        const rel = c.relativeTime ? `(${c.relativeTime} before capture)  ` : '';
+        return `* ${c.hash}  ${rel}${c.message}`;
+      })
       .join('\n')
   : '';
 const hasCostBreakdown = d.costBreakdown && d.costBreakdown.length > 0;
+const costItemRows =
+  d.costBreakdown?.filter((r) => !r.component.trim().toLowerCase().startsWith('total')) ?? [];
+const costTotalRows =
+  d.costBreakdown?.filter((r) => r.component.trim().toLowerCase().startsWith('total')) ?? [];
+const hasTokenOrCostSection = hasTokenSection || hasCostBreakdown;
+const has2027Pricing = Boolean(
+  d.costBreakdown?.some((r) => Boolean(r.rate2027) || Boolean(r.cost2027))
+);
+const costComparisonText = (d.costBreakdown ?? [])
+  .map((r) => `${r.rate2026 ?? ''} ${r.cost2026 ?? ''} ${r.rate2027 ?? ''} ${r.cost2027 ?? ''}`)
+  .join(' ');
+const isAutoApiComparison =
+  has2027Pricing && /Cursor Auto API|Auto API/i.test(costComparisonText);
+const isGpt6SolComparison =
+  has2027Pricing &&
+  !isAutoApiComparison &&
+  (/gpt-6\.1-sol/i.test(costComparisonText) ||
+    (!/2027/.test(costComparisonText) &&
+      (/95% off/i.test(costComparisonText) || d.model === 'gpt-6-sol')));
+const costSectionSubtitle = hasCostBreakdown
+  ? isAutoApiComparison
+    ? 'Included Tier vs Standard API USD'
+    : isGpt6SolComparison
+      ? 'gpt-6-sol vs gpt-6.1-sol API USD'
+      : has2027Pricing
+        ? '2026 vs 2027 Standard API USD'
+        : '2026 USD Rates'
+  : 'Token Telemetry';
+const costPrimaryRateHeader = isAutoApiComparison
+  ? 'Billed Rate'
+  : isGpt6SolComparison
+    ? 'Rate (gpt-6-sol)'
+    : has2027Pricing
+      ? 'Rate (2026)'
+      : 'Rate';
+const costPrimaryCostHeader = isAutoApiComparison
+  ? 'Billed Cost'
+  : isGpt6SolComparison
+    ? 'Cost (gpt-6-sol)'
+    : has2027Pricing
+      ? 'Cost (2026 Rate)'
+      : 'Estimated Cost';
+const costComparisonRateHeader = isAutoApiComparison
+  ? 'Standard API Rate'
+  : isGpt6SolComparison
+    ? 'Rate (gpt-6.1-sol)'
+    : 'Rate (2027)';
+const costComparisonCostHeader = isAutoApiComparison
+  ? 'Standard API Cost'
+  : isGpt6SolComparison
+    ? 'Cost (gpt-6.1-sol)'
+    : 'Cost (2027 Rate)';
+const costTableCaption = isAutoApiComparison
+  ? 'Token volume and estimated cost breakdown comparing billed tier and standard API rates'
+  : isGpt6SolComparison
+    ? 'Token volume and estimated cost breakdown comparing gpt-6-sol and gpt-6.1-sol pricing rates'
+    : has2027Pricing
+      ? 'Token volume and estimated cost breakdown comparing 2026 and 2027 pricing rates'
+      : 'Token volume and estimated cost breakdown';
 const hasSliceBreakdown = d.sliceBreakdown && d.sliceBreakdown.length > 0;
+const hasTaskPolls = Boolean(d.sliceBreakdown?.some((r) => (r.manageTaskPolls ?? 0) > 0));
+const hasSliceThinking = Boolean(
+  d.sliceBreakdown?.some((r) => r.thinkingTokens !== undefined && r.thinkingTokens > 0)
+);
+const totalSliceLlmCalls = d.sliceBreakdown?.reduce((sum, r) => sum + r.llmCalls, 0) ?? 0;
+const totalSliceSteps =
+  d.sliceBreakdown?.reduce((sum, r) => sum + (getStepRangeCount(r.stepRange) ?? 0), 0) ?? 0;
+const totalSlicePolls =
+  d.sliceBreakdown?.reduce((sum, r) => sum + (r.manageTaskPolls ?? 0), 0) ?? 0;
+const totalSliceThinking =
+  d.sliceBreakdown?.reduce((sum, r) => sum + (r.thinkingTokens ?? 0), 0) ?? 0;
+const totalSliceCostUsd = d.sliceBreakdown?.reduce((sum, r) => sum + r.costUsd, 0) ?? 0;
+const displaySliceTotalCostUsd =
+  Math.abs(totalSliceCostUsd - d.costUsd) <= 0.02 ? d.costUsd : totalSliceCostUsd;
 const hasNotesDetails = d.notesDetails && d.notesDetails.length > 0;
 const hasNotes = (d.notes && d.notes.length > 0) || hasNotesDetails;
 
@@ -54,24 +225,210 @@ const maxToolCalls =
     ? Math.max(...d.calls.toolCalls.breakdown.map((b) => b.total))
     : 1;
 
+const planTone: 'hl-mint' | 'hl-acid' | 'hl-magenta' =
+  plan.ratio === 1 ? 'hl-mint' : plan.ratio >= 0.7 ? 'hl-acid' : 'hl-magenta';
+const planProgressClass =
+  plan.ratio === 1
+    ? 'plan-progress-mint'
+    : plan.ratio >= 0.7
+      ? 'plan-progress-acid'
+      : 'plan-progress-magenta';
+const isCostLeader = plan.ratio === 1 && d.costUsd <= 1.0;
+const hasTestFailures = Boolean(d.tests && d.tests.passed < d.tests.total);
+const rawMaxSliceCost =
+  hasSliceBreakdown && d.sliceBreakdown!.length > 1
+    ? Math.max(...d.sliceBreakdown!.map((r) => r.costUsd))
+    : 0;
+const maxSliceCost = rawMaxSliceCost >= 0.25 ? rawMaxSliceCost : 0;
+
+let nonStageLlmCalls = 0;
+let nonStageCostUsd = 0;
+
+if (hasSliceBreakdown) {
+  for (const row of d.sliceBreakdown!) {
+    const stageId = matchSliceStageId(row.slice);
+    if (stageId) {
+      const prev = sliceByStage.get(stageId);
+      const combinedCost = (prev?.costUsd ?? 0) + row.costUsd;
+      const combinedCalls = (prev?.llmCalls ?? 0) + row.llmCalls;
+      sliceByStage.set(stageId, {
+        llmCalls: combinedCalls,
+        costUsd: Number(combinedCost.toFixed(4)),
+        isPeak: (prev?.isPeak ?? false) || (maxSliceCost > 0 && row.costUsd === maxSliceCost),
+      });
+    } else {
+      nonStageLlmCalls += row.llmCalls;
+      nonStageCostUsd = Number((nonStageCostUsd + row.costUsd).toFixed(4));
+    }
+  }
+}
+
+const committedStageIds = new Set<string>();
+if (hasCommitLog) {
+  for (const c of d.commitLog!) {
+    const stageId = matchCommitStageId(c.message);
+    if (stageId) {
+      committedStageIds.add(stageId);
+    }
+  }
+}
+
+function isStageInRange(stageId: string, text: string): boolean {
+  const stageNum = Number(stageId.slice(1));
+  if (isNaN(stageNum)) return false;
+  for (const match of text.matchAll(/\bS([1-7])\s*[–-]\s*S([1-7])\b/gi)) {
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    if (stageNum >= Math.min(start, end) && stageNum <= Math.max(start, end)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+let firstFailureNoteIdx: number | null = null;
+const missedStageNoteAnchor = new Map<string, { href: string; label: string }>();
+if (hasNotes && plan.ratio < 1) {
+  for (const [stageId, completed] of plan.entries) {
+    if (!completed) {
+      const stageRegex = new RegExp(`\\b${stageId}\\b`, 'i');
+      if (hasNotesDetails) {
+        let matchIdx = d.notesDetails!.findIndex((n) => {
+          const mainTitle = n.title.replace(/\([^)]*\)/g, '');
+          return (
+            stageRegex.test(mainTitle) ||
+            (new RegExp(`S[1-7]\\s*[–-]\\s*S[1-7]`, 'i').test(mainTitle) &&
+              isStageInRange(stageId, mainTitle))
+          );
+        });
+        if (matchIdx === -1) {
+          matchIdx = d.notesDetails!.findIndex(
+            (n) =>
+              stageRegex.test(n.title) ||
+              (new RegExp(`S[1-7]\\s*[–-]\\s*S[1-7]`, 'i').test(n.title) &&
+                isStageInRange(stageId, n.title))
+          );
+        }
+        if (matchIdx === -1) {
+          matchIdx = d.notesDetails!.findIndex((n) =>
+            n.bullets.some((b) => stageRegex.test(b) || isStageInRange(stageId, b))
+          );
+        }
+        if (matchIdx !== -1) {
+          if (firstFailureNoteIdx === null) {
+            firstFailureNoteIdx = matchIdx;
+          }
+          const noteNum = String(matchIdx + 1).padStart(2, '0');
+          missedStageNoteAnchor.set(stageId, {
+            href: `#note-${matchIdx + 1}`,
+            label: `Note #${noteNum} ↓`,
+          });
+          continue;
+        }
+      }
+      missedStageNoteAnchor.set(stageId, {
+        href: '#notes-section',
+        label: 'Diagnosis ↓',
+      });
+    }
+  }
+}
+const primaryFailureDiagHref =
+  firstFailureNoteIdx !== null ? `#note-${firstFailureNoteIdx + 1}` : '#notes-section';
+
 const displayHarness = formatHarnessName(d.codingHarness);
 const displayProvider = formatProviderName(d.provider);
+const metaSpecSummary = [
+  displayProvider,
+  d.effort ? `${d.effort} effort` : null,
+  d.interface?.type ? d.interface.type.toUpperCase() : null,
+]
+  .filter(Boolean)
+  .join(' · ');
+const wallClockMatch = d.interface?.details?.match(
+  /(?:wall-clock elapsed was\s+(\d+)\s*m|(\d+)\s*m\s+wall-clock)/i
+);
+const wallClockMinutes = wallClockMatch ? Number(wallClockMatch[1] ?? wallClockMatch[2]) : null;
+const contextWindowParts = splitContextWindow(d.contextWindow);
 const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.model} by ${displayProvider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
+
+const pageSections = [
+  { id: 'plan-section', label: `Plan (${plan.completed}/${plan.total})` },
+  ...(hasSliceBreakdown
+    ? [{ id: 'slice-section', label: `Slices (${d.sliceBreakdown!.length})` }]
+    : []),
+  ...(hasTokenOrCostSection
+    ? [{ id: 'tokens-cost-section', label: 'Tokens & Cost' }]
+    : hasCallsSection
+      ? [{ id: 'calls-section', label: 'Calls & Tools' }]
+      : []),
+  ...(hasNotes
+    ? [
+        {
+          id: 'notes-section',
+          label: `Field Notes (${hasNotesDetails ? d.notesDetails!.length : d.notes!.length})`,
+        },
+      ]
+    : []),
+  ...(hasCommitLog
+    ? [{ id: 'commits-section', label: `Commits (${d.commitLog!.length})` }]
+    : hasInterface
+      ? [{ id: 'interface-section', label: 'Command' }]
+      : []),
+];
 ---
 
 <BaseLayout
   title={`${displayHarness} — ${d.model}`}
+  activeNav="leaderboard"
   breadcrumbLabel={`${displayHarness} / ${d.model}`}
+  breadcrumbTone={planTone}
   description={runDescription}
   ogType="article"
 >
   <div class="detail-nav-row">
-    <a href="/" class="btn btn-sm btn-secondary">
-      <span aria-hidden="true">←</span> Back to Leaderboard
-    </a>
-    <span class="mono detail-run-id">
-      RUN ID: <code>{entry.id}</code>
-    </span>
+    <div class="detail-nav-left">
+      <a href="/" class="btn btn-sm btn-secondary" id="back-to-leaderboard-link">
+        <span aria-hidden="true">←</span> Back to Leaderboard
+      </a>
+    </div>
+    <nav aria-label="Adjacent ranked runs" class="detail-nav-pager">
+      {
+        prevRun && (
+          <a
+            href={`/runs/${prevRun.id}`}
+            class="btn btn-sm btn-secondary detail-nav-pager-btn"
+            id="prev-run-link"
+            aria-keyshortcuts="["
+          >
+            <span aria-hidden="true">←</span> #{prevRun.rank}
+            <span class="detail-nav-pager-label">
+              {prevRun.harness} / {prevRun.model}
+              {prevRun.effort ? ` (${prevRun.effort})` : ''}
+            </span>
+            <kbd class="menu-kbd" aria-hidden="true">[</kbd>
+          </a>
+        )
+      }
+      {
+        nextRun && (
+          <a
+            href={`/runs/${nextRun.id}`}
+            class="btn btn-sm btn-secondary detail-nav-pager-btn"
+            id="next-run-link"
+            aria-keyshortcuts="]"
+          >
+            #{nextRun.rank}
+            <span class="detail-nav-pager-label">
+              {nextRun.harness} / {nextRun.model}
+              {nextRun.effort ? ` (${nextRun.effort})` : ''}
+            </span>
+            <span aria-hidden="true">→</span>
+            <kbd class="menu-kbd" aria-hidden="true">]</kbd>
+          </a>
+        )
+      }
+    </nav>
   </div>
 
   <!-- Top Summary Header -->
@@ -79,14 +436,33 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
     <div class="detail-top-row">
       <div>
         <div class="entry-meta detail-entry-meta">
-          <span class="hl hl-sky">provider:{displayProvider}</span>
-          {d.effort && <span class="hl hl-violet">effort:{d.effort}</span>}
-          {d.interface?.type && (
-            <span class="hl hl-acid">interface:{d.interface.type}</span>
-          )}
-          <span class="tag-outline">
+          <span
+            class:list={[
+              'rank-badge',
+              { 'rank-1': rank === 1, 'rank-2': rank === 2, 'rank-3': rank === 3 },
+            ]}
+          >
+            #{rank} OF {totalRuns}
+          </span>
+          <span class="badge-static">{metaSpecSummary}</span>
+          {d.commits !== undefined &&
+            (hasCommitLog ? (
+              <a href="#commits-section" class="badge-static badge-link">
+                {d.commits} {d.commits === 1 ? 'commit' : 'commits'} ↓
+              </a>
+            ) : (
+              <span class="badge-static">
+                {d.commits} {d.commits === 1 ? 'commit' : 'commits'}
+              </span>
+            ))}
+          <span class="badge-static">
             <time datetime={d.timestamp}>{formatTimestamp(d.timestamp)}</time>
           </span>
+          {siblingRuns.length > 0 && (
+            <a href="#siblings-section" class="badge-static badge-link">
+              Compare {siblingRuns.length} related {siblingRuns.length === 1 ? 'run' : 'runs'} ↓
+            </a>
+          )}
         </div>
         <h1 id="run-detail-heading" class="headline-two-tone">
           {displayHarness}
@@ -95,82 +471,173 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
       </div>
 
       <div>
-        <span class:list={['hl', plan.ratio === 1 ? 'hl-mint' : 'hl-acid']}>
-          {plan.ratio === 1 ? 'ALL 7 SLICES PASSED' : `${plan.completed}/${plan.total} SLICES`}
+        <span class:list={['hl', planTone]}>
+          {plan.ratio === 1
+            ? 'ALL 7 SLICES PASSED'
+            : `${plan.completed}/${plan.total} SLICES (${plan.total - plan.completed} MISSED)`}
         </span>
       </div>
     </div>
 
-    <dl class="kpi-grid">
+    <dl class="kpi-grid detail-kpi-grid">
       <div class="kpi-box">
         <dt class="section-kicker">TIME ELAPSED</dt>
-        <dd class="stat-value kpi-val">{formatDuration(d.durationMinutes)}</dd>
-        <dd class="kpi-sub">Total wall-clock duration</dd>
+        <dd class="kpi-val">{formatDuration(d.durationMinutes)}</dd>
+        <dd class="kpi-sub">
+          {wallClockMinutes && wallClockMinutes > d.durationMinutes
+            ? `Active (${formatDuration(wallClockMinutes)} wall-clock incl. halts) · range ${formatDuration(fastestMin)}–${formatDuration(slowestMin)}`
+            : `range ${formatDuration(fastestMin)}–${formatDuration(slowestMin)} (${totalRuns} runs)`}
+        </dd>
       </div>
 
       <div class="kpi-box">
         <dt class="section-kicker">ESTIMATED COST</dt>
-        <dd class="stat-value kpi-val">
-          <span class="hl hl-mint">{formatCost(d.costUsd)}</span>
+        <dd class="kpi-val">
+          {
+            isCostLeader ? (
+              <span class="hl hl-mint">{formatCost(d.costUsd)}</span>
+            ) : (
+              formatCost(d.costUsd)
+            )
+          }
         </dd>
-        <dd class="kpi-sub">Total run cost (USD)</dd>
-      </div>
-
-      <div class="kpi-box">
-        <dt class="section-kicker" id="kpi-plan-label">PLAN COMPLETION</dt>
-        <dd class="stat-value kpi-val">
-          {plan.completed}/{plan.total}
+        <dd class="kpi-sub">
+          {isCostLeader
+            ? `Sub-$1.00 7/7 leader · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
+            : `USD · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`}
         </dd>
-        <dd class="kpi-sub">{Math.round(plan.ratio * 100)}% of checkpoints done</dd>
       </div>
 
       {
         d.tests && (
           <div class="kpi-box">
             <dt class="section-kicker">TEST SUITE</dt>
-            <dd class="stat-value kpi-val">
-              {d.tests.passed}/{d.tests.total}
+            <dd class="kpi-val">
+              {hasTestFailures ? (
+                <span class="hl hl-magenta">
+                  {d.tests.passed}/{d.tests.total}
+                </span>
+              ) : (
+                `${d.tests.passed}/${d.tests.total}`
+              )}
             </dd>
             <dd class="kpi-sub">
-              {d.tests.durationSeconds !== undefined
-                ? `${d.tests.total > 0 ? Math.round((d.tests.passed / d.tests.total) * 100) : 0}% passed (${d.tests.durationSeconds}s)`
-                : d.tests.passed === d.tests.total
-                  ? '100% tests passed'
-                  : 'Test suite results'}
+              {hasTestFailures
+                ? `${d.tests.total - d.tests.passed} failed · ${d.tests.total > 0 ? Math.round((d.tests.passed / d.tests.total) * 100) : 0}% passed${d.tests.durationSeconds !== undefined ? ` (${d.tests.durationSeconds}s)` : ''}`
+                : d.tests.durationSeconds !== undefined
+                  ? `${d.tests.total > 0 ? Math.round((d.tests.passed / d.tests.total) * 100) : 0}% passed (${d.tests.durationSeconds}s)${plan.ratio < 1 ? ` · ${plan.total - plan.completed} spec ${plan.total - plan.completed === 1 ? 'slice' : 'slices'} missed` : ''}`
+                  : d.tests.passed === d.tests.total
+                    ? `100% tests passed${plan.ratio < 1 ? ` · ${plan.total - plan.completed} spec ${plan.total - plan.completed === 1 ? 'slice' : 'slices'} missed` : ''}`
+                    : 'Test suite results'}
             </dd>
           </div>
         )
       }
 
       {
-        d.commits !== undefined && (
+        (d.tokens?.total || d.calls?.llmCalls !== undefined || d.commits !== undefined) && (
           <div class="kpi-box">
-            <dt class="section-kicker">GIT COMMITS</dt>
-            <dd class="stat-value kpi-val">{d.commits}</dd>
-            <dd class="kpi-sub">Git checkpoints recorded</dd>
+            <dt class="section-kicker">
+              {d.tokens?.total
+                ? 'TOTAL TOKENS'
+                : d.calls?.llmCalls !== undefined
+                  ? 'LLM / TOOL CALLS'
+                  : 'GIT COMMITS'}
+            </dt>
+            <dd class="kpi-val">
+              {d.tokens?.total ??
+                (d.calls?.llmCalls !== undefined ? `${d.calls.llmCalls}` : `${d.commits ?? 0}`)}
+            </dd>
+            <dd class="kpi-sub">
+              {d.tokens?.total
+                ? [
+                    d.tokens.cacheHitRate ? `${d.tokens.cacheHitRate} cache hit` : null,
+                    d.calls?.llmCalls !== undefined ? `${d.calls.llmCalls} LLM calls` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || 'Prompt + completion volume'
+                : d.calls?.llmCalls !== undefined
+                  ? `${d.calls.toolCalls?.total ?? 0} tool calls · ${d.commits ?? 0} commits`
+                  : hasCommitLog
+                    ? 'Git checkpoints recorded'
+                    : 'Checkpoints recorded'}
+            </dd>
           </div>
         )
       }
     </dl>
+
+    {
+      d.tests?.details && (
+        <div class="detail-test-strip">
+          <span
+            class:list={[
+              'hl',
+              hasTestFailures ? 'hl-magenta' : plan.ratio < 1 ? 'hl-acid' : 'hl-mint',
+            ]}
+          >
+            {hasTestFailures
+              ? 'TEST DIAGNOSTIC'
+              : plan.ratio < 1
+                ? 'AGENT SUITE PASSED · SPEC MISS'
+                : 'TEST & LINT VERDICT'}
+          </span>
+          <p class="mono detail-test-callout-copy">
+            {d.tests.details}
+            {!hasTestFailures && plan.ratio < 1
+              ? ` (agent ExUnit suite passed; post-run live verification missed ${plan.total - plan.completed} ${plan.total - plan.completed === 1 ? 'slice' : 'slices'})`
+              : ''}
+          </p>
+        </div>
+      )
+    }
   </section>
+
+  <nav aria-label="On this page" class="detail-jump-bar" id="detail-jump-bar">
+    <span class="mono detail-jump-label">JUMP TO:</span>
+    <div class="detail-jump-links" id="detail-jump-links">
+      {
+        pageSections.map((sec) => (
+          <a href={`#${sec.id}`} class="mono detail-jump-link">
+            {sec.label}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
 
   <div class="section-grid">
     <!-- Plan Completion Checklist -->
-    <section class="card col-12" aria-labelledby="plan-completion-heading">
+    <section class="card col-12" id="plan-section" aria-labelledby="plan-completion-heading">
       <div class="card-title">
-        <div>
-          <span class="section-kicker">01 · CHECKPOINT VERIFICATION</span>
-          <h2 id="plan-completion-heading" class="card-heading">
-            Plan Completion ({plan.completed}/{plan.total})
+        <div class="card-title-group">
+          <h2 id="plan-completion-heading" class="card-heading headline-two-tone">
+            Plan Completion <span class="muted">/ {plan.completed} of {plan.total} Slices</span>
           </h2>
+          {nonStageLlmCalls > 0 && (
+            <a href="#slice-nonstage" class="badge-static badge-link">
+              +{nonStageLlmCalls} prep/wrap-up calls
+              {nonStageCostUsd > 0 ? ` · ${formatCost(nonStageCostUsd)}` : ''} ↓
+            </a>
+          )}
+          {!hasSliceBreakdown && (
+            <span class="badge-static">Per-slice telemetry n/a</span>
+          )}
         </div>
-        <a href="/about#stages" class="action-link">
-          View Stage Specs <span aria-hidden="true">→</span>
-        </a>
+        <div class="card-title-group">
+          {hasNotes && plan.ratio < 1 && (
+            <a href={primaryFailureDiagHref} class="action-link plan-failure-diag-trigger">
+              Read Failure Diagnosis <span aria-hidden="true">↓</span>
+            </a>
+          )}
+          <a href="/about#stages" class="action-link">
+            View Stage Specs <span aria-hidden="true">→</span>
+          </a>
+        </div>
       </div>
 
       <progress
-        class="plan-progress"
+        class:list={['plan-progress', planProgressClass]}
         value={plan.completed}
         max={plan.total}
         aria-labelledby="plan-completion-heading"
@@ -178,156 +645,551 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
 
       <ul class="plan-checklist" role="list">
         {
-          plan.entries.map(([stageId, completed]) => (
-            <li class:list={['plan-item', completed ? 'completed' : 'incomplete']}>
-              <span class:list={['hl', completed ? 'hl-mint' : 'hl-magenta']} aria-hidden="true">
-                {completed ? 'PASS' : 'MISS'}
-              </span>
-              <div>
-                <div class="mono plan-stage-id">
-                  {stageId}
-                  <span class="visually-hidden">
-                    {' '}
-                    — {completed ? 'Completed' : 'Incomplete'}
+          plan.entries.map(([stageId, completed]) => {
+            const sliceStat = sliceByStage.get(stageId);
+            const wasAttempted =
+              completed ||
+              Boolean(sliceStat && sliceStat.llmCalls > 0) ||
+              committedStageIds.has(stageId) ||
+              (!hasSliceBreakdown && !hasCommitLog && Boolean(d.tests && d.tests.total > 0));
+            const missNoteLink = !completed ? missedStageNoteAnchor.get(stageId) : undefined;
+            return (
+              <li
+                id={`plan-${stageId.toLowerCase()}`}
+                class:list={[
+                  'plan-item',
+                  completed ? 'completed' : wasAttempted ? 'spec-miss' : 'incomplete',
+                ]}
+              >
+                <div class="plan-item-head">
+                  <span class="mono plan-stage-id">
+                    {stageId}
+                    <span class="visually-hidden">
+                      : {completed ? 'PASS' : 'MISS'}
+                      {sliceStat?.isPeak ? ' (Peak cost bottleneck)' : ''}
+                    </span>
                   </span>
+                  <div class="plan-item-badges" aria-hidden="true">
+                    {sliceStat?.isPeak && (
+                      <span class="hl hl-violet plan-peak-badge">
+                        PEAK
+                      </span>
+                    )}
+                    <span
+                      class:list={[
+                        'hl',
+                        completed ? 'hl-mint' : 'hl-magenta',
+                        'plan-status-badge',
+                        completed ? 'is-pass' : 'is-miss',
+                      ]}
+                    >
+                      {completed ? 'PASS' : 'MISS'}
+                    </span>
+                  </div>
                 </div>
-                {stageMap.get(stageId) && (
-                  <div class="plan-stage-title">{stageMap.get(stageId)}</div>
-                )}
-              </div>
-            </li>
-          ))
+                <div class="plan-item-body">
+                  {stageMap.get(stageId) && (
+                    <div class="plan-stage-title">{stageMap.get(stageId)}</div>
+                  )}
+                  <div class="plan-stage-links">
+                    {!completed && sliceStat && (
+                      <span class="mono plan-stage-telemetry">
+                        {committedStageIds.has(stageId) ||
+                        (d.tests && d.tests.total > 0 && d.tests.passed === d.tests.total)
+                          ? 'Built · failed live check'
+                          : 'Attempted · incomplete'}
+                      </span>
+                    )}
+                    {sliceStat ? (
+                      <a
+                        href={`#slice-${stageId.toLowerCase()}`}
+                        class="mono plan-stage-telemetry"
+                      >
+                        {sliceStat.llmCalls} calls · {formatCost(sliceStat.costUsd)}<span aria-hidden="true"> ↓</span>
+                      </a>
+                    ) : (
+                      <span class="mono plan-stage-telemetry">
+                        {!completed && !wasAttempted
+                          ? 'Not reached · 0 calls'
+                          : !completed && wasAttempted
+                            ? 'Built · failed live check'
+                            : !hasSliceBreakdown
+                              ? 'Slice passed'
+                              : 'Bundled in adjacent slice'}
+                      </span>
+                    )}
+                    {missNoteLink && (
+                      <a href={missNoteLink.href} class="mono plan-stage-diag-link">
+                        {missNoteLink.label}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })
         }
       </ul>
     </section>
 
-    <!-- Conditional: Command / Interface Used -->
+    <!-- Conditional: Slice / Phase Breakdown -->
     {
-      hasInterface && (
-        <section class="card col-12" aria-labelledby="interface-heading">
+      hasSliceBreakdown && (
+        <section
+          class="card col-12"
+          id="slice-section"
+          aria-labelledby="slice-breakdown-heading"
+        >
           <div class="card-title">
-            <div>
-              <span class="section-kicker">02 · DISPATCH COMMAND</span>
-              <div class="card-title-group">
-                <h2 id="interface-heading" class="card-heading">Command / Interface Used</h2>
-                {d.interface?.type && (
-                  <span class="hl hl-sky">{d.interface.type}</span>
-                )}
-              </div>
+            <div class="card-title-group">
+              <h2 id="slice-breakdown-heading" class="card-heading headline-two-tone">
+                Slice / Phase Breakdown{' '}
+                <span class="muted">/ {d.sliceBreakdown!.length} Phases</span>
+              </h2>
             </div>
-            {d.interface?.command && (
-              <div>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-secondary"
-                  id="copy-cmd-btn"
-                  data-cmd={d.interface.command}
-                >
-                  Copy Command
-                </button>
-                <span
-                  id="copy-cmd-status"
-                  class="visually-hidden"
-                  role="status"
-                  aria-live="polite"
-                />
-              </div>
-            )}
+            <div class="card-title-group">
+              <a href="#plan-section" class="action-link">
+                <span aria-hidden="true">↑</span> Plan Overview
+              </a>
+            </div>
           </div>
-
-          {d.interface?.command && (
-            <Code
-              code={d.interface.command}
-              lang="bash"
-              theme="ayu-dark"
-              wrap={null}
-              transformers={[
-                {
-                  pre(node) {
-                    delete node.properties.style;
-                  },
-                },
-              ]}
-              class="terminal-box terminal-box-wrap"
-            />
-          )}
-
-          {d.interface?.details && (
-            <p class:list={['interface-details', { 'has-cmd': Boolean(d.interface.command) }]}>
-              {d.interface.details}
-            </p>
-          )}
+          <p class="mono section-subnote">
+            Step Range spans transcript events (LLM + tool + system turns) · LLM Calls count completed model inference turns
+            {hasTaskPolls ? ' · manage_task Polls count background status checks' : ''}
+          </p>
+          <div
+            class="table-wrapper"
+            tabindex="0"
+            role="region"
+            aria-labelledby="slice-breakdown-heading"
+          >
+            <table class="app-table leaderboard-table static-table">
+              <caption class="visually-hidden">
+                Per-stage slice breakdown of step ranges, LLM calls, thinking tokens, and cost
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Slice / Phase</th>
+                  <th scope="col">Step Range</th>
+                  <th scope="col">LLM Calls</th>
+                  {hasTaskPolls && <th scope="col">manage_task Polls</th>}
+                  {hasSliceThinking && <th scope="col">Thinking Tokens</th>}
+                  <th scope="col">Estimated Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const seenStageIds = new Set<string>();
+                  let seenNonStageRow = false;
+                  let hasSeenAnyStage = false;
+                  return d.sliceBreakdown!.map((row) => {
+                    const isPeakCostSlice = maxSliceCost > 0 && row.costUsd === maxSliceCost;
+                    const costSharePct =
+                      totalSliceCostUsd > 0 ? Math.round((row.costUsd / totalSliceCostUsd) * 100) : 0;
+                    const stepCount = getStepRangeCount(row.stepRange);
+                    const matchedStage = matchSliceStageId(row.slice);
+                    if (matchedStage) {
+                      hasSeenAnyStage = true;
+                    }
+                    const stagePassed = matchedStage
+                      ? d.planCompletion?.[matchedStage as keyof typeof d.planCompletion]
+                      : undefined;
+                    let rowAnchorId: string | undefined;
+                    if (matchedStage && !seenStageIds.has(matchedStage)) {
+                      seenStageIds.add(matchedStage);
+                      rowAnchorId = `slice-${matchedStage.toLowerCase()}`;
+                    } else if (!matchedStage && !seenNonStageRow) {
+                      seenNonStageRow = true;
+                      rowAnchorId = 'slice-nonstage';
+                    }
+                    return (
+                      <tr id={rowAnchorId} class:list={[{ 'slice-row-peak': isPeakCostSlice }]}>
+                        <th scope="row" data-cell="Slice / Phase">
+                          <div class="slice-phase-cell">
+                            {stagePassed !== undefined ? (
+                              <span
+                                class:list={[
+                                  'hl',
+                                  stagePassed ? 'hl-mint' : 'hl-magenta',
+                                  'slice-stage-badge',
+                                  stagePassed ? 'is-pass' : 'is-miss',
+                                ]}
+                              >
+                                {matchedStage} {stagePassed ? 'PASS' : 'MISS'}
+                              </span>
+                            ) : (
+                              <span class="badge-static slice-stage-badge">
+                                {!hasSeenAnyStage ||
+                                /^s0\b|prep|init|environment|explore|exploration|setup|preflight|pre-flight/i.test(
+                                  row.slice
+                                )
+                                  ? 'PREP'
+                                  : 'POST'}
+                              </span>
+                            )}
+                            <strong>{row.slice}</strong>
+                          </div>
+                        </th>
+                      <td class="mono" data-cell="Step Range">
+                        {row.stepRange}
+                        {stepCount !== null && (
+                          <span class="metric-sub metric-inline">
+                            ({stepCount} {stepCount === 1 ? 'step' : 'steps'})
+                          </span>
+                        )}
+                      </td>
+                      <td class="mono" data-cell="LLM Calls">{row.llmCalls}</td>
+                      {hasTaskPolls && (
+                        <td class="mono" data-cell="manage_task Polls">
+                          {row.manageTaskPolls ?? 0}
+                        </td>
+                      )}
+                      {hasSliceThinking && (
+                        <td class="mono" data-cell="Thinking Tokens">
+                          {row.thinkingTokens?.toLocaleString() ?? '—'}
+                        </td>
+                      )}
+                      <td class="mono" data-cell="Estimated Cost">
+                        <div class="slice-cost-cell">
+                          {isPeakCostSlice ? (
+                            <span class="hl hl-violet cost-pill">
+                              {formatCost(row.costUsd)} ({costSharePct}%) · PEAK
+                            </span>
+                          ) : (
+                            <span class="cost-mono">
+                              {formatCost(row.costUsd)}
+                              {totalSliceCostUsd > 0 && (
+                                <>
+                                  {' '}
+                                  <span class="metric-sub metric-inline">({costSharePct}%)</span>
+                                </>
+                              )}
+                            </span>
+                          )}
+                          {maxSliceCost > 0 && row.costUsd > 0 && (
+                            <div class="slice-cost-track" aria-hidden="true">
+                              <span
+                                class:list={[
+                                  'slice-cost-fill',
+                                  isPeakCostSlice ? 'is-peak' : 'is-normal',
+                                  { 'is-track-end': row.costUsd >= maxSliceCost },
+                                ]}
+                                style={`inline-size: ${Math.min(100, (row.costUsd / maxSliceCost) * 100).toFixed(1)}%`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                    );
+                  });
+                })()}
+              </tbody>
+              <tfoot>
+                <tr class="table-row-total">
+                  <th scope="row" data-cell="Slice / Phase">
+                    <strong>Total ({d.sliceBreakdown!.length} phases)</strong>
+                  </th>
+                  <td class="mono" data-cell="Step Range">
+                    {totalSliceSteps > 0 ? (
+                      <strong>{totalSliceSteps.toLocaleString()} steps</strong>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td class="mono" data-cell="LLM Calls">
+                    <strong>{totalSliceLlmCalls}</strong>
+                  </td>
+                  {hasTaskPolls && (
+                    <td class="mono" data-cell="manage_task Polls">
+                      <strong>{totalSlicePolls}</strong>
+                    </td>
+                  )}
+                  {hasSliceThinking && (
+                    <td class="mono" data-cell="Thinking Tokens">
+                      <strong>{totalSliceThinking.toLocaleString()}</strong>
+                    </td>
+                  )}
+                  <td class="mono" data-cell="Estimated Cost">
+                    {isCostLeader ? (
+                      <span class="hl hl-mint cost-pill">{formatCost(displaySliceTotalCostUsd)}</span>
+                    ) : (
+                      <strong class="cost-mono">{formatCost(displaySliceTotalCostUsd)}</strong>
+                    )}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </section>
       )
     }
 
-    <!-- Conditional: Token & Context Window Usage -->
+    <!-- Unified Conditional: Tokens, Cache & Cost Breakdown -->
     {
-      hasTokenSection && (
+      hasTokenOrCostSection && (
         <section
-          class:list={['card', hasCallsSection ? 'col-6' : 'col-12']}
+          class="card col-12 deferred-section"
+          id="tokens-cost-section"
           aria-labelledby="token-usage-heading"
         >
           <div class="card-title">
-            <div>
-              <span class="section-kicker">03 · TELEMETRY &amp; CONTEXT</span>
-              <h2 id="token-usage-heading" class="card-heading">Token &amp; Context Usage</h2>
+            <div class="card-title-group">
+              <h2 id="token-usage-heading" class="card-heading headline-two-tone">
+                Tokens, Cache &amp; Cost{' '}
+                <span class="muted">
+                  / {costSectionSubtitle}
+                </span>
+              </h2>
             </div>
-            <span class="hl hl-violet">token telemetry</span>
           </div>
 
-          <dl class="kpi-grid">
-            {d.tokens?.input && (
-              <div class="kpi-box">
-                <dt class="section-kicker">INPUT (UNCACHED)</dt>
-                <dd class="kpi-val">{d.tokens.input}</dd>
-              </div>
-            )}
+          {hasTokenSection && hasCostBreakdown && (
+            <dl class="tokens-meta-strip">
+              {d.tokens?.total && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">TOTAL TOKENS</dt>
+                  <dd class="mono">
+                    <strong>{d.tokens.total}</strong>
+                    {d.tokens.input && d.tokens.output ? (
+                      <span class="tokens-meta-sub">
+                        ({d.tokens.input} uncached · {d.tokens.output} out)
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              )}
 
-            {d.tokens?.cachedInput && (
-              <div class="kpi-box">
-                <dt class="section-kicker">CACHED INPUT</dt>
-                <dd class="kpi-val">{d.tokens.cachedInput}</dd>
-              </div>
-            )}
+              {d.tokens?.cacheHitRate && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">CACHE HIT RATE</dt>
+                  <dd class="mono">
+                    <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
+                    {d.tokens.cachedInput && d.tokens.total ? (
+                      <span class="tokens-meta-sub">
+                        ({d.tokens.cachedInput} / {d.tokens.total})
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              )}
 
-            {d.tokens?.output && (
-              <div class="kpi-box">
-                <dt class="section-kicker">OUTPUT TOKENS</dt>
-                <dd class="kpi-val">{d.tokens.output}</dd>
-                {d.tokens?.thinking && (
-                  <dd class="kpi-sub">incl. {d.tokens.thinking} thinking</dd>
+              {d.tokens?.thinking && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">THINKING TOKENS</dt>
+                  <dd class="mono">
+                    <strong>{d.tokens.thinking}</strong>
+                    {d.tokens.output ? (
+                      <span class="tokens-meta-sub">(of {d.tokens.output} output)</span>
+                    ) : null}
+                  </dd>
+                </div>
+              )}
+
+              {d.contextWindow && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">PEAK CONTEXT</dt>
+                  <dd class="mono">
+                    <span class="hl hl-sky">{contextWindowParts.headline}</span>
+                    {contextWindowParts.detail ? (
+                      <span class="tokens-meta-sub">({contextWindowParts.detail})</span>
+                    ) : null}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
+
+          {hasTokenSection && !hasCostBreakdown && (
+            <dl class="kpi-grid kpi-grid-tokens-summary">
+              {(d.tokens?.total || d.tokens?.input) && (
+                <div class="kpi-box">
+                  <dt class="section-kicker">
+                    {d.tokens?.total ? 'TOTAL TOKENS' : 'INPUT (UNCACHED)'}
+                  </dt>
+                  <dd class="kpi-val">{d.tokens?.total ?? d.tokens?.input}</dd>
+                  <dd class="kpi-sub">
+                    {d.tokens?.input && d.tokens?.cachedInput
+                      ? `${d.tokens.input} uncached · ${d.tokens.cachedInput} cached`
+                      : d.tokens?.cachedInput
+                        ? `Includes ${d.tokens.cachedInput} cached reads`
+                        : 'Prompt + completion token volume'}
+                  </dd>
+                </div>
+              )}
+
+              {d.tokens?.cacheHitRate && (
+                <div class="kpi-box">
+                  <dt class="section-kicker">CACHE HIT RATE</dt>
+                  <dd class="kpi-val">
+                    <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
+                  </dd>
+                  <dd class="kpi-sub">
+                    {d.tokens.cachedInput && d.tokens.total
+                      ? `${d.tokens.cachedInput} cached of ${d.tokens.total} total tokens`
+                      : 'Cached input share of total prompt tokens'}
+                  </dd>
+                </div>
+              )}
+
+              {(d.tokens?.output || d.tokens?.thinking) && (
+                <div class="kpi-box">
+                  <dt class="section-kicker">
+                    {d.tokens?.output && d.tokens?.thinking
+                      ? 'OUTPUT & THINKING'
+                      : d.tokens?.output
+                        ? 'OUTPUT TOKENS'
+                        : 'THINKING TOKENS'}
+                  </dt>
+                  <dd class="kpi-val">{d.tokens?.output ?? d.tokens?.thinking}</dd>
+                  <dd class="kpi-sub">
+                    {d.tokens?.output && d.tokens?.thinking
+                      ? `Includes ${d.tokens.thinking} reasoning tokens`
+                      : d.tokens?.thinking
+                        ? 'Reasoning token volume'
+                        : 'Completion token volume'}
+                  </dd>
+                </div>
+              )}
+
+              {d.contextWindow && (
+                <div class="kpi-box">
+                  <dt class="section-kicker">CONTEXT WINDOW USAGE</dt>
+                  <dd class="kpi-val">
+                    <span class="hl hl-sky">{contextWindowParts.headline}</span>
+                  </dd>
+                  <dd class="kpi-sub">
+                    {contextWindowParts.detail ?? 'Peak prompt context window'}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          )}
+
+          {hasCostBreakdown && (
+            <div
+              class="table-wrapper"
+              tabindex="0"
+              role="region"
+              aria-labelledby="token-usage-heading"
+            >
+              <table class="app-table leaderboard-table static-table">
+                <caption class="visually-hidden">
+                  {costTableCaption}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Component</th>
+                    <th scope="col">Tokens</th>
+                    <th scope="col">{costPrimaryRateHeader}</th>
+                    <th scope="col">{costPrimaryCostHeader}</th>
+                    {has2027Pricing && <th scope="col">{costComparisonRateHeader}</th>}
+                    {has2027Pricing && <th scope="col">{costComparisonCostHeader}</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {costItemRows.map((row) => {
+                    const c26 = splitCostString(row.cost2026);
+                    const c27 = splitCostString(row.cost2027);
+                    return (
+                      <tr>
+                        <th scope="row" data-cell="Component">
+                          <strong>{row.component}</strong>
+                        </th>
+                        <td class="mono" data-cell="Tokens">{row.tokens}</td>
+                        <td
+                          class="mono"
+                          data-cell={costPrimaryRateHeader}
+                        >
+                          {row.rate2026 ?? '—'}
+                        </td>
+                        <td
+                          class="mono"
+                          data-cell={costPrimaryCostHeader}
+                        >
+                          <span class="cost-mono">{c26.primary}</span>
+                          {c26.detail && (
+                            <>
+                              {' '}
+                              <span class="metric-sub metric-inline">({c26.detail})</span>
+                            </>
+                          )}
+                        </td>
+                        {has2027Pricing && (
+                          <td class="mono" data-cell={costComparisonRateHeader}>{row.rate2027 ?? '—'}</td>
+                        )}
+                        {has2027Pricing && (
+                          <td class="mono" data-cell={costComparisonCostHeader}>
+                            <span class="cost-mono">{c27.primary}</span>
+                            {c27.detail && (
+                              <>
+                                {' '}
+                                <span class="metric-sub metric-inline">({c27.detail})</span>
+                              </>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                {costTotalRows.length > 0 && (
+                  <tfoot>
+                    {costTotalRows.map((row) => {
+                      const c26 = splitCostString(row.cost2026);
+                      const c27 = splitCostString(row.cost2027);
+                      return (
+                        <tr class="table-row-total">
+                          <th scope="row" data-cell="Component">
+                            <strong>{row.component}</strong>
+                          </th>
+                          <td class="mono" data-cell="Tokens">
+                            <strong>{row.tokens}</strong>
+                          </td>
+                          <td
+                            class="mono"
+                            data-cell={costPrimaryRateHeader}
+                          >
+                            {row.rate2026 ?? '—'}
+                          </td>
+                          <td
+                            class="mono"
+                            data-cell={costPrimaryCostHeader}
+                          >
+                            {isCostLeader ? (
+                              <span class="hl hl-mint cost-pill">{c26.primary}</span>
+                            ) : (
+                              <strong class="cost-mono">{c26.primary}</strong>
+                            )}
+                            {c26.detail && (
+                              <>
+                                {' '}
+                                <span class="metric-sub metric-inline">({c26.detail})</span>
+                              </>
+                            )}
+                          </td>
+                          {has2027Pricing && (
+                            <td class="mono" data-cell={costComparisonRateHeader}>{row.rate2027 ?? '—'}</td>
+                          )}
+                          {has2027Pricing && (
+                            <td class="mono" data-cell={costComparisonCostHeader}>
+                              <span class="cost-pill cost-pill-projected">{c27.primary}</span>
+                              {c27.detail && (
+                                <>
+                                  {' '}
+                                  <span class="metric-sub metric-inline">({c27.detail})</span>
+                                </>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tfoot>
                 )}
-              </div>
-            )}
-
-            {d.tokens?.total && (
-              <div class="kpi-box">
-                <dt class="section-kicker">TOTAL TOKENS</dt>
-                <dd class="kpi-val">{d.tokens.total}</dd>
-                <dd class="kpi-sub">incl. cached reads</dd>
-              </div>
-            )}
-
-            {d.tokens?.cacheHitRate && (
-              <div class="kpi-box kpi-span-2">
-                <dt class="section-kicker">CACHE HIT RATE</dt>
-                <dd class="kpi-val">
-                  <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
-                </dd>
-                <dd class="kpi-sub">
-                  Formula: <code>CacheRead / (input + cacheRead + cacheWrite)</code>
-                </dd>
-              </div>
-            )}
-
-            {d.contextWindow && (
-              <div class="kpi-box kpi-span-2">
-                <dt class="section-kicker">CONTEXT WINDOW USAGE</dt>
-                <dd class="kpi-val kpi-val-compact">{d.contextWindow}</dd>
-              </div>
-            )}
-          </dl>
+              </table>
+            </div>
+          )}
         </section>
       )
     }
@@ -336,33 +1198,36 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
     {
       hasCallsSection && (
         <section
-          class:list={['card', hasTokenSection ? 'col-6' : 'col-12']}
+          class="card col-12 deferred-section"
+          id="calls-section"
           aria-labelledby="calls-breakdown-heading"
         >
           <div class="card-title">
-            <div>
-              <span class="section-kicker">04 · AGENT LOOP CALLS</span>
-              <h2 id="calls-breakdown-heading" class="card-heading">Calls &amp; Tool Breakdown</h2>
+            <div class="card-title-group">
+              <h2 id="calls-breakdown-heading" class="card-heading headline-two-tone">
+                Calls &amp; Tool Breakdown <span class="muted">/ Tool Loop</span>
+              </h2>
             </div>
-            <span class="hl hl-sky">tool loop</span>
           </div>
 
-          <dl class="kpi-grid kpi-grid-spaced">
+          <dl class="calls-summary-strip">
             {d.calls?.llmCalls !== undefined && (
-              <div class="kpi-box">
+              <div class="calls-summary-item">
                 <dt class="section-kicker">LLM API CALLS</dt>
-                <dd class="kpi-val">{d.calls.llmCalls}</dd>
-                <dd class="kpi-sub">completed agent_response steps</dd>
+                <dd class="calls-summary-val">
+                  <strong class="mono">{d.calls.llmCalls}</strong>
+                  <span class="mono calls-summary-sub">completed agent_response steps</span>
+                </dd>
               </div>
             )}
 
             {d.calls?.toolCalls?.total !== undefined && (
-              <div class="kpi-box">
+              <div class="calls-summary-item">
                 <dt class="section-kicker">TOOL CALLS</dt>
-                <dd class="kpi-val">{d.calls.toolCalls.total}</dd>
-                <dd class="kpi-sub">
+                <dd class="calls-summary-val">
+                  <strong class="mono">{d.calls.toolCalls.total}</strong>
                   {d.calls.toolCalls.done !== undefined && (
-                    <span>{d.calls.toolCalls.done} DONE</span>
+                    <span class="mono calls-summary-sub">{d.calls.toolCalls.done} DONE</span>
                   )}
                   {d.calls.toolCalls.error !== undefined && d.calls.toolCalls.error > 0 && (
                     <span class="hl hl-magenta tool-err-pill">
@@ -375,37 +1240,62 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
           </dl>
 
           {d.calls?.toolCalls?.breakdown && d.calls.toolCalls.breakdown.length > 0 && (
-            <ul class="command-list tool-list" role="list">
-              {d.calls.toolCalls.breakdown.map((item, idx) => {
+            <ul class="command-list tool-list tool-list-grid" role="list">
+              {d.calls.toolCalls.breakdown.map((item) => {
                 const doneCount = item.done ?? item.total - (item.error ?? 0);
                 const errCount = item.error ?? 0;
-                const labelId = `tool-label-${idx}`;
+                const totalCallsDenom = d.calls?.toolCalls?.total || maxToolCalls;
+                const sharePct =
+                  totalCallsDenom > 0 ? Math.round((item.total / totalCallsDenom) * 100) : 0;
+                const barDenom = maxToolCalls > 0 ? maxToolCalls : 1;
+                const doneBarPct = Math.min(100, (doneCount / barDenom) * 100);
+                const errBarPct = Math.min(100 - doneBarPct, (errCount / barDenom) * 100);
+                const isFullTrack = doneCount + errCount >= barDenom;
 
                 return (
                   <li class="command-row tool-row">
                     <div class="tool-row-header">
-                      <span class="tool-name" id={labelId}>
+                      <span class="tool-name">
                         <span class="prefix">tool/</span>
-                        <span class:list={['hl', errCount > 0 ? 'hl-magenta' : 'hl-acid']}>
+                        <span
+                          class:list={[
+                            errCount > 0 ? 'hl hl-magenta' : 'badge-static tool-name-badge',
+                          ]}
+                        >
                           {item.tool}
                         </span>
                       </span>
                       <div class="tool-counts">
                         <strong>{item.total}</strong>
-                        {(item.done !== undefined || (item.error && item.error > 0)) && (
-                          <span class="tool-status-note">
-                            ({doneCount} DONE
-                            {errCount > 0 ? `, ${errCount} ERROR` : ''})
-                          </span>
-                        )}
+                        <span class="tool-status-note">
+                          ({sharePct}%
+                          {item.done !== undefined || (item.error && item.error > 0)
+                            ? ` · ${doneCount} DONE${errCount > 0 ? `, ${errCount} ERROR` : ''}`
+                            : ''}
+                          )
+                        </span>
                       </div>
                     </div>
-                    <progress
-                      class:list={['tool-progress', { 'has-error': errCount > 0 }]}
-                      value={item.total}
-                      max={maxToolCalls}
-                      aria-labelledby={labelId}
-                    />
+                    <div class="tool-bar-track" aria-hidden="true">
+                      {doneCount > 0 && (
+                        <span
+                          class:list={[
+                            'tool-bar-fill tool-bar-done',
+                            { 'is-track-end': isFullTrack && errCount === 0 },
+                          ]}
+                          style={`inline-size: ${doneBarPct.toFixed(2)}%`}
+                        />
+                      )}
+                      {errCount > 0 && (
+                        <span
+                          class:list={[
+                            'tool-bar-fill tool-bar-error',
+                            { 'is-track-end': isFullTrack },
+                          ]}
+                          style={`inline-size: ${errBarPct.toFixed(2)}%`}
+                        />
+                      )}
+                    </div>
                   </li>
                 );
               })}
@@ -415,169 +1305,44 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
       )
     }
 
-    <!-- Conditional: Cost Breakdown -->
-    {
-      hasCostBreakdown && (
-        <section
-          class="card col-12 deferred-section"
-          aria-labelledby="cost-breakdown-heading"
-        >
-          <div class="card-title">
-            <div>
-              <span class="section-kicker">05 · COST MATRIX</span>
-              <h2 id="cost-breakdown-heading" class="card-heading">Estimated Cost Breakdown</h2>
-            </div>
-            <span class="hl hl-mint">USD pricing</span>
-          </div>
-          <div
-            class="table-wrapper table-wrapper-flat"
-            tabindex="0"
-            role="region"
-            aria-labelledby="cost-breakdown-heading"
-          >
-            <table class="app-table leaderboard-table static-table">
-              <caption class="visually-hidden">
-                Token volume and estimated cost breakdown comparing 2026 and 2027 pricing rates
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Component</th>
-                  <th scope="col">Tokens</th>
-                  <th scope="col">Rate (2026)</th>
-                  <th scope="col">Cost (2026 Rate)</th>
-                  <th scope="col">Rate (2027)</th>
-                  <th scope="col">Cost (2027 Rate)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.costBreakdown!.map((row) => (
-                  <tr>
-                    <th scope="row" data-cell="Component">
-                      <strong>{row.component}</strong>
-                    </th>
-                    <td class="mono" data-cell="Tokens">{row.tokens}</td>
-                    <td class="mono" data-cell="Rate (2026)">{row.rate2026 ?? '—'}</td>
-                    <td class="mono" data-cell="Cost (2026)">
-                      <span class="hl hl-mint">{row.cost2026}</span>
-                    </td>
-                    <td class="mono" data-cell="Rate (2027)">{row.rate2027 ?? '—'}</td>
-                    <td class="mono" data-cell="Cost (2027)">{row.cost2027 ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )
-    }
-
-    <!-- Conditional: Slice / Phase Breakdown -->
-    {
-      hasSliceBreakdown && (
-        <section
-          class="card col-12 deferred-section"
-          aria-labelledby="slice-breakdown-heading"
-        >
-          <div class="card-title">
-            <div>
-              <span class="section-kicker">06 · SLICE TELEMETRY</span>
-              <h2 id="slice-breakdown-heading" class="card-heading">Slice / Phase Breakdown</h2>
-            </div>
-            <span class="hl hl-violet">per-stage metrics</span>
-          </div>
-          <div
-            class="table-wrapper table-wrapper-flat"
-            tabindex="0"
-            role="region"
-            aria-labelledby="slice-breakdown-heading"
-          >
-            <table class="app-table leaderboard-table static-table">
-              <caption class="visually-hidden">
-                Per-stage slice breakdown of step ranges, LLM calls, task polls, thinking tokens, and
-                cost
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Slice / Phase</th>
-                  <th scope="col">Step Range</th>
-                  <th scope="col">LLM Calls</th>
-                  <th scope="col">manage_task Polls</th>
-                  <th scope="col">Thinking Tokens</th>
-                  <th scope="col">Cost (2026 Rate)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.sliceBreakdown!.map((row) => (
-                  <tr>
-                    <th scope="row" data-cell="Slice / Phase">
-                      <strong>{row.slice}</strong>
-                    </th>
-                    <td class="mono" data-cell="Step Range">{row.stepRange}</td>
-                    <td class="mono" data-cell="LLM Calls">{row.llmCalls}</td>
-                    <td class="mono" data-cell="manage_task Polls">{row.manageTaskPolls ?? 0}</td>
-                    <td class="mono" data-cell="Thinking Tokens">
-                      {row.thinkingTokens?.toLocaleString() ?? '—'}
-                    </td>
-                    <td class="mono" data-cell="Cost (2026)">
-                      <span class="hl hl-mint cost-pill">{formatCost(row.costUsd)}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )
-    }
-
-    <!-- Conditional: Git Commit Log -->
-    {
-      hasCommitLog && (
-        <section
-          class="card col-12 deferred-section"
-          aria-labelledby="git-commits-heading"
-        >
-          <div class="card-title">
-            <div>
-              <span class="section-kicker">07 · GIT CHECKPOINTS</span>
-              <h2 id="git-commits-heading" class="card-heading">
-                Git Commits ({d.commitLog!.length})
-              </h2>
-            </div>
-            <span class="hl hl-acid">git log</span>
-          </div>
-          <pre class="terminal-box" tabindex="0"><code>{commitLogText}</code></pre>
-        </section>
-      )
-    }
-
-    <!-- Conditional: Notes -->
+    <!-- Conditional: Notes & Key Findings -->
     {
       hasNotes && (
         <section
-          class="card col-12 deferred-section"
+          class="card col-12"
           id="notes-section"
           aria-labelledby="notes-findings-heading"
         >
           <div class="card-title">
-            <div>
-              <span class="section-kicker">08 · FIELD NOTES</span>
-              <div class="card-title-group">
-                <h2 id="notes-findings-heading" class="card-heading">Notes &amp; Key Findings</h2>
-                <span class="hl hl-violet">
-                  {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} findings
+            <div class="card-title-group">
+              <h2 id="notes-findings-heading" class="card-heading headline-two-tone">
+                Notes &amp; Key Findings{' '}
+                <span class="muted">
+                  / {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} Observations
                 </span>
-              </div>
+              </h2>
             </div>
-            {hasNotesDetails && d.notesDetails!.length > 1 && (
-              <button
-                type="button"
-                class="btn btn-sm btn-secondary"
-                id="toggle-notes-btn"
-                aria-expanded="false"
-              >
-                Expand All
-              </button>
+            {hasNotesDetails && (
+              <div>
+                {d.notesDetails!.length > 1 && (
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    id="toggle-notes-btn"
+                    aria-expanded="false"
+                    aria-keyshortcuts="e"
+                  >
+                    <span id="toggle-notes-label">Expand All Notes</span>
+                    <kbd class="menu-kbd" aria-hidden="true">e</kbd>
+                  </button>
+                )}
+                <span
+                  id="toggle-notes-status"
+                  class="visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                />
+              </div>
             )}
           </div>
 
@@ -585,9 +1350,13 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
             <ol class="notes-list" role="list">
               {d.notesDetails!.map((note, idx) => (
                 <li class="note-card">
-                  <details class="note-disclosure" open={idx === 0}>
+                  <details
+                    class="note-disclosure"
+                    id={`note-${idx + 1}`}
+                    open={idx === (firstFailureNoteIdx ?? 0)}
+                  >
                     <summary class="note-summary">
-                      <span class="hl hl-acid note-num" aria-hidden="true">
+                      <span class="note-num" aria-hidden="true">
                         {String(idx + 1).padStart(2, '0')}
                       </span>
                       <strong class="note-title">
@@ -600,7 +1369,7 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
                         )}
                       </strong>
                       <span class="note-summary-meta">
-                        <span class="tag-outline note-count-badge">
+                        <span class="badge-static note-count-badge">
                           {note.bullets.length} {note.bullets.length === 1 ? 'point' : 'points'}
                         </span>
                         <span class="note-chevron" aria-hidden="true">▸</span>
@@ -649,6 +1418,16 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
                           );
                         })}
                       </ul>
+                      <div class="note-body-footer">
+                        <a
+                          href={`#note-${idx + 1}`}
+                          class="mono action-link note-permalink-btn"
+                          data-note-hash={`#note-${idx + 1}`}
+                          data-note-label={`#note-${String(idx + 1).padStart(2, '0')}`}
+                        >
+                          Copy #note-{String(idx + 1).padStart(2, '0')} link
+                        </a>
+                      </div>
                     </div>
                   </details>
                 </li>
@@ -658,7 +1437,7 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
             <ol class="notes-list" role="list">
               {d.notes!.map((note, idx) => (
                 <li class="note-item">
-                  <span class="hl hl-acid note-num" aria-hidden="true">
+                  <span class="note-num" aria-hidden="true">
                     {String(idx + 1).padStart(2, '0')}
                   </span>
                   <span>
@@ -677,31 +1456,341 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
         </section>
       )
     }
+
+    <!-- Conditional: Command / Interface Used -->
+    {
+      hasInterface && (
+        <section
+          class:list={['card deferred-section', hasInterface && hasCommitLog ? 'col-6' : 'col-12']}
+          id="interface-section"
+          aria-labelledby="interface-heading"
+        >
+          <div class="card-title">
+            <div class="card-title-group">
+              <h2 id="interface-heading" class="card-heading headline-two-tone">
+                Command / Interface Used{' '}
+                {d.interface?.type && (
+                  <span class="muted">/ {d.interface.type.toUpperCase()}</span>
+                )}
+              </h2>
+            </div>
+            {d.interface?.command && (
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-secondary"
+                  id="copy-cmd-btn"
+                  data-cmd={d.interface.command}
+                >
+                  Copy Command
+                </button>
+                <span
+                  id="copy-cmd-status"
+                  class="visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                />
+              </div>
+            )}
+          </div>
+
+          {d.interface?.command && (
+            <Code
+              code={d.interface.command}
+              lang="bash"
+              theme={neoAcidCodeTheme}
+              wrap={null}
+              transformers={[
+                {
+                  pre(node) {
+                    delete node.properties.style;
+                  },
+                },
+              ]}
+              class="terminal-box terminal-box-wrap"
+            />
+          )}
+
+          {d.interface?.details && (
+            <p class="interface-details">
+              {d.interface.details}
+            </p>
+          )}
+
+          <div class="interface-footer-meta">
+            <span class="mono text-muted">
+              {wallClockMinutes && wallClockMinutes > d.durationMinutes
+                ? `Execution mode: Manual 'continue' nudges across ${formatDuration(wallClockMinutes)} wall-clock`
+                : 'Execution mode: Single-prompt Outside-In TDD workflow'}
+            </span>
+            <a href="/about#prompt-spec-heading" class="action-link">
+              View Prompt Contract <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Conditional: Git Commit Log -->
+    {
+      hasCommitLog && (
+        <section
+          class:list={['card deferred-section', hasInterface && hasCommitLog ? 'col-6' : 'col-12']}
+          id="commits-section"
+          aria-labelledby="git-commits-heading"
+        >
+          <div class="card-title">
+            <div class="card-title-group">
+              <h2 id="git-commits-heading" class="card-heading headline-two-tone">
+                Git Commits <span class="muted">/ {d.commitLog!.length} Checkpoints</span>
+              </h2>
+            </div>
+            <div>
+              <button
+                type="button"
+                class="btn btn-sm btn-secondary"
+                id="copy-commits-btn"
+                data-cmd={commitLogText}
+              >
+                Copy Log
+              </button>
+              <span
+                id="copy-commits-status"
+                class="visually-hidden"
+                role="status"
+                aria-live="polite"
+              />
+            </div>
+          </div>
+          {(singleCommitAuthor || hasRelativeCommitTimes) && (
+            <p class="mono section-subnote">
+              {[
+                singleCommitAuthor ? `Author: ${singleCommitAuthor}` : null,
+                hasRelativeCommitTimes ? 'Timestamps relative to post-run capture' : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          )}
+          <ol class="command-list commit-list" role="list">
+            {d.commitLog!.map((c) => {
+              const commitStage = matchCommitStageId(c.message);
+              const commitStagePassed = commitStage
+                ? d.planCompletion?.[commitStage as keyof typeof d.planCompletion]
+                : undefined;
+              return (
+                <li class="command-row commit-row">
+                  <div class="commit-main">
+                    <code class="commit-hash">{c.hash}</code>
+                    {commitStage && (
+                      <a
+                        href={`#plan-${commitStage.toLowerCase()}`}
+                        aria-label={`Jump to stage ${commitStage} (${commitStagePassed === false ? 'MISS' : 'PASS'}) in Plan Completion`}
+                        class:list={[
+                          'hl',
+                          commitStagePassed === false ? 'hl-magenta is-miss' : 'hl-mint is-pass',
+                          'commit-stage-badge',
+                        ]}
+                      >
+                        {commitStage}
+                        {commitStagePassed === false ? ' MISS' : ''}
+                      </a>
+                    )}
+                    <span class="commit-msg">{c.message}</span>
+                  </div>
+                  {((!singleCommitAuthor && c.author) || c.relativeTime) && (
+                    <div class="commit-meta-right">
+                      {!singleCommitAuthor && c.author && (
+                        <span class="commit-author">{c.author}</span>
+                      )}
+                      {c.relativeTime && (
+                        <span class="commit-time" title={`${c.relativeTime} before capture`}>
+                          -{c.relativeTime}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )
+    }
   </div>
+
+  {
+    siblingRuns.length > 0 && (
+      <aside class="card detail-siblings-bar" id="siblings-section" aria-label="Compare related runs">
+        <span class="mono detail-siblings-label">COMPARE RELATED RUNS:</span>
+        <div class="detail-siblings-list">
+          {siblingRuns.map((sib) => {
+            const sliceDiff = sib.completed - plan.completed;
+            const costDiff = Number((sib.costUsd - d.costUsd).toFixed(2));
+            const durDiff = sib.durationMinutes - d.durationMinutes;
+            const deltaParts: string[] = [];
+            let betterCount = 0;
+            let worseCount = 0;
+
+            if (sliceDiff !== 0) {
+              const absSlices = Math.abs(sliceDiff);
+              deltaParts.push(
+                `${sliceDiff > 0 ? '+' : '-'}${absSlices} ${absSlices === 1 ? 'slice' : 'slices'}`
+              );
+            }
+            if (costDiff < 0) {
+              betterCount++;
+              deltaParts.push(`${formatCost(Math.abs(costDiff))} cheaper`);
+            } else if (costDiff > 0) {
+              worseCount++;
+              deltaParts.push(`${formatCost(costDiff)} pricier`);
+            } else {
+              deltaParts.push(formatCost(sib.costUsd));
+            }
+            if (durDiff < 0) {
+              betterCount++;
+              deltaParts.push(`${formatDuration(Math.abs(durDiff))} faster`);
+            } else if (durDiff > 0) {
+              worseCount++;
+              deltaParts.push(`${formatDuration(durDiff)} slower`);
+            } else {
+              deltaParts.push(formatDuration(sib.durationMinutes));
+            }
+            const deltaText =
+              sliceDiff === 0 && costDiff === 0 && durDiff === 0
+                ? `${formatCost(sib.costUsd)} · ${formatDuration(sib.durationMinutes)} (par)`
+                : deltaParts.join(' · ');
+            const deltaToneClass =
+              sliceDiff > 0
+                ? 'is-better'
+                : sliceDiff < 0
+                  ? 'is-worse'
+                  : betterCount > 0 && worseCount === 0
+                    ? 'is-better'
+                    : worseCount > 0 && betterCount === 0
+                      ? 'is-worse'
+                      : '';
+            const deltaPrefix =
+              deltaToneClass === 'is-better'
+                ? '▲ '
+                : deltaToneClass === 'is-worse'
+                  ? '▼ '
+                  : betterCount > 0 && worseCount > 0
+                    ? '⇄ '
+                    : '';
+
+            return (
+              <a href={`/runs/${sib.id}`} class="detail-sibling-chip">
+                <span class="mono">#{sib.rank}</span>
+                <strong>
+                  {sib.harness} / {sib.model}
+                  {sib.effort ? ` (${sib.effort})` : ''}
+                </strong>
+                <span class="badge-static detail-sibling-rel">
+                  {sib.relation === 'same-model' ? 'same model' : 'same harness'} ·{' '}
+                  {sib.completed}/{sib.total}
+                </span>
+                <span class:list={['mono detail-sibling-delta', deltaToneClass]}>
+                  {deltaPrefix}{deltaText}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      </aside>
+    )
+  }
+
+  <nav aria-label="Rank pagination" class="detail-bottom-pager">
+    {
+      prevRun ? (
+        <a href={`/runs/${prevRun.id}`} class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">← PREVIOUS RANK (#{prevRun.rank})</span>
+          <strong class="detail-pager-title">
+            {prevRun.harness} / {prevRun.model}
+            {prevRun.effort ? ` (${prevRun.effort})` : ''}
+          </strong>
+          <span class="mono detail-pager-meta">
+            {prevRun.completed}/{prevRun.total} slices · {formatCost(prevRun.costUsd)} ·{' '}
+            {formatDuration(prevRun.durationMinutes)}
+          </span>
+        </a>
+      ) : (
+        <a href="/" class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">← LEADERBOARD INDEX</span>
+          <strong class="detail-pager-title">All Benchmark Runs</strong>
+          <span class="mono detail-pager-meta">Compare all {totalRuns} verified evaluations</span>
+        </a>
+      )
+    }
+    {
+      nextRun ? (
+        <a href={`/runs/${nextRun.id}`} class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">NEXT RANK (#{nextRun.rank}) →</span>
+          <strong class="detail-pager-title">
+            {nextRun.harness} / {nextRun.model}
+            {nextRun.effort ? ` (${nextRun.effort})` : ''}
+          </strong>
+          <span class="mono detail-pager-meta">
+            {nextRun.completed}/{nextRun.total} slices · {formatCost(nextRun.costUsd)} ·{' '}
+            {formatDuration(nextRun.durationMinutes)}
+          </span>
+        </a>
+      ) : (
+        <a href="/" class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">LEADERBOARD INDEX →</span>
+          <strong class="detail-pager-title">All Benchmark Runs</strong>
+          <span class="mono detail-pager-meta">Compare all {totalRuns} verified evaluations</span>
+        </a>
+      )
+    }
+  </nav>
 </BaseLayout>
 
 <script>
-  const copyBtn = document.getElementById('copy-cmd-btn') as HTMLButtonElement | null;
-  const copyStatus = document.getElementById('copy-cmd-status') as HTMLElement | null;
-  copyBtn?.addEventListener('click', async () => {
-    const cmd = copyBtn.dataset.cmd;
-    if (!cmd) return;
-    try {
-      await navigator.clipboard.writeText(cmd);
-      const original = copyBtn.textContent;
-      copyBtn.textContent = '✓ Copied!';
-      if (copyStatus) copyStatus.textContent = 'Command copied to clipboard.';
-      setTimeout(() => {
-        copyBtn.textContent = original;
-        if (copyStatus) copyStatus.textContent = '';
-      }, 1800);
-    } catch {
-      copyBtn.textContent = 'Failed to copy';
-      if (copyStatus) copyStatus.textContent = 'Failed to copy command.';
-    }
-  });
+  function bindCopyButton(btnId: string, statusId: string, label: string) {
+    const btn = document.getElementById(btnId) as HTMLButtonElement | null;
+    const status = document.getElementById(statusId) as HTMLElement | null;
+    btn?.addEventListener('click', async () => {
+      const cmd = btn.dataset.cmd;
+      if (!cmd) return;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        const original = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        if (status) status.textContent = `${label} copied to clipboard.`;
+        setTimeout(() => {
+          btn.textContent = original;
+          if (status) status.textContent = '';
+        }, 1800);
+      } catch {
+        btn.textContent = 'Failed to copy';
+        if (status) status.textContent = `Failed to copy ${label.toLowerCase()}.`;
+      }
+    });
+  }
 
+  bindCopyButton('copy-cmd-btn', 'copy-cmd-status', 'Command');
+  bindCopyButton('copy-commits-btn', 'copy-commits-status', 'Commit log');
+
+  const backLink = document.getElementById('back-to-leaderboard-link') as HTMLAnchorElement | null;
+  if (backLink && document.referrer) {
+    try {
+      const refUrl = new URL(document.referrer);
+      if (
+        refUrl.origin === window.location.origin &&
+        (refUrl.pathname === '/' || refUrl.pathname === '') &&
+        refUrl.search
+      ) {
+        backLink.href = `/${refUrl.search}`;
+      }
+    } catch {}
+  }
+
+  const notesSection = document.getElementById('notes-section') as HTMLElement | null;
   const toggleNotesBtn = document.getElementById('toggle-notes-btn') as HTMLButtonElement | null;
+  const toggleNotesLabel = document.getElementById('toggle-notes-label') as HTMLElement | null;
+  const toggleNotesStatus = document.getElementById('toggle-notes-status') as HTMLElement | null;
   const noteDisclosures = Array.from(
     document.querySelectorAll<HTMLDetailsElement>('#notes-section .note-disclosure')
   );
@@ -709,19 +1798,197 @@ const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.mod
   function syncToggleNotesBtn() {
     if (!toggleNotesBtn || noteDisclosures.length === 0) return;
     const allOpen = noteDisclosures.every((d) => d.open);
-    toggleNotesBtn.textContent = allOpen ? 'Collapse All' : 'Expand All';
+    const labelText = allOpen ? 'Collapse All Notes' : 'Expand All Notes';
+    if (toggleNotesLabel) {
+      toggleNotesLabel.textContent = labelText;
+    } else {
+      toggleNotesBtn.textContent = labelText;
+    }
     toggleNotesBtn.setAttribute('aria-expanded', String(allOpen));
+  }
+
+  function openNoteFromHash(targetHash = window.location.hash) {
+    if (!targetHash || !/^#note-\d+$/.test(targetHash)) return;
+    const target = document.querySelector<HTMLDetailsElement>(targetHash);
+    if (target) {
+      target.open = true;
+      syncToggleNotesBtn();
+    }
+  }
+
+  openNoteFromHash();
+  window.addEventListener('hashchange', () => openNoteFromHash());
+
+  const diagNoteLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      '.plan-stage-diag-link[href^="#note-"], .plan-failure-diag-trigger[href^="#note-"]'
+    )
+  );
+  for (const link of diagNoteLinks) {
+    link.addEventListener('click', () => {
+      const href = link.getAttribute('href');
+      if (href) openNoteFromHash(href);
+    });
   }
 
   toggleNotesBtn?.addEventListener('click', () => {
     const allOpen = noteDisclosures.every((d) => d.open);
+    const nextOpen = !allOpen;
     for (const d of noteDisclosures) {
-      d.open = !allOpen;
+      d.open = nextOpen;
     }
     syncToggleNotesBtn();
+    if (!nextOpen && notesSection && notesSection.getBoundingClientRect().top < 0) {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      notesSection.scrollIntoView({ behavior: prefersReduced ? 'instant' : 'smooth', block: 'start' });
+    }
+    if (toggleNotesStatus) {
+      toggleNotesStatus.textContent = nextOpen
+        ? `Expanded all ${noteDisclosures.length} field notes.`
+        : `Collapsed all ${noteDisclosures.length} field notes.`;
+    }
   });
 
   for (const d of noteDisclosures) {
     d.addEventListener('toggle', syncToggleNotesBtn);
   }
+
+  const notePermalinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('.note-permalink-btn')
+  );
+  for (const link of notePermalinks) {
+    link.addEventListener('click', async (e) => {
+      const noteHash = link.dataset.noteHash;
+      const noteLabel = link.dataset.noteLabel || noteHash;
+      if (!noteHash) return;
+      e.preventDefault();
+      const fullUrl = `${window.location.origin}${window.location.pathname}${noteHash}`;
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        const original = link.textContent;
+        link.textContent = `✓ Copied ${noteLabel} link`;
+        if (toggleNotesStatus) {
+          toggleNotesStatus.textContent = `Copied ${noteLabel} link to clipboard.`;
+        }
+        setTimeout(() => {
+          link.textContent = original;
+          if (toggleNotesStatus) toggleNotesStatus.textContent = '';
+        }, 1800);
+      } catch {
+        window.location.hash = noteHash;
+      }
+    });
+  }
+
+  const tableWrappers = Array.from(document.querySelectorAll<HTMLElement>('.table-wrapper'));
+  if (tableWrappers.length > 0) {
+    const syncTableWrapperFocus = () => {
+      for (const wrapper of tableWrappers) {
+        if (wrapper.scrollWidth > wrapper.clientWidth + 1) {
+          wrapper.setAttribute('tabindex', '0');
+        } else {
+          wrapper.removeAttribute('tabindex');
+        }
+      }
+    };
+    syncTableWrapperFocus();
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver(syncTableWrapperFocus);
+      for (const wrapper of tableWrappers) {
+        ro.observe(wrapper);
+      }
+    }
+  }
+
+  const jumpLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('#detail-jump-bar .detail-jump-link')
+  );
+  const supportsScrollTargetGroup =
+    typeof CSS !== 'undefined' && CSS.supports('scroll-target-group: auto');
+
+  if (supportsScrollTargetGroup) {
+    const syncAriaCurrent = () => {
+      const currentLink = document.querySelector<HTMLAnchorElement>(
+        '#detail-jump-bar .detail-jump-link:target-current'
+      );
+      if (!currentLink) return;
+      for (const link of jumpLinks) {
+        link.setAttribute('aria-current', link === currentLink ? 'true' : 'false');
+      }
+    };
+    syncAriaCurrent();
+    document.addEventListener('scrollend', syncAriaCurrent);
+  } else if (jumpLinks.length > 0 && 'IntersectionObserver' in window) {
+    const sections = document.querySelectorAll<HTMLElement>(
+      '.section-grid > section[id], #siblings-section'
+    );
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            for (const link of jumpLinks) {
+              const isActive = link.getAttribute('href') === `#${id}`;
+              link.classList.toggle(':target-current', isActive);
+              link.setAttribute('aria-current', isActive ? 'true' : 'false');
+            }
+          }
+        }
+      },
+      { rootMargin: '-50% 0px -50% 0px', threshold: 0 }
+    );
+    for (const section of sections) {
+      observer.observe(section);
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.isComposing || e.repeat || e.metaKey || e.ctrlKey || e.altKey) {
+      return;
+    }
+    if (window.getSelection()?.toString()) return;
+
+    const target = e.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+
+    const interactiveAncestor = target?.closest<HTMLElement>(
+      'a, button, summary, input, textarea, select, [contenteditable="true"], [role="button"], [role="link"], [role="region"][tabindex], [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (e.key === '[') {
+      const prev = document.getElementById('prev-run-link') as HTMLAnchorElement | null;
+      if (!prev || (interactiveAncestor && interactiveAncestor !== prev)) return;
+      e.preventDefault();
+      window.location.href = prev.href;
+    } else if (e.key === ']') {
+      const next = document.getElementById('next-run-link') as HTMLAnchorElement | null;
+      if (!next || (interactiveAncestor && interactiveAncestor !== next)) return;
+      e.preventDefault();
+      window.location.href = next.href;
+    } else if (e.key === 'e' && toggleNotesBtn && notesSection) {
+      const isFocusOnToggle = interactiveAncestor === toggleNotesBtn;
+      const isFocusInsideNotes = Boolean(
+        target &&
+          notesSection.contains(target) &&
+          (!interactiveAncestor ||
+            interactiveAncestor === toggleNotesBtn ||
+            interactiveAncestor.tagName === 'SUMMARY')
+      );
+      const rect = notesSection.getBoundingClientRect();
+      const isNotesInViewport = rect.top < window.innerHeight && rect.bottom > 0;
+      const isUnfocusedBody = !interactiveAncestor && isNotesInViewport;
+
+      if (!isFocusOnToggle && !isFocusInsideNotes && !isUnfocusedBody) return;
+      e.preventDefault();
+      toggleNotesBtn.click();
+    }
+  });
 </script>
