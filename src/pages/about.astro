@@ -71,6 +71,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   description="Methodology, V1 CLI product contract, and S1–S7 Outside-In TDD implementation slices for the Capy Bench Elixir/OTP coding agent benchmark."
   activeNav="about"
 >
+  <div class="about-quiet">
   <!-- 01. HERO -->
   <section class="hero-box" aria-labelledby="about-hero-heading">
     <div class="pixel-mosaic" aria-hidden="true">
@@ -81,8 +82,6 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
       <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
     </div>
-
-    <span class="section-kicker">METHODOLOGY &amp; V1 CLI CONTRACT</span>
 
     <h1 id="about-hero-heading" class="headline-two-tone">
       One starter repo, seven TDD slices.{' '}
@@ -484,7 +483,254 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       )
     }
   </nav>
+  </div>
 </BaseLayout>
+
+<style>
+  /* ==========================================================================
+     QUIETER ABOUT & SPECS REFINEMENTS (Neo-Acid Read Restraint)
+     Matches index.astro and runs/[id].astro: preserves semantic brand colors
+     (--hl-acid, --hl-mint, --hl-sky, --hl-violet, --hl-magenta) for earned
+     markers while removing nested box chrome and widening reading measures.
+     ========================================================================== */
+  .about-quiet .hero-box {
+    padding: 1.5rem 100px 1.35rem 0;
+    margin-block-end: 1.25rem;
+  }
+
+  .about-quiet .headline-two-tone {
+    font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+  }
+
+  .about-quiet .hero-subtitle {
+    font-size: 0.96875rem;
+    line-height: 1.55;
+    margin-block-start: 0.65rem;
+    max-inline-size: 92ch;
+  }
+
+  .about-quiet .pixel-mosaic {
+    inset-block-start: 1.35rem;
+    grid-template-columns: repeat(5, 13px);
+    grid-template-rows: repeat(6, 13px);
+    opacity: 0.85;
+  }
+
+  /* Quieter Hero Callout: open top-bordered note instead of a heavy 8px-left-border box */
+  .about-quiet .hero-callout {
+    max-inline-size: 92ch;
+    margin-block-start: 1rem;
+    padding: 0.85rem 0 0;
+    border: none;
+    border-block-start: var(--border-row);
+    background-color: transparent;
+  }
+
+  /* Unified 4-Column Contract Parameters Strip */
+  .about-quiet .hero-stats-grid {
+    gap: 0;
+    margin-block: 0 1.5rem;
+    border: var(--border-frame);
+    background-color: transparent;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .about-quiet .stat-card {
+    border: none;
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+    padding: 1rem 1.2rem;
+    gap: 0.3rem;
+  }
+
+  .about-quiet .stat-card:last-child {
+    border-inline-end: none;
+  }
+
+  .about-quiet .stat-value {
+    font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+  }
+
+  @media (max-width: 900px) {
+    .about-quiet .hero-stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .about-quiet .stat-card:nth-child(2) {
+      border-inline-end: none;
+    }
+
+    .about-quiet .stat-card:nth-child(-n + 2) {
+      border-block-end: var(--border-row);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .about-quiet .hero-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .about-quiet .stat-card {
+      border-inline-end: none;
+      border-block-end: var(--border-row);
+    }
+
+    .about-quiet .stat-card:last-child {
+      border-block-end: none;
+    }
+  }
+
+  /* Open Underline Sticky Jump Bar */
+  .about-quiet .detail-jump-bar {
+    background-color: var(--bg-canvas);
+    border: none;
+    border-block-end: var(--border-frame);
+    padding: 0.55rem 0;
+    margin-block-end: 1.5rem;
+  }
+
+  .about-quiet .detail-jump-link {
+    background-color: transparent;
+    border: none;
+    border-block-end: 3px solid transparent;
+    padding: 0.35rem 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .about-quiet .detail-jump-link:hover {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .about-quiet .detail-jump-link:target-current,
+  .about-quiet .detail-jump-link.\:target-current {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-block-end-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .about-quiet .detail-jump-link:target-current,
+  :global([data-theme="light"]) .about-quiet .detail-jump-link.\:target-current {
+    border-block-end-color: var(--accent-cobalt);
+  }
+
+  /* Section Cards & Widen Full-Width Lead Paragraphs */
+  .about-quiet .section-grid > .card {
+    background-color: transparent;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .about-quiet .section-grid > .card .card-heading {
+    font-size: 1.25rem;
+  }
+
+  .about-quiet .card-title .badge-static {
+    border: none;
+    background-color: transparent;
+    color: var(--text-muted);
+    padding: 0;
+  }
+
+  .about-quiet .card-title .btn-secondary {
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  /* Unified 8-Card Stage Matrix (PREP + S1–S7) */
+  .about-quiet .stage-spec-grid {
+    gap: 0;
+    border: 1px solid var(--border-strong-color);
+    background-color: transparent;
+  }
+
+  .about-quiet .stage-spec-card {
+    background-color: transparent;
+    border: none;
+    border-block-end: var(--border-row);
+    padding: 1.15rem;
+  }
+
+  .about-quiet .stage-spec-card:last-child {
+    border-block-end: none;
+  }
+
+  @media (width >= 38em) and (width < 68em) {
+    .about-quiet .stage-spec-card:nth-child(odd) {
+      border-inline-end: var(--border-row);
+    }
+
+    .about-quiet .stage-spec-card:nth-last-child(-n + 2) {
+      border-block-end: none;
+    }
+  }
+
+  @media (width >= 68em) {
+    .about-quiet .stage-spec-card:not(:nth-child(4n)) {
+      border-inline-end: var(--border-row);
+    }
+
+    .about-quiet .stage-spec-card:nth-child(n + 5) {
+      border-block-end: none;
+    }
+  }
+
+  .about-quiet .stage-spec-meta .badge-static {
+    border: none;
+    background-color: transparent;
+    color: var(--text-muted);
+    padding: 0;
+  }
+
+  .about-quiet .stage-spec-meta .hl-violet {
+    background-color: transparent;
+    color: var(--text-primary);
+    border-block-end: 2px solid var(--hl-violet);
+    padding: 0.05rem 0.2rem;
+  }
+
+  /* Judging Rubric Callouts: clean 3px semantic left rule without outer 2px box */
+  .about-quiet .judging-list {
+    gap: 0;
+    border-block-start: var(--border-row);
+  }
+
+  .about-quiet .judging-list .callout {
+    border: none;
+    border-inline-start: 3px solid var(--border-strong-color);
+    border-block-end: var(--border-row);
+    background-color: transparent;
+    padding: 0.85rem 0 0.85rem 1rem;
+  }
+
+  .about-quiet .judging-list .callout:last-child {
+    border-block-end: none;
+  }
+
+  .about-quiet .judging-list .callout-mint {
+    border-inline-start-color: var(--hl-mint);
+  }
+
+  .about-quiet .judging-list .callout-sky {
+    border-inline-start-color: var(--hl-sky);
+  }
+
+  .about-quiet .judging-list .callout-magenta {
+    border-inline-start-color: var(--hl-magenta);
+  }
+
+  /* Terminal Boxes & Bottom Pager */
+  .about-quiet .terminal-box {
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .about-quiet .detail-pager-card {
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+    padding: 1.15rem 1.35rem;
+  }
+</style>
 
 <script>
   function bindCopyButton(btnId: string, statusId: string, label: string, sectionId?: string) {
