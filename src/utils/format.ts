@@ -81,6 +81,24 @@ export function formatCompactContextWindow(val?: string): string | null {
   return withoutParens || val;
 }
 
+export function splitContextWindow(val?: string): { headline: string; detail: string | null } {
+  if (!val) return { headline: '', detail: null };
+  const match = val.trim().match(/^([^(]+?)\s*\(([^)]+)\)$/);
+  if (match) {
+    return { headline: match[1].trim(), detail: match[2].trim() };
+  }
+  return { headline: val.trim(), detail: null };
+}
+
+export function splitCostString(val?: string): { primary: string; detail: string | null } {
+  if (!val) return { primary: '—', detail: null };
+  const match = val.trim().match(/^([^(]+?)\s*\(([^)]+)\)$/);
+  if (match) {
+    return { primary: match[1].trim(), detail: match[2].trim() };
+  }
+  return { primary: val.trim(), detail: null };
+}
+
 const HARNESS_DISPLAY_MAP: Record<string, string> = {
   antigravity: 'Antigravity',
   'antigravity cli': 'Antigravity CLI',
@@ -125,6 +143,42 @@ export function getPlanStats(planCompletion: Record<string, boolean>) {
   return { entries, completed, total, ratio };
 }
 
+export function matchSliceStageId(sliceLabel: string): string | null {
+  const match = sliceLabel
+    .trim()
+    .match(/^(?:(?:Preparation|Prep|Setup)\s*\+\s*|Phase\s+\d+:\s*)?(S[1-7])(?::|\s|\/|-)/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+export function matchCommitStageId(message: string): string | null {
+  const explicit = message.match(/\b(S[1-7])\b/i);
+  if (explicit) {
+    return explicit[1].toUpperCase();
+  }
+  const text = message.toLowerCase();
+  if (/release verification|record release|^init\b|document v1 benchmark contract/.test(text)) {
+    return null;
+  }
+  if (/ctrl-c|sigint|interrupted runs|partial summar/.test(text)) return 'S7';
+  if (/percentile|latenc|elapsed time/.test(text)) return 'S6';
+  if (/outcome|status accounting|status counts|transport failure|exit codes/.test(text)) {
+    return 'S5';
+  }
+  if (/pace[d]?|five-second|5-second|deadline boundar/.test(text)) return 'S4';
+  if (/stream(?:ed|ing)?.*(?:http|get)|tls|bounded get/.test(text)) return 'S3';
+  if (/argument|malformed url|invalid cli/.test(text)) return 'S2';
+  if (/launch.*(?:cli|capy bench)/.test(text)) return 'S1';
+  return null;
+}
+
+export function getStepRangeCount(stepRange: string): number | null {
+  const match = stepRange.trim().match(/^(\d+)\s*[–-]\s*(\d+)$/);
+  if (!match) return null;
+  const start = Number(match[1]);
+  const end = Number(match[2]);
+  return end >= start ? end - start + 1 : null;
+}
+
 export interface TextSegment {
   type: 'text' | 'code';
   value: string;
@@ -139,6 +193,7 @@ export interface ParsedNoteBullet {
 
 const INLINE_CODE_PATTERN = new RegExp(
   [
+    '`[^`]+`',
     '\\b(?:WaitMsBeforeAsync|cache_read_tokens|Overwrite|isError|thinkingLevel|stopReason|effort|attempt):\\s*(?:"[^"]+"|[0-9]+|true|false)\\b',
     '(?::[a-z_0-9]+\\.|\\b[A-Za-z0-9_.]+\\.)?[A-Za-z0-9_]+!?\\([^()]*\\)',
     '(?::[a-z_][a-z_0-9]*|\\b[A-Z][A-Za-z0-9_.]*)\\.[a-z_0-9!?]+\\/[0-9]+',
@@ -174,8 +229,10 @@ export function tokenizeNoteText(text: string): TextSegment[] {
     if (idx > lastIndex) {
       segments.push({ type: 'text', value: text.slice(lastIndex, idx) });
     }
-    segments.push({ type: 'code', value: match[0] });
-    lastIndex = idx + match[0].length;
+    const raw = match[0];
+    const clean = raw.startsWith('`') && raw.endsWith('`') && raw.length > 2 ? raw.slice(1, -1) : raw;
+    segments.push({ type: 'code', value: clean });
+    lastIndex = idx + raw.length;
   }
 
   if (lastIndex < text.length) {
