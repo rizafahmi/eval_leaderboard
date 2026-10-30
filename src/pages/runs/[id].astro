@@ -386,6 +386,7 @@ const pageSections = [
   description={runDescription}
   ogType="article"
 >
+  <div class="run-detail-quiet">
   <div class="detail-nav-row">
     <div class="detail-nav-left">
       <a href="/" class="btn btn-sm btn-secondary" id="back-to-leaderboard-link">
@@ -444,24 +445,32 @@ const pageSections = [
           >
             #{rank} OF {totalRuns}
           </span>
-          <span class="badge-static">{metaSpecSummary}</span>
-          {d.commits !== undefined &&
-            (hasCommitLog ? (
-              <a href="#commits-section" class="badge-static badge-link">
-                {d.commits} {d.commits === 1 ? 'commit' : 'commits'} ↓
-              </a>
-            ) : (
-              <span class="badge-static">
-                {d.commits} {d.commits === 1 ? 'commit' : 'commits'}
-              </span>
-            ))}
-          <span class="badge-static">
+          <span class="detail-meta-text">{metaSpecSummary}</span>
+          {d.commits !== undefined && (
+            <>
+              <span class="detail-meta-sep" aria-hidden="true">·</span>
+              {hasCommitLog ? (
+                <a href="#commits-section" class="detail-meta-link">
+                  {d.commits} {d.commits === 1 ? 'commit' : 'commits'} ↓
+                </a>
+              ) : (
+                <span class="detail-meta-text">
+                  {d.commits} {d.commits === 1 ? 'commit' : 'commits'}
+                </span>
+              )}
+            </>
+          )}
+          <span class="detail-meta-sep" aria-hidden="true">·</span>
+          <span class="detail-meta-text">
             <time datetime={d.timestamp}>{formatTimestamp(d.timestamp)}</time>
           </span>
           {siblingRuns.length > 0 && (
-            <a href="#siblings-section" class="badge-static badge-link">
-              Compare {siblingRuns.length} related {siblingRuns.length === 1 ? 'run' : 'runs'} ↓
-            </a>
+            <>
+              <span class="detail-meta-sep" aria-hidden="true">·</span>
+              <a href="#siblings-section" class="detail-meta-link">
+                Compare {siblingRuns.length} related {siblingRuns.length === 1 ? 'run' : 'runs'} ↓
+              </a>
+            </>
           )}
         </div>
         <h1 id="run-detail-heading" class="headline-two-tone">
@@ -1745,7 +1754,369 @@ const pageSections = [
       )
     }
   </nav>
+  </div>
 </BaseLayout>
+
+<style>
+  /* ==========================================================================
+     QUIETER RUN DETAIL REFINEMENTS (Neo-Acid Operate Restraint)
+     Matches index.astro's quieter rhythm: preserves semantic brand colors
+     (--hl-acid, --hl-mint, --hl-sky, --hl-violet, --hl-magenta) for earned
+     verdicts and bottlenecks while eliminating box-in-box nesting.
+     ========================================================================== */
+  .run-detail-quiet .detail-nav-row {
+    padding-block: 1.15rem 1rem;
+  }
+
+  .run-detail-quiet .detail-nav-row .btn-secondary {
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  /* Header Card & Inline Metadata */
+  .run-detail-quiet .detail-header-card {
+    background-color: transparent;
+    padding: 1.35rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .run-detail-quiet .detail-top-row {
+    padding-block-end: 1.1rem;
+    border-block-end: var(--border-row);
+  }
+
+  .run-detail-quiet .detail-entry-meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    gap: 0.45rem;
+    margin-block-end: 0.6rem;
+  }
+
+  .run-detail-quiet .rank-badge {
+    border-width: 1px;
+    border-color: var(--border-subtle-color);
+    background-color: transparent;
+    color: var(--text-muted);
+    block-size: 1.65rem;
+    font-size: 0.75rem;
+  }
+
+  .run-detail-quiet .rank-badge.rank-1 {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-width: 2px;
+    border-color: var(--raw-ebony);
+  }
+
+  .run-detail-quiet .rank-badge.rank-2 {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+    border-block-end: 2px solid var(--hl-mint);
+  }
+
+  .run-detail-quiet .rank-badge.rank-3 {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+    border-block-end: 2px solid var(--hl-sky);
+  }
+
+  .run-detail-quiet .detail-meta-text {
+    color: var(--text-secondary);
+  }
+
+  .run-detail-quiet .detail-meta-sep {
+    color: var(--border-strong-color);
+  }
+
+  .run-detail-quiet .detail-meta-link {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong-color);
+    text-underline-offset: 3px;
+  }
+
+  .run-detail-quiet .detail-meta-link:hover,
+  .run-detail-quiet .detail-meta-link:focus-visible {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    text-decoration: none;
+  }
+
+  /* Unified KPI Telemetry Strip inside Header Card */
+  .run-detail-quiet .detail-kpi-grid {
+    gap: 0;
+    border: 1px solid var(--border-subtle-color);
+    background-color: transparent;
+  }
+
+  .run-detail-quiet .detail-kpi-grid .kpi-box {
+    border: none;
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+    padding: 0.95rem 1.15rem;
+  }
+
+  .run-detail-quiet .detail-kpi-grid .kpi-box:last-child {
+    border-inline-end: none;
+  }
+
+  @media (width < 54em) and (width >= 30em) {
+    .run-detail-quiet .detail-kpi-grid .kpi-box:nth-child(2n) {
+      border-inline-end: none;
+    }
+
+    .run-detail-quiet .detail-kpi-grid .kpi-box:nth-child(-n + 2) {
+      border-block-end: var(--border-row);
+    }
+  }
+
+  @media (width < 30em) {
+    .run-detail-quiet .detail-kpi-grid .kpi-box {
+      border-inline-end: none;
+      border-block-end: var(--border-row);
+    }
+
+    .run-detail-quiet .detail-kpi-grid .kpi-box:last-child {
+      border-block-end: none;
+    }
+  }
+
+  /* Quieter Test & Lint Verdict Strip */
+  .run-detail-quiet .detail-test-strip {
+    border: none;
+    border-block-start: var(--border-row);
+    background-color: transparent;
+    padding: 0.85rem 0 0;
+  }
+
+  /* Sticky Jump Bar: open underline tabs instead of heavy boxed buttons */
+  .run-detail-quiet .detail-jump-bar {
+    background-color: var(--bg-canvas);
+    border: none;
+    border-block-end: var(--border-frame);
+    padding: 0.55rem 0;
+    margin-block-end: 1.5rem;
+  }
+
+  .run-detail-quiet .detail-jump-link {
+    background-color: transparent;
+    border: none;
+    border-block-end: 3px solid transparent;
+    padding: 0.35rem 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .run-detail-quiet .detail-jump-link:hover {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .run-detail-quiet .detail-jump-link:target-current,
+  .run-detail-quiet .detail-jump-link.\:target-current {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-block-end-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .run-detail-quiet .detail-jump-link:target-current,
+  :global([data-theme="light"]) .run-detail-quiet .detail-jump-link.\:target-current {
+    border-block-end-color: var(--accent-cobalt);
+  }
+
+  /* Section Cards: quiet canvas background & lighter inner dividers */
+  .run-detail-quiet .section-grid > .card {
+    background-color: transparent;
+    padding: 1.35rem 1.5rem;
+  }
+
+  /* Plan Completion: unified 7-slice pipeline strip instead of 7 separate 2px boxes */
+  .run-detail-quiet .plan-progress {
+    block-size: 0.45rem;
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .run-detail-quiet .plan-checklist {
+    gap: 0;
+    border: 1px solid var(--border-strong-color);
+    background-color: transparent;
+  }
+
+  .run-detail-quiet .plan-item {
+    border: none;
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+    padding: 0.85rem;
+  }
+
+  .run-detail-quiet .plan-item:last-child {
+    border-inline-end: none;
+  }
+
+  .run-detail-quiet .plan-item.spec-miss {
+    border-block-start: 3px solid var(--hl-magenta);
+    background-color: var(--bg-surface);
+  }
+
+  .run-detail-quiet .plan-item.incomplete {
+    border-block-start: 2px dashed var(--border-strong-color);
+    opacity: 0.75;
+  }
+
+  .run-detail-quiet .plan-item-badges .is-pass {
+    border: none;
+    border-block-end: 2px solid var(--hl-mint);
+    background-color: transparent;
+    color: var(--text-secondary);
+    padding: 0.05rem 0.2rem;
+    font-size: 0.6875rem;
+  }
+
+  @media (width < 68em) {
+    .run-detail-quiet .plan-checklist {
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .run-detail-quiet .plan-item {
+      border: 1px solid var(--border-subtle-color);
+    }
+  }
+
+  /* Tables & Inline Strips inside Section Cards */
+  .run-detail-quiet .table-wrapper {
+    border-width: 1px;
+    border-color: var(--border-subtle-color);
+  }
+
+  .run-detail-quiet .leaderboard-table thead th {
+    background-color: var(--bg-surface);
+    border-block-end: 1px solid var(--border-strong-color);
+    padding: 0.65rem 0.9rem;
+  }
+
+  .run-detail-quiet .leaderboard-table :is(td, tbody th, tfoot th) {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .run-detail-quiet .slice-stage-badge.is-pass {
+    border-color: var(--border-subtle-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+
+  .run-detail-quiet .tokens-meta-strip,
+  .run-detail-quiet .calls-summary-strip {
+    border: none;
+    border-block-end: var(--border-row);
+    background-color: transparent;
+    padding: 0.25rem 0 0.95rem;
+    margin-block-end: 0.75rem;
+  }
+
+  .run-detail-quiet .kpi-grid-tokens-summary {
+    gap: 0;
+    border: 1px solid var(--border-subtle-color);
+  }
+
+  .run-detail-quiet .kpi-grid-tokens-summary .kpi-box {
+    border: none;
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+  }
+
+  .run-detail-quiet .kpi-grid-tokens-summary .kpi-box:last-child {
+    border-inline-end: none;
+  }
+
+  /* Tool Call Breakdown: cleaner inline tool names & slimmer tracks */
+  .run-detail-quiet .tool-name-badge {
+    border: none;
+    background-color: transparent;
+    padding: 0;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+  }
+
+  .run-detail-quiet .tool-bar-track {
+    block-size: 0.35rem;
+    border-width: 1px;
+    border-color: var(--border-subtle-color);
+  }
+
+  /* Notes & Key Findings: unified disclosure stack instead of 5 separate 2px cards */
+  .run-detail-quiet .notes-list {
+    gap: 0;
+    border: 1px solid var(--border-subtle-color);
+  }
+
+  .run-detail-quiet .note-card {
+    border: none;
+    border-block-end: var(--border-row);
+    background-color: transparent;
+  }
+
+  .run-detail-quiet .note-card:last-child {
+    border-block-end: none;
+  }
+
+  .run-detail-quiet .note-summary {
+    background-color: transparent;
+    padding: 0.85rem 1rem;
+  }
+
+  .run-detail-quiet .note-disclosure[open] > .note-summary {
+    background-color: var(--bg-surface);
+    border-block-end: var(--border-row);
+  }
+
+  .run-detail-quiet .note-summary:hover,
+  .run-detail-quiet .note-summary:focus-visible {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+  }
+
+  .run-detail-quiet .note-num {
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .run-detail-quiet .note-count-badge {
+    border: none;
+    background-color: transparent;
+    color: var(--text-muted);
+    padding: 0;
+  }
+
+  /* Terminal & Commit Log */
+  .run-detail-quiet .terminal-box {
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .run-detail-quiet .commit-hash {
+    background-color: transparent;
+    border-color: var(--border-subtle-color);
+    color: var(--text-secondary);
+  }
+
+  /* Sibling Runs & Bottom Pager */
+  .run-detail-quiet .detail-siblings-bar {
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .run-detail-quiet .detail-pager-card {
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+    padding: 1.15rem 1.35rem;
+  }
+</style>
 
 <script>
   function bindCopyButton(btnId: string, statusId: string, label: string) {
