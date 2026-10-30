@@ -101,6 +101,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
 ---
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
+  <div class="leaderboard-quiet">
   <!-- 01. HERO & TWO-TONE UNBOUNDED TYPOGRAPHY -->
   <section class="hero-box" aria-labelledby="hero-heading">
     <div class="pixel-mosaic" aria-hidden="true">
@@ -127,10 +128,10 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </p>
   </section>
 
-  <!-- 02. EVIDENCE-BACKED METRIC CARDS -->
+  <!-- 02. EVIDENCE-BACKED METRIC STRIP -->
   <dl class="hero-stats-grid" aria-label="Benchmark summary statistics">
     <div class="card stat-card">
-      <dt class="section-kicker">01 · FULL-SPEC PASS RATE</dt>
+      <dt class="section-kicker">FULL-SPEC PASS RATE</dt>
       <dd class="stat-value">
         {fullPassCount}/{enrichedRuns.length}
       </dd>
@@ -140,7 +141,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">02 · LOWEST 7/7 COST</dt>
+      <dt class="section-kicker">LOWEST 7/7 COST</dt>
       <dd class="stat-value">
         {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
       </dd>
@@ -159,7 +160,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">03 · FASTEST 7/7 RUN</dt>
+      <dt class="section-kicker">FASTEST 7/7 RUN</dt>
       <dd class="stat-value">
         {fastestLeader
           ? formatDuration(fastestLeader.data.durationMinutes)
@@ -180,7 +181,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">04 · DEEPEST TEST SUITE</dt>
+      <dt class="section-kicker">DEEPEST TEST SUITE</dt>
       <dd class="stat-value">
         {deepestTestsLeader && deepestTestsLeader.testsPassed >= 0
           ? `${deepestTestsLeader.testsPassed}`
@@ -316,7 +317,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
   </search>
 
   <!-- 04. LEADERBOARD DATA TABLE -->
-  <div class="table-wrapper" role="region" aria-labelledby="leaderboard-caption">
+  <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
     <table class="app-table leaderboard-table" id="leaderboard-table">
       <caption id="leaderboard-caption" class="visually-hidden">
         Capy Bench evaluation runs ranked by plan completion, tests passed, duration, token usage,
@@ -434,11 +435,20 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                       </a>
                     </div>
                     <div class="entry-meta">
-                      <span class="badge-static">{displayProvider}</span>
-                      {data.effort && <span class="badge-static">effort:{data.effort}</span>}
-                      {data.interface?.type && (
-                        <span class="badge-static badge-tag">{data.interface.type}</span>
+                      <span>{displayProvider}</span>
+                      {data.effort && (
+                        <>
+                          <span class="entry-meta-sep" aria-hidden="true">·</span>
+                          <span>effort:{data.effort}</span>
+                        </>
                       )}
+                      {data.interface?.type && (
+                        <>
+                          <span class="entry-meta-sep" aria-hidden="true">·</span>
+                          <span class="entry-meta-tag">{data.interface.type}</span>
+                        </>
+                      )}
+                      <span class="entry-meta-sep" aria-hidden="true">·</span>
                       <time datetime={data.timestamp} class="metric-sub metric-inline entry-timestamp">
                         {formatTimestamp(data.timestamp)}
                       </time>
@@ -454,13 +464,12 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                       </span>
                       <span
                         class:list={[
-                          'hl',
                           'plan-pct-badge',
                           plan.ratio === 1
-                            ? 'hl-mint'
+                            ? 'hl hl-mint'
                             : plan.ratio >= 0.7
-                              ? 'hl-acid'
-                              : 'hl-magenta',
+                              ? 'plan-pct-partial'
+                              : 'hl hl-magenta',
                         ]}
                       >
                         {Math.round(plan.ratio * 100)}%
@@ -550,10 +559,10 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                 </td>
 
                 <td data-cell="Cost">
-                  {plan.ratio === 1 && data.costUsd <= 1.0 ? (
+                  {lowestCostLeader && run.id === lowestCostLeader.id ? (
                     <span
                       class="hl hl-mint cost-pill"
-                      title="Sub-$1.00 full-pass cost leader"
+                      title="Lowest 7/7 full-pass cost leader"
                     >
                       {formatCost(data.costUsd)}
                     </span>
@@ -596,7 +605,276 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       </tbody>
     </table>
   </div>
+  </div>
 </BaseLayout>
+
+<style>
+  /* ==========================================================================
+     QUIETER LEADERBOARD REFINEMENTS (Neo-Acid Operate Restraint)
+     Preserves brand color (--hl-acid, --hl-mint, --hl-sky, --hl-magenta) for
+     earned semantic anchors while stripping decorative container chrome,
+     redundant cell badges, and heavy full-cell header fills.
+     ========================================================================== */
+  .leaderboard-quiet .hero-box {
+    padding: 1.5rem 100px 1.35rem 0;
+    margin-block-end: 1.25rem;
+  }
+
+  .leaderboard-quiet .headline-two-tone {
+    font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+  }
+
+  .leaderboard-quiet .hero-subtitle {
+    font-size: 0.96875rem;
+    line-height: 1.55;
+    margin-block-start: 0.65rem;
+  }
+
+  .leaderboard-quiet .pixel-mosaic {
+    inset-block-start: 1.35rem;
+    grid-template-columns: repeat(5, 13px);
+    grid-template-rows: repeat(6, 13px);
+    opacity: 0.85;
+  }
+
+  /* Unified architectural telemetry strip instead of 4 separated heavy boxes */
+  .leaderboard-quiet .hero-stats-grid {
+    gap: 0;
+    margin-block: 0 1.5rem;
+    border: var(--border-frame);
+    background-color: transparent;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .leaderboard-quiet .stat-card {
+    border: none;
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+    padding: 1rem 1.2rem;
+    gap: 0.3rem;
+  }
+
+  .leaderboard-quiet .stat-card:last-child {
+    border-inline-end: none;
+  }
+
+  .leaderboard-quiet .stat-value {
+    font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+  }
+
+  @media (max-width: 900px) {
+    .leaderboard-quiet .hero-stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .leaderboard-quiet .stat-card:nth-child(2) {
+      border-inline-end: none;
+    }
+
+    .leaderboard-quiet .stat-card:nth-child(-n + 2) {
+      border-block-end: var(--border-row);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .leaderboard-quiet .hero-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .leaderboard-quiet .stat-card {
+      border-inline-end: none;
+      border-block-end: var(--border-row);
+    }
+
+    .leaderboard-quiet .stat-card:last-child {
+      border-block-end: none;
+    }
+  }
+
+  /* Quieter command bar: open structural rules instead of a nested heavy box */
+  .leaderboard-quiet .controls-bar {
+    background-color: transparent;
+    border: none;
+    border-block-end: var(--border-frame);
+    padding: 0 0 1rem;
+    margin-block-end: 1.25rem;
+    gap: 1rem 1.25rem;
+  }
+
+  .leaderboard-quiet .command-input-prefix {
+    background: var(--bg-surface);
+    color: var(--hl-acid);
+    border-inline-end: var(--border-row);
+    font-size: 0.78rem;
+  }
+
+  :global([data-theme="light"]) .leaderboard-quiet .command-input-prefix {
+    color: var(--accent-cobalt);
+  }
+
+  .leaderboard-quiet .input,
+  .leaderboard-quiet .select {
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-strong-color);
+  }
+
+  .leaderboard-quiet .command-input-wrap {
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-strong-color);
+  }
+
+  .leaderboard-quiet .command-input-wrap .input {
+    border: none;
+  }
+
+  .leaderboard-quiet .sort-dir-btn {
+    border-width: 1px;
+  }
+
+  .leaderboard-quiet .controls-footer-row {
+    padding-block-start: 0.65rem;
+  }
+
+  .leaderboard-quiet .stage-legend-bar {
+    padding-block-start: 0.6rem;
+    color: var(--text-muted);
+  }
+
+  /* Quieter table headers & row density */
+  .leaderboard-quiet .leaderboard-table thead th {
+    background-color: var(--bg-canvas);
+    padding: 0.7rem 0.9rem;
+  }
+
+  .leaderboard-quiet .leaderboard-table thead th.sortable {
+    padding: 0;
+  }
+
+  .leaderboard-quiet .sort-header-btn {
+    min-block-size: 2.5rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
+  }
+
+  .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-indicator {
+    color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
+    box-shadow: inset 0 -3px 0 var(--accent-cobalt);
+  }
+
+  :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-indicator {
+    color: var(--accent-cobalt);
+  }
+
+  .leaderboard-quiet .leaderboard-table thead th.sortable:hover .sort-header-btn {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .leaderboard-quiet .leaderboard-table :is(td, tbody th, tfoot th) {
+    padding: 0.8rem 0.9rem;
+  }
+
+  /* Quieter rank badges: #1 keeps full brand acid fill; #2 & #3 use clean semantic accents */
+  .leaderboard-quiet .rank-badge {
+    border-width: 1px;
+    border-color: var(--border-subtle-color);
+    background-color: transparent;
+    color: var(--text-muted);
+    min-inline-size: 2rem;
+    block-size: 1.75rem;
+    font-size: 0.75rem;
+  }
+
+  .leaderboard-quiet .rank-badge.rank-1 {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-width: 2px;
+    border-color: var(--raw-ebony);
+  }
+
+  .leaderboard-quiet .rank-badge.rank-2 {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+    border-block-end: 2px solid var(--hl-mint);
+  }
+
+  .leaderboard-quiet .rank-badge.rank-3 {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+    border-block-end: 2px solid var(--hl-sky);
+  }
+
+  /* Quieter row metadata: clean monospace inline line instead of 3 boxed pills per row */
+  .leaderboard-quiet .entry-meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    gap: 0.35rem;
+    margin-block-start: 0.3rem;
+  }
+
+  .leaderboard-quiet .entry-meta-sep {
+    color: var(--border-strong-color);
+  }
+
+  .leaderboard-quiet .entry-meta-tag {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  /* Plan percentage & stage strip */
+  .leaderboard-quiet .plan-pct-badge {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.08rem 0.38rem;
+  }
+
+  .leaderboard-quiet .plan-pct-partial {
+    border: 1px solid var(--hl-acid);
+    color: var(--hl-acid);
+    background-color: transparent;
+  }
+
+  :global([data-theme="light"]) .leaderboard-quiet .plan-pct-partial {
+    border-color: var(--raw-ebony);
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+  }
+
+  .leaderboard-quiet .stage-pill {
+    font-size: 0.65rem;
+    padding: 0.16rem 0.28rem;
+  }
+
+  .leaderboard-quiet .stage-pill.done {
+    background-color: transparent;
+  }
+
+  /* Quieter row action: subtle text affordance that lights up with brand acid on row hover */
+  .leaderboard-quiet .view-btn {
+    border-width: 1px;
+    border-color: transparent;
+    color: var(--text-muted);
+    padding: 0.32rem 0.6rem;
+  }
+
+  .leaderboard-quiet .leaderboard-table:not(.static-table) tbody tr.run-row:hover .view-btn {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+  }
+</style>
 
 <script>
   const table = document.getElementById('leaderboard-table') as HTMLTableElement | null;
