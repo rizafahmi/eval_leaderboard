@@ -636,6 +636,49 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     border-color: var(--border-strong-color);
   }
 
+  .about-quiet .section-lead,
+  .about-quiet .section-body-copy {
+    max-inline-size: none;
+  }
+
+  /* 2-Column Editorial Split for Spec Sections (PLAN.md, README.md, PROMPT.md)
+     Eliminates the dead right half inside ~80ch hard-wrapped <pre> blocks by placing
+     the section header, description, and copy action in a left sidebar column
+     and giving the right column to the terminal box without soft-wrap orphans. */
+  @media (width >= 62em) {
+    .about-quiet #plan-spec,
+    .about-quiet #contract-spec,
+    .about-quiet #prompt-spec {
+      display: grid;
+      grid-template-columns: minmax(15rem, 17.5rem) minmax(0, 1fr);
+      column-gap: 1.5rem;
+      row-gap: 0.75rem;
+      align-items: start;
+    }
+
+    .about-quiet :is(#plan-spec, #contract-spec, #prompt-spec) > .card-title {
+      grid-column: 1;
+      flex-direction: column;
+      align-items: flex-start;
+      border-block-end: none;
+      padding-block-end: 0;
+      gap: 0.65rem;
+    }
+
+    .about-quiet :is(#plan-spec, #contract-spec, #prompt-spec) > .section-body-copy {
+      grid-column: 1;
+      margin: 0;
+    }
+
+    .about-quiet :is(#plan-spec, #contract-spec, #prompt-spec) > .terminal-box {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      inline-size: 100%;
+      font-size: 0.75rem;
+      padding-inline: 1rem;
+    }
+  }
+
   /* Unified 8-Card Stage Matrix (PREP + S1–S7) */
   .about-quiet .stage-spec-grid {
     gap: 0;
