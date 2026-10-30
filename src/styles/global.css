@@ -1276,7 +1276,8 @@ progress::-moz-progress-bar {
 @media (pointer: coarse) {
   .detail-jump-link,
   .detail-sibling-chip,
-  .detail-nav-row .btn-sm {
+  .detail-nav-row .btn-sm,
+  .card-title .btn-sm {
     min-block-size: 2.75rem;
   }
 
@@ -1306,7 +1307,8 @@ progress::-moz-progress-bar {
   color: var(--text-primary);
 }
 
-.detail-pager-card:hover {
+.detail-pager-card:hover,
+.detail-pager-card:focus-visible {
   background-color: var(--hl-acid);
   color: var(--hl-ink);
   border-color: var(--raw-ebony);
@@ -1385,6 +1387,8 @@ progress::-moz-progress-bar {
 }
 
 .section-grid > section[id],
+.section-grid [id],
+.stage-spec-card[id],
 #siblings-section,
 .plan-item[id],
 tr[id^="slice-"],
@@ -1398,14 +1402,21 @@ tr[id^="slice-"],
 
 .col-6 {
   grid-column: span 6;
+  align-self: stretch;
 
   @media (width <= 54em) {
     grid-column: span 12;
   }
 }
 
+.col-6 > .terminal-box {
+  flex: 1;
+}
+
 .deferred-section {
   contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 480px;
 }
 
 .card-title {
@@ -2185,8 +2196,16 @@ a.commit-stage-badge:focus-visible {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
+
+  @media (width >= 38em) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (width >= 68em) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .stage-spec-card {
@@ -2199,10 +2218,27 @@ a.commit-stage-badge:focus-visible {
   gap: 0.6rem;
 }
 
+.stage-spec-card:target,
+.section-grid > section[id]:target {
+  border-color: var(--hl-acid);
+}
+
+[data-theme="light"] .stage-spec-card:target,
+[data-theme="light"] .section-grid > section[id]:target {
+  border-color: var(--accent-cobalt);
+}
+
 .stage-spec-header {
   display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.stage-spec-meta {
+  display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .stage-spec-title {
