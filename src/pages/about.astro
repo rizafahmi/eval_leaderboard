@@ -1,12 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Code } from 'astro:components';
+import { createCssVariablesTheme } from 'shiki';
 import {
   BENCHMARK_STAGES,
   BENCHMARK_PLAN,
   BENCHMARK_README_CONTRACT,
   BENCHMARK_PROMPT,
 } from '../data/benchmark';
+
+const neoAcidCodeTheme = createCssVariablesTheme({
+  name: 'neo-acid',
+  variablePrefix: '--code-',
+});
 
 const shikiResetTransformer = {
   pre(node: { properties: Record<string, unknown> }) {
@@ -164,7 +170,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       <Code
         code={sampleEndProductOutput}
         lang="bash"
-        theme="ayu-dark"
+        theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
         class="terminal-box"
@@ -239,7 +245,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       <Code
         code={BENCHMARK_PLAN}
         lang="markdown"
-        theme="ayu-dark"
+        theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
         class="terminal-box"
@@ -275,7 +281,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       <Code
         code={BENCHMARK_README_CONTRACT}
         lang="markdown"
-        theme="ayu-dark"
+        theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
         class="terminal-box"
@@ -311,7 +317,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       <Code
         code={BENCHMARK_PROMPT}
         lang="markdown"
-        theme="ayu-dark"
+        theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
         class="terminal-box"

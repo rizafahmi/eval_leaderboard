@@ -12,6 +12,7 @@ interface Props {
   description?: string;
   activeNav?: 'leaderboard' | 'about';
   breadcrumbLabel?: string;
+  breadcrumbTone?: 'hl-mint' | 'hl-acid' | 'hl-magenta';
   ogType?: 'website' | 'article';
   ogImage?: string;
   ogImageAlt?: string;
@@ -25,6 +26,7 @@ const {
   description = DEFAULT_DESCRIPTION,
   activeNav,
   breadcrumbLabel,
+  breadcrumbTone = 'hl-mint',
   ogType = 'website',
   ogImage = '/og-image.png',
   ogImageAlt = 'Capy Bench Leaderboard — Personal coding agent and LLM benchmark for Elixir/OTP CLI engineering (S1–S7)',
@@ -153,8 +155,17 @@ const jsonLd = {
             <li>
               <a
                 href="/"
-                class:list={['app-nav-item', { 'is-active': activeNav === 'leaderboard' }]}
-                aria-current={activeNav === 'leaderboard' ? 'page' : undefined}
+                class:list={[
+                  'app-nav-item',
+                  { 'is-active': activeNav === 'leaderboard' },
+                ]}
+                aria-current={
+                  activeNav === 'leaderboard' && !breadcrumbLabel
+                    ? 'page'
+                    : activeNav === 'leaderboard'
+                      ? 'true'
+                      : undefined
+                }
               >
                 Leaderboard
               </a>
@@ -189,24 +200,22 @@ const jsonLd = {
           <li><a href="/">eval.rizafahmi.com</a></li>
           <li aria-hidden="true">/</li>
           {
-            activeNav === 'leaderboard' ? (
-              <li>
+            breadcrumbLabel ? (
+              <li aria-current="page">
+                <span class:list={['hl', breadcrumbTone]}>{breadcrumbLabel}</span>
+              </li>
+            ) : activeNav === 'leaderboard' ? (
+              <li aria-current="page">
                 <span class="hl hl-acid">Leaderboard</span>
               </li>
             ) : activeNav === 'about' ? (
-              <li>
+              <li aria-current="page">
                 <span class="hl hl-violet">About &amp; S1–S7 Contract</span>
               </li>
             ) : (
-              <>
-                <li>
-                  <a href="/">Runs</a>
-                </li>
-                <li aria-hidden="true">/</li>
-                <li>
-                  <span class="hl hl-mint">{breadcrumbLabel ?? title}</span>
-                </li>
-              </>
+              <li aria-current="page">
+                <span class:list={['hl', breadcrumbTone]}>{title}</span>
+              </li>
             )
           }
         </ol>
