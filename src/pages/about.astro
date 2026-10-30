@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Code } from 'astro:components';
+import { getCollection } from 'astro:content';
 import { createCssVariablesTheme } from 'shiki';
 import {
   BENCHMARK_STAGES,
@@ -8,6 +9,37 @@ import {
   BENCHMARK_README_CONTRACT,
   BENCHMARK_PROMPT,
 } from '../data/benchmark';
+import {
+  formatCost,
+  formatDuration,
+  formatHarnessName,
+  getPlanStats,
+} from '../utils/format';
+
+const runs = await getCollection('runs', ({ data }) => data.published !== false);
+const sortedRuns = [...runs].sort((a, b) => {
+  const planA = getPlanStats(a.data.planCompletion);
+  const planB = getPlanStats(b.data.planCompletion);
+  if (planB.ratio !== planA.ratio) return planB.ratio - planA.ratio;
+  const testsA =
+    a.data.tests && a.data.tests.total > 0 ? a.data.tests.passed / a.data.tests.total : -1;
+  const testsB =
+    b.data.tests && b.data.tests.total > 0 ? b.data.tests.passed / b.data.tests.total : -1;
+  if (testsB !== testsA) return testsB - testsA;
+  if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
+  return a.data.durationMinutes - b.data.durationMinutes;
+});
+const topRun = sortedRuns[0];
+const topRunPlan = topRun ? getPlanStats(topRun.data.planCompletion) : null;
+
+const aboutSections = [
+  { id: 'stages', label: 'S1–S7 Slices' },
+  { id: 'end-product', label: 'Target CLI Output' },
+  { id: 'judging', label: 'Evaluation Rubric' },
+  { id: 'plan-spec', label: 'PLAN.md' },
+  { id: 'contract-spec', label: 'V1 Contract' },
+  { id: 'prompt-spec', label: 'PROMPT.md' },
+];
 
 const neoAcidCodeTheme = createCssVariablesTheme({
   name: 'neo-acid',
@@ -83,40 +115,62 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     </div>
   </section>
 
-  <!-- 02. CONTRACT PARAMETERS -->
+  <!-- CONTRACT PARAMETERS -->
   <dl class="hero-stats-grid" aria-label="Benchmark specification parameters">
     <div class="card stat-card">
-      <dt class="section-kicker">01 · CHECKPOINTS</dt>
+      <dt class="section-kicker">SPECIFICATION CHECKPOINTS</dt>
       <dd class="stat-value">S1–S7</dd>
-      <dd class="stat-meta">Preparation + 7 sequential TDD slices</dd>
+      <dd class="stat-meta">
+        <a href="#stages" class="stat-leader-link">Preparation + 7 sequential TDD slices</a>
+      </dd>
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">02 · WINDOW / TIMEOUT</dt>
+      <dt class="section-kicker">PACING WINDOW &amp; TIMEOUT</dt>
       <dd class="stat-value">5s / 2s</dd>
-      <dd class="stat-meta">5s pacing window · 2s per-request cap</dd>
+      <dd class="stat-meta">
+        <a href="#contract-spec" class="stat-leader-link">5s pacing window · 2s per-request cap</a>
+      </dd>
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">03 · MAX REQUESTS</dt>
+      <dt class="section-kicker">MAX REQUESTS CAP</dt>
       <dd class="stat-value">50</dd>
-      <dd class="stat-meta">10 req/sec single-flight GET pacing</dd>
+      <dd class="stat-meta">
+        <a href="#stage-s4" class="stat-leader-link">10 req/sec single-flight GET pacing</a>
+      </dd>
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">04 · TARGET STACK</dt>
+      <dt class="section-kicker">TARGET RUNTIME STACK</dt>
       <dd class="stat-value">Elixir</dd>
-      <dd class="stat-meta">OTP escript ./cb · macOS &amp; Linux</dd>
+      <dd class="stat-meta">
+        <a href="#end-product" class="stat-leader-link">OTP escript ./cb · macOS &amp; Linux</a>
+      </dd>
     </div>
   </dl>
+
+  <nav aria-label="On this page" class="detail-jump-bar" id="about-jump-bar">
+    <span class="mono detail-jump-label">JUMP TO:</span>
+    <div class="detail-jump-links" id="about-jump-links">
+      {
+        aboutSections.map((sec) => (
+          <a href={`#${sec.id}`} class="mono detail-jump-link">
+            {sec.label}
+          </a>
+        ))
+      }
+    </div>
+  </nav>
 
   <div class="section-grid">
     <!-- The S1 - S7 Implementation Plan -->
     <section class="card col-12" id="stages" aria-labelledby="stages-heading">
       <div class="card-title">
-        <div>
-          <span class="section-kicker">01 · OUTSIDE-IN TDD SLICES</span>
-          <h2 id="stages-heading" class="card-heading">The Implementation Slices (S1 – S7)</h2>
+        <div class="card-title-group">
+          <h2 id="stages-heading" class="card-heading headline-two-tone">
+            The Implementation Slices <span class="muted">/ Preparation &amp; S1–S7</span>
+          </h2>
         </div>
         <span class="hl hl-violet">Preparation + 7 Slices · Outside-In TDD</span>
       </div>
@@ -129,12 +183,46 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
       </p>
 
       <ol class="stage-spec-grid" role="list">
+        <li id="stage-prep" class="stage-spec-card stage-spec-card-prep">
+          <div class="stage-spec-header">
+            <div class="stage-spec-meta">
+              <span class="hl hl-mint" aria-hidden="true">PREP</span>
+              <span class="badge-static">Pre-checked [x]</span>
+            </div>
+            <h3 class="stage-spec-title">
+              <span class="visually-hidden">PREP: </span>Establish README Contract
+            </h3>
+          </div>
+          <p class="stage-spec-desc">
+            Move the V1 CLI product contract and example output into README.md and link to it from
+            PLAN.md without retaining a duplicate.
+          </p>
+          <ul class="stage-deliverables-list" role="list">
+            <li class="stage-deliverable-item">
+              <span class="check-icon" aria-hidden="true">✓</span>
+              <span>V1 CLI product contract documented in README.md</span>
+            </li>
+            <li class="stage-deliverable-item">
+              <span class="check-icon" aria-hidden="true">✓</span>
+              <span>Duplicate contract text replaced with README link in PLAN.md</span>
+            </li>
+            <li class="stage-deliverable-item">
+              <span class="check-icon" aria-hidden="true">✓</span>
+              <span>Baseline repository state committed before S1 dispatch</span>
+            </li>
+          </ul>
+        </li>
         {
           BENCHMARK_STAGES.map((stage) => (
-            <li class="stage-spec-card">
+            <li id={`stage-${stage.id.toLowerCase()}`} class="stage-spec-card">
               <div class="stage-spec-header">
-                <span class="hl hl-violet">{stage.id}</span>
-                <h3 class="stage-spec-title">{stage.title}</h3>
+                <div class="stage-spec-meta">
+                  <span class="hl hl-violet" aria-hidden="true">{stage.id}</span>
+                  <span class="badge-static">{stage.deliverables.length} checks</span>
+                </div>
+                <h3 class="stage-spec-title">
+                  <span class="visually-hidden">{stage.id}: </span>{stage.title}
+                </h3>
               </div>
               <p class="stage-spec-desc">{stage.description}</p>
               <ul class="stage-deliverables-list" role="list">
@@ -152,13 +240,30 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     </section>
 
     <!-- Glimpse of the End Product -->
-    <section class="card col-6" aria-labelledby="end-product-heading">
+    <section class="card col-6" id="end-product" aria-labelledby="end-product-heading">
       <div class="card-title">
-        <div>
-          <span class="section-kicker">02 · TARGET CLI OUTPUT</span>
-          <h2 id="end-product-heading" class="card-heading">Glimpse of the End Product</h2>
+        <div class="card-title-group">
+          <h2 id="end-product-heading" class="card-heading headline-two-tone">
+            Glimpse of the End Product <span class="muted">/ Target CLI Output</span>
+          </h2>
         </div>
-        <span class="hl hl-mint">Target State</span>
+        <div class="card-title-group">
+          <span class="hl hl-mint">Target State</span>
+          <button
+            type="button"
+            class="btn btn-sm btn-secondary"
+            id="copy-cli-btn"
+            data-prompt={sampleEndProductOutput}
+          >
+            Copy CLI Transcript
+          </button>
+          <span
+            id="copy-cli-status"
+            class="visually-hidden"
+            role="status"
+            aria-live="polite"
+          ></span>
+        </div>
       </div>
       <p class="section-body-copy">
         A completed run produces the <code>./cb</code> escript executable that paces single-flight
@@ -178,13 +283,14 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     </section>
 
     <!-- How We Judge & Calculate Metrics -->
-    <section class="card col-6" aria-labelledby="judging-heading">
+    <section class="card col-6" id="judging" aria-labelledby="judging-heading">
       <div class="card-title">
-        <div>
-          <span class="section-kicker">03 · EVALUATION RUBRIC</span>
-          <h2 id="judging-heading" class="card-heading">How Runs Are Judged</h2>
+        <div class="card-title-group">
+          <h2 id="judging-heading" class="card-heading headline-two-tone">
+            How Runs Are Judged <span class="muted">/ Evaluation Rubric</span>
+          </h2>
         </div>
-        <span class="hl hl-acid">verification rules</span>
+        <span class="hl hl-acid">Verification Rules</span>
       </div>
       <dl class="judging-list">
         <div class="callout callout-mint">
@@ -217,15 +323,15 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     </section>
 
     <!-- Implementation Plan (PLAN.md) -->
-    <section class="card col-12 deferred-section" aria-labelledby="plan-spec-heading">
+    <section class="card col-12 deferred-section" id="plan-spec" aria-labelledby="plan-spec-heading">
       <div class="card-title">
-        <div>
-          <span class="section-kicker">04 · IMPLEMENTATION PLAN</span>
-          <h2 id="plan-spec-heading" class="card-heading">
-            Implementation Plan (PLAN.md)
+        <div class="card-title-group">
+          <h2 id="plan-spec-heading" class="card-heading headline-two-tone">
+            Implementation Plan <span class="muted">/ PLAN.md</span>
           </h2>
         </div>
-        <div>
+        <div class="card-title-group">
+          <span class="badge-static">starter-repo/PLAN.md</span>
           <button
             type="button"
             class="btn btn-sm btn-secondary"
@@ -242,26 +348,35 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
+      <p class="section-body-copy">
+        Checked into the root of the benchmark starter repository. Agents update task checkboxes
+        (<code>[x]</code>) and record verification commands and blockers in place as they progress
+        from <code>S1</code> through <code>S7</code>.
+      </p>
       <Code
         code={BENCHMARK_PLAN}
         lang="markdown"
         theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
-        class="terminal-box"
+        class="terminal-box terminal-box-wrap"
       />
     </section>
 
     <!-- V1 CLI Contract (README.md) -->
-    <section class="card col-12 deferred-section" aria-labelledby="contract-spec-heading">
+    <section
+      class="card col-12 deferred-section"
+      id="contract-spec"
+      aria-labelledby="contract-spec-heading"
+    >
       <div class="card-title">
-        <div>
-          <span class="section-kicker">05 · V1 PRODUCT CONTRACT</span>
-          <h2 id="contract-spec-heading" class="card-heading">
-            V1 CLI Product Contract (README.md)
+        <div class="card-title-group">
+          <h2 id="contract-spec-heading" class="card-heading headline-two-tone">
+            V1 CLI Product Contract <span class="muted">/ README.md</span>
           </h2>
         </div>
-        <div>
+        <div class="card-title-group">
+          <span class="badge-static">starter-repo/README.md</span>
           <button
             type="button"
             class="btn btn-sm btn-secondary"
@@ -278,26 +393,35 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
+      <p class="section-body-copy">
+        Established during the pre-checked Preparation step as the single source of truth for
+        invocation syntax, 5-second pacing, 2-second timeout cancellation, output formatting, and
+        exit codes (<code>0</code>, <code>2</code>, <code>130</code>).
+      </p>
       <Code
         code={BENCHMARK_README_CONTRACT}
         lang="markdown"
         theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
-        class="terminal-box"
+        class="terminal-box terminal-box-wrap"
       />
     </section>
 
     <!-- Instructions Given to the Coding Agent (PROMPT.md) -->
-    <section class="card col-12 deferred-section" aria-labelledby="prompt-spec-heading">
+    <section
+      class="card col-12 deferred-section"
+      id="prompt-spec"
+      aria-labelledby="prompt-spec-heading"
+    >
       <div class="card-title">
-        <div>
-          <span class="section-kicker">06 · AGENT DISPATCH PROMPT</span>
-          <h2 id="prompt-spec-heading" class="card-heading">
-            Instructions Given to the Coding Agent (PROMPT.md)
+        <div class="card-title-group">
+          <h2 id="prompt-spec-heading" class="card-heading headline-two-tone">
+            Agent Dispatch Prompt <span class="muted">/ PROMPT.md</span>
           </h2>
         </div>
-        <div>
+        <div class="card-title-group">
+          <span class="badge-static">starter-repo/PROMPT.md</span>
           <button
             type="button"
             class="btn btn-sm btn-secondary"
@@ -314,42 +438,155 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           ></span>
         </div>
       </div>
+      <p class="section-body-copy">
+        Exact initial prompt dispatched to every Coding Harness + Model pair to initiate the
+        autonomous Outside-In TDD loop across <code>S1</code>–<code>S7</code>.
+      </p>
       <Code
         code={BENCHMARK_PROMPT}
         lang="markdown"
         theme={neoAcidCodeTheme}
         wrap={null}
         transformers={[shikiResetTransformer]}
-        class="terminal-box"
+        class="terminal-box terminal-box-wrap"
       />
     </section>
   </div>
+
+  <nav aria-label="Benchmark navigation" class="detail-bottom-pager">
+    <a href="/" class="card card-interactive detail-pager-card">
+      <span class="mono detail-pager-dir">← LEADERBOARD TABLE</span>
+      <strong class="detail-pager-title">
+        Compare All {sortedRuns.length} Verified Agent Runs
+      </strong>
+      <span class="mono detail-pager-meta">
+        Filter &amp; sort S1–S7 completion, test pass rates, token efficiency, and API cost
+      </span>
+    </a>
+    {
+      topRun && topRunPlan ? (
+        <a href={`/runs/${topRun.id}`} class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">INSPECT #1 VERIFIED RUN →</span>
+          <strong class="detail-pager-title">
+            {formatHarnessName(topRun.data.codingHarness)} / {topRun.data.model}
+            {topRun.data.effort ? ` (${topRun.data.effort})` : ''}
+          </strong>
+          <span class="mono detail-pager-meta">
+            {topRunPlan.completed}/{topRunPlan.total} slices · {formatCost(topRun.data.costUsd)} ·{' '}
+            {formatDuration(topRun.data.durationMinutes)}
+          </span>
+        </a>
+      ) : (
+        <a href="/?fullPass=1" class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">FULL 7/7 PASSES →</span>
+          <strong class="detail-pager-title">View Verified 7/7 Completions</strong>
+          <span class="mono detail-pager-meta">
+            Filter leaderboard to runs passing every S1–S7 slice and release check
+          </span>
+        </a>
+      )
+    }
+  </nav>
 </BaseLayout>
 
 <script>
-  function bindCopyButton(btnId: string, statusId: string, label: string) {
+  function bindCopyButton(btnId: string, statusId: string, label: string, sectionId?: string) {
     const btn = document.getElementById(btnId) as HTMLButtonElement | null;
     const status = document.getElementById(statusId) as HTMLElement | null;
-    btn?.addEventListener('click', async () => {
+    if (!btn) return;
+
+    const originalText = btn.textContent?.trim() || `Copy ${label}`;
+    let resetTimer: number | undefined;
+
+    btn.addEventListener('click', async () => {
       const text = btn.dataset.prompt;
       if (!text) return;
+
+      if (resetTimer !== undefined) {
+        window.clearTimeout(resetTimer);
+      }
+
       try {
         await navigator.clipboard.writeText(text);
-        const original = btn.textContent;
-        btn.textContent = `✓ Copied ${label}!`;
+        btn.textContent = `✓ Copied ${label}`;
+        btn.classList.add('btn-acid');
+        btn.classList.remove('btn-secondary');
         if (status) status.textContent = `${label} copied to clipboard.`;
-        setTimeout(() => {
-          btn.textContent = original;
+        resetTimer = window.setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('btn-acid');
+          btn.classList.add('btn-secondary');
           if (status) status.textContent = '';
+          resetTimer = undefined;
         }, 1800);
       } catch {
-        btn.textContent = 'Failed to copy';
-        if (status) status.textContent = `Failed to copy ${label}.`;
+        const container =
+          (sectionId ? document.getElementById(sectionId) : null) ?? btn.closest('section');
+        const codeEl = container?.querySelector<HTMLElement>('.terminal-box');
+        if (codeEl && window.getSelection) {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(codeEl);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+        btn.textContent = 'Select text: press ⌘C / Ctrl+C';
+        btn.classList.remove('btn-acid');
+        btn.classList.add('btn-secondary');
+        if (status) {
+          status.textContent = `Clipboard unavailable. Selected ${label} text—press Ctrl+C or Command+C to copy.`;
+        }
+        resetTimer = window.setTimeout(() => {
+          btn.textContent = originalText;
+          if (status) status.textContent = '';
+          resetTimer = undefined;
+        }, 3200);
       }
     });
   }
 
-  bindCopyButton('copy-plan-btn', 'copy-plan-status', 'PLAN.md');
-  bindCopyButton('copy-contract-btn', 'copy-contract-status', 'V1 Contract');
-  bindCopyButton('copy-prompt-btn', 'copy-prompt-status', 'PROMPT.md');
+  bindCopyButton('copy-cli-btn', 'copy-cli-status', 'CLI Transcript', 'end-product');
+  bindCopyButton('copy-plan-btn', 'copy-plan-status', 'PLAN.md', 'plan-spec');
+  bindCopyButton('copy-contract-btn', 'copy-contract-status', 'V1 Contract', 'contract-spec');
+  bindCopyButton('copy-prompt-btn', 'copy-prompt-status', 'PROMPT.md', 'prompt-spec');
+
+  const jumpLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>('#about-jump-bar .detail-jump-link')
+  );
+  const supportsScrollTargetGroup =
+    typeof CSS !== 'undefined' && CSS.supports('scroll-target-group: auto');
+
+  if (supportsScrollTargetGroup) {
+    const syncAriaCurrent = () => {
+      const currentLink = document.querySelector<HTMLAnchorElement>(
+        '#about-jump-bar .detail-jump-link:target-current'
+      );
+      if (!currentLink) return;
+      for (const link of jumpLinks) {
+        link.setAttribute('aria-current', link === currentLink ? 'true' : 'false');
+      }
+    };
+    syncAriaCurrent();
+    document.addEventListener('scrollend', syncAriaCurrent);
+  } else if (jumpLinks.length > 0 && 'IntersectionObserver' in window) {
+    const sections = document.querySelectorAll<HTMLElement>('.section-grid > section[id]');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('id');
+            for (const link of jumpLinks) {
+              const isActive = link.getAttribute('href') === `#${id}`;
+              link.classList.toggle(':target-current', isActive);
+              link.setAttribute('aria-current', isActive ? 'true' : 'false');
+            }
+          }
+        }
+      },
+      { rootMargin: '-50% 0px -50% 0px', threshold: 0 }
+    );
+    for (const section of sections) {
+      observer.observe(section);
+    }
+  }
 </script>
