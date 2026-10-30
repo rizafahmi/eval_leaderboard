@@ -56,12 +56,34 @@
   /* Focus ring */
   --focus-ring: 3px solid var(--hl-acid);
 
+  /* Syntax Highlighting Tokens (Dark Mode — Neo-Acid Obsidian) */
+  --code-background: var(--raw-obsidian);
+  --code-foreground: var(--text-primary);
+  --code-token-function: var(--hl-acid);
+  --code-token-keyword: var(--hl-violet);
+  --code-token-constant: var(--hl-sky);
+  --code-token-string: var(--text-secondary);
+  --code-token-string-expression: var(--hl-mint);
+  --code-token-comment: var(--text-muted);
+  --code-token-punctuation: var(--text-secondary);
+  --code-token-parameter: var(--hl-sky);
+
   /* ------------------------------------------------------------------------
      3. TYPOGRAPHY & LAYOUT (5-Face 87KB Budget)
      ------------------------------------------------------------------------ */
   --font-display: "Unbounded", system-ui, -apple-system, sans-serif;
   --font-body: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
   --font-mono: "Martian Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-mono: 0.875rem;
+  --text-compact: 0.9375rem;
+  --text-base: 1rem;
+  --text-body: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
 
   --radius-none: 0px;
   --container-narrow: 720px;
@@ -85,6 +107,18 @@
   --link-hover-text: #ffffff;
 
   --focus-ring: 3px solid var(--accent-cobalt);
+
+  /* Syntax Highlighting Tokens (Light Mode — High-Contrast Ebony & Cobalt on Plaster) */
+  --code-background: var(--raw-plaster-alt);
+  --code-foreground: var(--raw-ebony);
+  --code-token-function: var(--accent-cobalt);
+  --code-token-keyword: var(--accent-cobalt);
+  --code-token-constant: var(--raw-ebony);
+  --code-token-string: var(--text-secondary);
+  --code-token-string-expression: var(--raw-ebony);
+  --code-token-comment: var(--text-secondary);
+  --code-token-punctuation: var(--text-secondary);
+  --code-token-parameter: var(--accent-cobalt);
 }
 
 /* ==========================================================================
@@ -771,7 +805,7 @@ mark[data-hl] {
   font-size: 0.9375rem;
 }
 
-.app-table th {
+.app-table thead th {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -782,12 +816,13 @@ mark[data-hl] {
   border-bottom: var(--border-frame);
 }
 
-.app-table td {
+.app-table :is(td, tbody th, tfoot th) {
   padding: 0.75rem 1rem;
   border-bottom: var(--border-row);
+  text-align: left;
 }
 
-.app-table tr:hover td {
+.app-table tbody tr:hover :is(td, th) {
   background-color: var(--bg-surface);
 }
 

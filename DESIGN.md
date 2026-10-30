@@ -31,16 +31,51 @@ typography:
     fontSize: "2.5rem"
     fontWeight: 800
     lineHeight: 1.15
+  heading:
+    fontFamily: "Unbounded, system-ui, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 800
+    lineHeight: 1.15
+  heading-sm:
+    fontFamily: "Unbounded, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 800
+    lineHeight: 1.2
   body:
     fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.6
+  body-sm:
+    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.6
+  compact:
+    fontFamily: "Schibsted Grotesk, system-ui, sans-serif"
+    fontSize: "0.9375rem"
+    fontWeight: 400
+    lineHeight: 1.55
   mono:
     fontFamily: "Martian Mono, JetBrains Mono, monospace"
     fontSize: "0.875rem"
     fontWeight: 700
     lineHeight: 1.4
+  mono-sm:
+    fontFamily: "Martian Mono, JetBrains Mono, monospace"
+    fontSize: "0.8125rem"
+    fontWeight: 400
+    lineHeight: 1.45
+  mono-xs:
+    fontFamily: "Martian Mono, JetBrains Mono, monospace"
+    fontSize: "0.75rem"
+    fontWeight: 700
+    lineHeight: 1.35
+  mono-2xs:
+    fontFamily: "Martian Mono, JetBrains Mono, monospace"
+    fontSize: "0.6875rem"
+    fontWeight: 700
+    lineHeight: 1.2
 rounded:
   none: "0px"
   sm: "2px"
@@ -130,9 +165,13 @@ Every highlighter swatch is calibrated to achieve **WCAG AAA (>7:1)** contrast a
 ### Hierarchy
 
 - **Two-Tone Hero Headline (`.headline-two-tone`)**: `Unbounded 800`, `clamp(1.65rem, 3.6vw, 2.5rem)`, line-height `1.15`.
-- **Section Heading (`h2`)**: `Unbounded 800`, `1.5rem–1.75rem`, line-height `1.15`.
-- **Section Kicker (`.section-kicker`)**: `Martian Mono 700`, `0.75rem`, uppercase, `letter-spacing: 0.06em`, `--text-muted`.
-- **Body Copy**: `Schibsted Grotesk 400`, `1.0625rem`, line-height `1.6`, capped at `65ch` for reading views.
+- **Section Heading (`h2`) & KPI Figure (`.kpi-val`)**: `Unbounded 800` / `Martian Mono 700`, `1.5rem` (`--text-xl`), line-height `1.15`.
+- **Card Heading (`.card-heading`)**: `Unbounded 800`, `1.25rem` (`--text-lg`), line-height `1.2`.
+- **Body Copy**: `Schibsted Grotesk 400`, `1.0625rem` (`--text-body`), line-height `1.6`, capped at `65ch` for reading views (`1rem` / `--text-base` for compact cards/notes, `0.9375rem` / `--text-compact` for dense tables and secondary blurbs).
+- **Primary Mono Metric (`.metric-primary`, `.btn`, `.action-link`)**: `Martian Mono 700`, `0.875rem` (`--text-mono`), `tabular-nums`.
+- **Dense Mono Telemetry (`.terminal-box`, `.commit-msg`, `.plan-stage-title`)**: `Martian Mono 400/700`, `0.8125rem` (`--text-sm`).
+- **Section Kicker (`.section-kicker`) & Static Badge (`.badge-static`, `.metric-sub`)**: `Martian Mono 700`, `0.75rem` (`--text-xs`), uppercase for kickers, `letter-spacing: 0.06em`, `--text-muted`.
+- **Micro Stage Pill & Shortcut Badge (`.stage-pill`, `.commit-stage-badge`, `.menu-kbd`)**: `Martian Mono 700`, `0.6875rem` (`--text-2xs`).
 
 ### Named Rules
 
