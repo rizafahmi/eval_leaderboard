@@ -147,7 +147,6 @@ const jsonLd = {
             <span class="mark-cell mark-violet"></span>
           </span>
           <span>CAPY.BENCH</span>
-          <span class="hl hl-acid brand-pill">S1–S7</span>
         </a>
 
         <nav aria-label="Main">
@@ -194,35 +193,19 @@ const jsonLd = {
         </div>
       </header>
 
-      <!-- Sub-nav: Breadcrumbs + Spec Telemetry Bar -->
-      <div class="subnav-bar">
-        <ol class="app-breadcrumbs" aria-label="Breadcrumb">
-          <li><a href="/">eval.rizafahmi.com</a></li>
-          <li aria-hidden="true">/</li>
-          {
-            breadcrumbLabel ? (
+      {
+        breadcrumbLabel && (
+          <div class="subnav-bar">
+            <ol class="app-breadcrumbs" aria-label="Breadcrumb">
+              <li><a href="/">eval.rizafahmi.com</a></li>
+              <li aria-hidden="true">/</li>
               <li aria-current="page">
-                <span class:list={['hl', breadcrumbTone]}>{breadcrumbLabel}</span>
+                <span class="badge-static">{breadcrumbLabel}</span>
               </li>
-            ) : activeNav === 'leaderboard' ? (
-              <li aria-current="page">
-                <span class="hl hl-acid">Leaderboard</span>
-              </li>
-            ) : activeNav === 'about' ? (
-              <li aria-current="page">
-                <span class="hl hl-violet">About &amp; S1–S7 Contract</span>
-              </li>
-            ) : (
-              <li aria-current="page">
-                <span class:list={['hl', breadcrumbTone]}>{title}</span>
-              </li>
-            )
-          }
-        </ol>
-        <span class="subnav-meta">
-          Elixir/OTP CLI · Outside-In TDD · Neo-Acid v1.0
-        </span>
-      </div>
+            </ol>
+          </div>
+        )
+      }
 
       <main id="main-content" tabindex="-1">
         <slot />
@@ -255,18 +238,8 @@ const jsonLd = {
             <ul>
               <li><a href="/">Leaderboard Table</a></li>
               <li><a href="/about">Methodology &amp; Judging</a></li>
-              <li><a href="/about#stages">Slices S1–S7</a></li>
+              <li><a href="/about#stages">Slices</a></li>
               <li><a href="/about#contract-spec-heading">V1 CLI Contract</a></li>
-            </ul>
-          </div>
-
-          <div class="app-footer-col">
-            <span class="section-kicker">BENCHMARK SLICES</span>
-            <ul>
-              <li><a href="/about#stages">/cb S1–S2 CLI &amp; HTTP</a></li>
-              <li><a href="/about#stages">/cb S3–S4 Pacing &amp; TLS</a></li>
-              <li><a href="/about#stages">/cb S5–S6 Timeout &amp; p95</a></li>
-              <li><a href="/about#stages">/cb S7 SIGINT Ctrl-C</a></li>
             </ul>
           </div>
 
@@ -279,11 +252,6 @@ const jsonLd = {
               <li><a href="#main-content">Back to top ↑</a></li>
             </ul>
           </div>
-        </div>
-
-        <div class="app-footer-colophon">
-          <span>capy-bench · single-task field evaluations (S1–S7)</span>
-          <span>rizafahmi.com · Neo-Acid Design System</span>
         </div>
       </footer>
     </div>

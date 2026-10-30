@@ -465,7 +465,7 @@ const pageSections = [
           )}
         </div>
         <h1 id="run-detail-heading" class="headline-two-tone">
-          {displayHarness}
+          {displayHarness}{' '}
           <span class="muted">/ {d.model}</span>
         </h1>
       </div>
@@ -612,7 +612,7 @@ const pageSections = [
       <div class="card-title">
         <div class="card-title-group">
           <h2 id="plan-completion-heading" class="card-heading headline-two-tone">
-            Plan Completion <span class="muted">/ {plan.completed} of {plan.total} Slices</span>
+            Plan Completion{' '}<span class="muted">/ {plan.completed} of {plan.total} Slices</span>
           </h2>
           {nonStageLlmCalls > 0 && (
             <a href="#slice-nonstage" class="badge-static badge-link">
@@ -1205,7 +1205,7 @@ const pageSections = [
           <div class="card-title">
             <div class="card-title-group">
               <h2 id="calls-breakdown-heading" class="card-heading headline-two-tone">
-                Calls &amp; Tool Breakdown <span class="muted">/ Tool Loop</span>
+                Calls &amp; Tool Breakdown{' '}<span class="muted">/ Tool Loop</span>
               </h2>
             </div>
           </div>
@@ -1542,7 +1542,7 @@ const pageSections = [
           <div class="card-title">
             <div class="card-title-group">
               <h2 id="git-commits-heading" class="card-heading headline-two-tone">
-                Git Commits <span class="muted">/ {d.commitLog!.length} Checkpoints</span>
+                Git Commits{' '}<span class="muted">/ {d.commitLog!.length} Checkpoints</span>
               </h2>
             </div>
             <div>

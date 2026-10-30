@@ -853,10 +853,9 @@ mark[data-hl] {
 
 .app-footer-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
+  grid-template-columns: 2fr repeat(2, 1fr);
   gap: 2rem;
   padding-bottom: 2.5rem;
-  border-bottom: var(--border-row);
 }
 
 .app-footer-col ul {
