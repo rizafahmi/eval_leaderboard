@@ -19,6 +19,7 @@ import {
   tokenizeNoteText,
 } from '../../utils/format';
 import { BENCHMARK_STAGES } from '../../data/benchmark';
+import { analyzeAndRankRuns } from '../../utils/telemetry';
 
 const neoAcidCodeTheme = createCssVariablesTheme({
   name: 'neo-acid',
@@ -64,6 +65,11 @@ export async function getStaticPaths() {
     };
   };
 
+  const analyzedList = analyzeAndRankRuns(
+    runs.map((r) => ({ id: r.id, data: r.data }))
+  );
+  const telemetryById = new Map(analyzedList.map((a) => [a.id, a]));
+
   return sorted.map((entry, idx) => {
     const prevRun = idx > 0 ? toNavSummary(sorted[idx - 1], idx - 1) : null;
     const nextRun = idx < sorted.length - 1 ? toNavSummary(sorted[idx + 1], idx + 1) : null;
@@ -86,6 +92,7 @@ export async function getStaticPaths() {
       params: { id: entry.id },
       props: {
         entry,
+        telemetry: telemetryById.get(entry.id)!,
         rank: idx + 1,
         totalRuns,
         fastestMin,
@@ -102,6 +109,7 @@ export async function getStaticPaths() {
 
 const {
   entry,
+  telemetry,
   rank,
   totalRuns,
   fastestMin,
@@ -392,6 +400,16 @@ const pageSections = [
       <a href="/" class="btn btn-sm btn-secondary" id="back-to-leaderboard-link">
         <span aria-hidden="true">←</span> Back to Leaderboard
       </a>
+      <a
+        href={
+          siblingRuns.length > 0
+            ? `/compare?a=${entry.id}&b=${siblingRuns[0].id}`
+            : `/compare?a=${entry.id}`
+        }
+        class="btn btn-sm btn-secondary"
+      >
+        Diff in Workbench <span aria-hidden="true">→</span>
+      </a>
     </div>
     <nav aria-label="Adjacent ranked runs" class="detail-nav-pager">
       {
@@ -479,7 +497,15 @@ const pageSections = [
         </h1>
       </div>
 
-      <div>
+      <div class="detail-verdict-badges">
+        {telemetry.isParetoFrontier && (
+          <span
+            class="hl hl-acid"
+            title={`Pareto Frontier #${telemetry.paretoOrder}: non-dominated on 7/7 speed and cost`}
+          >
+            PARETO OPTIMAL #{telemetry.paretoOrder}
+          </span>
+        )}
         <span class:list={['hl', planTone]}>
           {plan.ratio === 1
             ? 'ALL 7 SLICES PASSED'
@@ -1003,6 +1029,49 @@ const pageSections = [
                     {contextWindowParts.detail ? (
                       <span class="tokens-meta-sub">({contextWindowParts.detail})</span>
                     ) : null}
+                  </dd>
+                </div>
+              )}
+
+              {telemetry.costMetrics.cacheSavingsUsd > 0 && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">CACHE SAVINGS</dt>
+                  <dd class="mono">
+                    <span class="hl hl-mint">
+                      -{formatCost(telemetry.costMetrics.cacheSavingsUsd)} ({telemetry.costMetrics.cacheSavingsPct}%)
+                    </span>
+                    <span class="tokens-meta-sub">
+                      (vs {formatCost(telemetry.costMetrics.uncachedCounterfactualCostUsd)} uncached)
+                    </span>
+                  </dd>
+                </div>
+              )}
+
+              {telemetry.costPerCompletedSlice !== null && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">UNIT ECONOMICS</dt>
+                  <dd class="mono">
+                    <strong>{formatCost(telemetry.costPerCompletedSlice)} / slice</strong>
+                    {telemetry.tokensPerCompletedSlice !== null && (
+                      <span class="tokens-meta-sub">
+                        ({(telemetry.tokensPerCompletedSlice / 1_000_000).toFixed(2)}M tok/slice)
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              )}
+
+              {telemetry.toolSuccessRatePct !== null && (
+                <div class="tokens-meta-item">
+                  <dt class="mono">TOOL PRECISION</dt>
+                  <dd class="mono">
+                    <strong>{telemetry.toolSuccessRatePct}% ok</strong>
+                    <span class="tokens-meta-sub">
+                      ({telemetry.toolErrorCalls} err / {telemetry.toolTotalCalls} calls
+                      {telemetry.pollingCalls > 0
+                        ? ` · ${telemetry.pollingCalls} polls ~${formatCost(telemetry.estimatedPollingWasteUsd)}`
+                        : ''})
+                    </span>
                   </dd>
                 </div>
               )}
@@ -1783,6 +1852,20 @@ const pageSections = [
   .run-detail-quiet .detail-top-row {
     padding-block-end: 1.1rem;
     border-block-end: var(--border-row);
+  }
+
+  .run-detail-quiet .detail-verdict-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .run-detail-quiet .detail-nav-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .run-detail-quiet .detail-entry-meta {

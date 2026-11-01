@@ -28,12 +28,18 @@ pnpm preview   # Previews the production build locally
 
 ## Testing & Verification
 - **Build & Schema Check**: Run `pnpm build` to verify that all JSON benchmark entries in `src/content/runs/` conform to the Zod schema in `src/content.config.ts` and that all static routes compile cleanly.
-- **Test Runner**: No external test framework is installed by default. Use Node's built-in test runner (`node --test`) for utility tests, or verify changes via `pnpm build`.
+- **Test & Conservation Audit Runner**: Run `pnpm test` (`node --experimental-strip-types --test tests/*.test.ts`) to verify exact integer token conservation, cache hit rate math, slice call/cost conservation, contiguous step ranges, Pareto frontier calculation, and raw JSONL transcript ingestion.
+- **Run Ingestion & Sync CLI**: Run `pnpm ingest --sync` to normalize/backfill exact numeric telemetry across `src/content/runs/*.json`, or `pnpm ingest --transcript <events.jsonl> ...` to ingest a raw harness session log.
 
 ## Project Structure & Conventions
-- `src/content.config.ts` — Zod schema definition for the `runs` collection.
+- `src/content.config.ts` — Zod schema definition for the `runs` collection (including exact numeric `tokenCounts`, `contextMetrics`, and `verification`).
 - `src/content/runs/*.json` — Individual benchmark run entries (named `<harness>-<model>-<effort>-<timestamp>.json`).
 - `src/data/benchmark.ts` — Benchmark stage definitions (`S1`–`S7`) and task prompt metadata.
+- `src/data/pricing.ts` — Versioned model token pricing catalog and counterfactual cost engine (billed, standard API, 2027 comparison, and uncached counterfactuals).
 - `src/utils/format.ts` — Formatting and calculation helpers (duration, cost, token parsing, plan stats).
-- `src/pages/index.astro` — Main leaderboard table with client-side filtering and sorting.
-- `src/pages/runs/[id].astro` — Detailed view for an individual benchmark run.
+- `src/utils/telemetry.ts` — Econometric analysis, Speed × Cost Pareto frontier solver, cross-run `S1`–`S7` bottleneck matrix, and controlled ablation discovery.
+- `src/pages/index.astro` — Main leaderboard table with pricing lenses, Pareto frontier plot, stage bottleneck matrix, and client-side filtering/sorting.
+- `src/pages/compare.astro` — Interactive head-to-head run comparison and controlled ablation workbench.
+- `src/pages/runs/[id].astro` — Detailed forensic view for an individual benchmark run.
+- `scripts/ingest-run.ts` — Raw JSONL transcript & git history ingestion and telemetry normalization CLI.
+- `tests/audit-runs.test.ts` — Automated conservation law and econometric regression test suite.
