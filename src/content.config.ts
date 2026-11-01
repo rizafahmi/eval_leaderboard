@@ -39,7 +39,35 @@ const runs = defineCollection({
         cacheHitRate: z.string().optional(),
       })
       .optional(),
+    tokenCounts: z
+      .object({
+        uncachedInput: z.number(),
+        cachedInput: z.number(),
+        output: z.number(),
+        thinking: z.number().optional(),
+        total: z.number(),
+        cacheHitRatePct: z.number(),
+      })
+      .optional(),
     contextWindow: z.string().optional(),
+    contextMetrics: z
+      .object({
+        minTokens: z.number().optional(),
+        avgTokens: z.number().optional(),
+        peakTokens: z.number(),
+        windowLimitTokens: z.number().optional(),
+        peakUtilizationPct: z.number().optional(),
+      })
+      .optional(),
+    verification: z
+      .object({
+        holdoutPassed: z.number(),
+        holdoutTotal: z.number(),
+        holdoutVerdict: z.enum(['full-pass', 'partial-pass', 'zero-pass']),
+        agentSuitePassed: z.number().optional(),
+        agentSuiteTotal: z.number().optional(),
+      })
+      .optional(),
     calls: z
       .object({
         llmCalls: z.number().optional(),
