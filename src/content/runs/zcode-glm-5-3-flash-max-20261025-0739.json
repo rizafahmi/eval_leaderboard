@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 6,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentSuitePassed": 63,
+    "agentSuiteTotal": 63
+  },
   "interface": {
     "type": "desktop",
     "command": "@PROMPT.md",
@@ -35,7 +42,19 @@
     "total": "51.95M",
     "cacheHitRate": "99.39%"
   },
+  "tokenCounts": {
+    "uncachedInput": 317655,
+    "cachedInput": 51415872,
+    "output": 221218,
+    "thinking": 137221,
+    "total": 51954745,
+    "cacheHitRatePct": 99.39
+  },
   "contextWindow": "302.3k peak (26,838 → 302,319 tokens)",
+  "contextMetrics": {
+    "minTokens": 26838,
+    "peakTokens": 302319
+  },
   "calls": {
     "llmCalls": 294,
     "toolCalls": {
@@ -43,13 +62,48 @@
       "done": 268,
       "error": 27,
       "breakdown": [
-        { "tool": "Bash", "total": 178, "done": 161, "error": 17 },
-        { "tool": "Edit", "total": 52, "done": 46, "error": 6 },
-        { "tool": "Write", "total": 38, "done": 34, "error": 4 },
-        { "tool": "Read", "total": 11, "done": 11, "error": 0 },
-        { "tool": "TodoWrite", "total": 9, "done": 9, "error": 0 },
-        { "tool": "TaskOutput", "total": 6, "done": 6, "error": 0 },
-        { "tool": "TaskStop", "total": 1, "done": 1, "error": 0 }
+        {
+          "tool": "Bash",
+          "total": 178,
+          "done": 161,
+          "error": 17
+        },
+        {
+          "tool": "Edit",
+          "total": 52,
+          "done": 46,
+          "error": 6
+        },
+        {
+          "tool": "Write",
+          "total": 38,
+          "done": 34,
+          "error": 4
+        },
+        {
+          "tool": "Read",
+          "total": 11,
+          "done": 11,
+          "error": 0
+        },
+        {
+          "tool": "TodoWrite",
+          "total": 9,
+          "done": 9,
+          "error": 0
+        },
+        {
+          "tool": "TaskOutput",
+          "total": 6,
+          "done": 6,
+          "error": 0
+        },
+        {
+          "tool": "TaskStop",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
       ]
     }
   },

@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 21,
+    "agentSuiteTotal": 21
+  },
   "interface": {
     "type": "cli",
     "command": "pi --mode json --provider openai-codex --model gpt-6.1-sol --thinking high --tools read,bash,edit,write --no-extensions --no-skills --no-prompt-templates --no-themes --no-mcp --no-approve --session-dir ./records @PROMPT.md",
@@ -35,7 +42,19 @@
     "total": "6.50M",
     "cacheHitRate": "97.77%"
   },
+  "tokenCounts": {
+    "uncachedInput": 144076,
+    "cachedInput": 6310656,
+    "output": 44858,
+    "thinking": 17026,
+    "total": 6499590,
+    "cacheHitRatePct": 97.77
+  },
   "contextWindow": "75.0k peak (2,854 → 75,009 prompt tokens; 75,070 total)",
+  "contextMetrics": {
+    "minTokens": 2854,
+    "peakTokens": 75009
+  },
   "calls": {
     "llmCalls": 178,
     "toolCalls": {
@@ -43,10 +62,30 @@
       "done": 152,
       "error": 28,
       "breakdown": [
-        { "tool": "bash", "total": 82, "done": 56, "error": 26 },
-        { "tool": "edit", "total": 64, "done": 62, "error": 2 },
-        { "tool": "write", "total": 25, "done": 25, "error": 0 },
-        { "tool": "read", "total": 9, "done": 9, "error": 0 }
+        {
+          "tool": "bash",
+          "total": 82,
+          "done": 56,
+          "error": 26
+        },
+        {
+          "tool": "edit",
+          "total": 64,
+          "done": 62,
+          "error": 2
+        },
+        {
+          "tool": "write",
+          "total": 25,
+          "done": 25,
+          "error": 0
+        },
+        {
+          "tool": "read",
+          "total": 9,
+          "done": 9,
+          "error": 0
+        }
       ]
     }
   },
@@ -170,7 +209,7 @@
       "llmCalls": 13,
       "manageTaskPolls": 0,
       "thinkingTokens": 513,
-      "costUsd": 0.10
+      "costUsd": 0.1
     },
     {
       "slice": "S6: Elapsed time & completed-response p50/p95 (243ce83)",
@@ -194,7 +233,7 @@
       "llmCalls": 13,
       "manageTaskPolls": 0,
       "thinkingTokens": 3399,
-      "costUsd": 0.30
+      "costUsd": 0.3
     }
   ],
   "notes": [

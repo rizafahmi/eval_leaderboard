@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 6,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentSuitePassed": 42,
+    "agentSuiteTotal": 42
+  },
   "interface": {
     "type": "desktop",
     "command": "@PROMPT.md",
@@ -35,7 +42,19 @@
     "total": "34.48M",
     "cacheHitRate": "99.52%"
   },
+  "tokenCounts": {
+    "uncachedInput": 164637,
+    "cachedInput": 34210176,
+    "output": 102973,
+    "thinking": 42155,
+    "total": 34477786,
+    "cacheHitRatePct": 99.52
+  },
   "contextWindow": "167.7k peak (26,398 → 167,669 tokens)",
+  "contextMetrics": {
+    "minTokens": 26398,
+    "peakTokens": 167669
+  },
   "calls": {
     "llmCalls": 344,
     "toolCalls": {
@@ -43,11 +62,36 @@
       "done": 346,
       "error": 18,
       "breakdown": [
-        { "tool": "Bash", "total": 222, "done": 219, "error": 3 },
-        { "tool": "Edit", "total": 94, "done": 80, "error": 14 },
-        { "tool": "Read", "total": 21, "done": 21, "error": 0 },
-        { "tool": "Write", "total": 20, "done": 19, "error": 1 },
-        { "tool": "TodoWrite", "total": 7, "done": 7, "error": 0 }
+        {
+          "tool": "Bash",
+          "total": 222,
+          "done": 219,
+          "error": 3
+        },
+        {
+          "tool": "Edit",
+          "total": 94,
+          "done": 80,
+          "error": 14
+        },
+        {
+          "tool": "Read",
+          "total": 21,
+          "done": 21,
+          "error": 0
+        },
+        {
+          "tool": "Write",
+          "total": 20,
+          "done": 19,
+          "error": 1
+        },
+        {
+          "tool": "TodoWrite",
+          "total": 7,
+          "done": 7,
+          "error": 0
+        }
       ]
     }
   },

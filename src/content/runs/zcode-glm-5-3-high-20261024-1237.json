@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 80,
+    "agentSuiteTotal": 80
+  },
   "interface": {
     "type": "desktop",
     "command": "@PROMPT.md",
@@ -35,7 +42,19 @@
     "total": "45.22M",
     "cacheHitRate": "99.42%"
   },
+  "tokenCounts": {
+    "uncachedInput": 259545,
+    "cachedInput": 44752960,
+    "output": 204560,
+    "thinking": 81263,
+    "total": 45217065,
+    "cacheHitRatePct": 99.42
+  },
   "contextWindow": "271.4k peak (26,846 → 271,444 tokens)",
+  "contextMetrics": {
+    "minTokens": 26846,
+    "peakTokens": 271444
+  },
   "calls": {
     "llmCalls": 263,
     "toolCalls": {
@@ -43,14 +62,54 @@
       "done": 253,
       "error": 16,
       "breakdown": [
-        { "tool": "Bash", "total": 140, "done": 132, "error": 8 },
-        { "tool": "Edit", "total": 56, "done": 50, "error": 6 },
-        { "tool": "Write", "total": 38, "done": 36, "error": 2 },
-        { "tool": "Read", "total": 20, "done": 20, "error": 0 },
-        { "tool": "TodoWrite", "total": 8, "done": 8, "error": 0 },
-        { "tool": "WebFetch", "total": 4, "done": 4, "error": 0 },
-        { "tool": "TaskOutput", "total": 2, "done": 2, "error": 0 },
-        { "tool": "WebSearch", "total": 1, "done": 1, "error": 0 }
+        {
+          "tool": "Bash",
+          "total": 140,
+          "done": 132,
+          "error": 8
+        },
+        {
+          "tool": "Edit",
+          "total": 56,
+          "done": 50,
+          "error": 6
+        },
+        {
+          "tool": "Write",
+          "total": 38,
+          "done": 36,
+          "error": 2
+        },
+        {
+          "tool": "Read",
+          "total": 20,
+          "done": 20,
+          "error": 0
+        },
+        {
+          "tool": "TodoWrite",
+          "total": 8,
+          "done": 8,
+          "error": 0
+        },
+        {
+          "tool": "WebFetch",
+          "total": 4,
+          "done": 4,
+          "error": 0
+        },
+        {
+          "tool": "TaskOutput",
+          "total": 2,
+          "done": 2,
+          "error": 0
+        },
+        {
+          "tool": "WebSearch",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
       ]
     }
   },

@@ -22,6 +22,13 @@
     "S6": false,
     "S7": false
   },
+  "verification": {
+    "holdoutPassed": 2,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentSuitePassed": 36,
+    "agentSuiteTotal": 37
+  },
   "interface": {
     "type": "desktop",
     "command": "@PROMPT.md",
@@ -35,7 +42,19 @@
     "total": "33.34M",
     "cacheHitRate": "98.44%"
   },
+  "tokenCounts": {
+    "uncachedInput": 518564,
+    "cachedInput": 32706496,
+    "output": 115833,
+    "thinking": 49313,
+    "total": 33340893,
+    "cacheHitRatePct": 98.44
+  },
   "contextWindow": "189.5k peak (26,945 → 189,505 tokens)",
+  "contextMetrics": {
+    "minTokens": 26945,
+    "peakTokens": 189505
+  },
   "calls": {
     "llmCalls": 292,
     "toolCalls": {
@@ -43,14 +62,54 @@
       "done": 291,
       "error": 26,
       "breakdown": [
-        { "tool": "Bash", "total": 200, "done": 189, "error": 11 },
-        { "tool": "Edit", "total": 58, "done": 46, "error": 12 },
-        { "tool": "Write", "total": 32, "done": 29, "error": 3 },
-        { "tool": "Read", "total": 13, "done": 13, "error": 0 },
-        { "tool": "TodoWrite", "total": 9, "done": 9, "error": 0 },
-        { "tool": "WebFetch", "total": 2, "done": 2, "error": 0 },
-        { "tool": "TaskOutput", "total": 2, "done": 2, "error": 0 },
-        { "tool": "TaskStop", "total": 1, "done": 1, "error": 0 }
+        {
+          "tool": "Bash",
+          "total": 200,
+          "done": 189,
+          "error": 11
+        },
+        {
+          "tool": "Edit",
+          "total": 58,
+          "done": 46,
+          "error": 12
+        },
+        {
+          "tool": "Write",
+          "total": 32,
+          "done": 29,
+          "error": 3
+        },
+        {
+          "tool": "Read",
+          "total": 13,
+          "done": 13,
+          "error": 0
+        },
+        {
+          "tool": "TodoWrite",
+          "total": 9,
+          "done": 9,
+          "error": 0
+        },
+        {
+          "tool": "WebFetch",
+          "total": 2,
+          "done": 2,
+          "error": 0
+        },
+        {
+          "tool": "TaskOutput",
+          "total": 2,
+          "done": 2,
+          "error": 0
+        },
+        {
+          "tool": "TaskStop",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
       ]
     }
   },

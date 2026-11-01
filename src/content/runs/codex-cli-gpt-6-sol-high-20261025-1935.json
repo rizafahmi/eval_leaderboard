@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 31,
+    "agentSuiteTotal": 31
+  },
   "interface": {
     "type": "cli",
     "command": "codex exec --json --dangerously-bypass-approvals-and-sandbox -m gpt-6-sol -c model_reasoning_effort=\"high\" -o records/20261025T123554Z.final.txt \"$(< PROMPT.md)\" > records/20261025T123554Z.events.jsonl 2> records/20261025T123554Z.stderr.log",
@@ -35,7 +42,20 @@
     "total": "11.23M",
     "cacheHitRate": "98.65%"
   },
+  "tokenCounts": {
+    "uncachedInput": 151120,
+    "cachedInput": 11016064,
+    "output": 63248,
+    "thinking": 24865,
+    "total": 11230432,
+    "cacheHitRatePct": 98.65
+  },
   "contextWindow": "74.9k avg (~15k → ~135k peak tokens across 149 calls)",
+  "contextMetrics": {
+    "minTokens": 15000,
+    "avgTokens": 74900,
+    "peakTokens": 135000
+  },
   "calls": {
     "llmCalls": 149,
     "toolCalls": {
@@ -43,8 +63,18 @@
       "done": 122,
       "error": 27,
       "breakdown": [
-        { "tool": "command_execution (zsh)", "total": 91, "done": 69, "error": 22 },
-        { "tool": "file_change (apply_patch)", "total": 58, "done": 53, "error": 5 }
+        {
+          "tool": "command_execution (zsh)",
+          "total": 91,
+          "done": 69,
+          "error": 22
+        },
+        {
+          "tool": "file_change (apply_patch)",
+          "total": 58,
+          "done": 53,
+          "error": 5
+        }
       ]
     }
   },
@@ -195,7 +225,7 @@
       "llmCalls": 7,
       "manageTaskPolls": 0,
       "thinkingTokens": 1169,
-      "costUsd": 0.20
+      "costUsd": 0.2
     }
   ],
   "notes": [

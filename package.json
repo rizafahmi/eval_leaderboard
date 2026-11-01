@@ -8,7 +8,9 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "ingest": "node --experimental-strip-types scripts/ingest-run.ts"
   },
   "dependencies": {
     "@fontsource/martian-mono": "^5.3.0",

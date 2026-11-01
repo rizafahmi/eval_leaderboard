@@ -22,6 +22,13 @@
     "S6": true,
     "S7": true
   },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 41,
+    "agentSuiteTotal": 41
+  },
   "interface": {
     "type": "cli",
     "command": "agy --mode auto --dangerously-skip-permissions --model gemini-3.8-flash-high --effort high --output-format stream-json --print \"$(< PROMPT.md)\" > records/events.jsonl",
@@ -35,7 +42,20 @@
     "total": "55.60M",
     "cacheHitRate": "98.11%"
   },
+  "tokenCounts": {
+    "uncachedInput": 1046593,
+    "cachedInput": 54406484,
+    "output": 151851,
+    "thinking": 69199,
+    "total": 55604928,
+    "cacheHitRatePct": 98.11
+  },
   "contextWindow": "26.88% out of 1.0M (268.8k peak)",
+  "contextMetrics": {
+    "peakTokens": 268800,
+    "windowLimitTokens": 1000000,
+    "peakUtilizationPct": 26.88
+  },
   "calls": {
     "llmCalls": 388,
     "toolCalls": {
@@ -43,12 +63,42 @@
       "done": 384,
       "error": 3,
       "breakdown": [
-        { "tool": "run_command", "total": 177, "done": 177, "error": 0 },
-        { "tool": "manage_task", "total": 105, "done": 105, "error": 0 },
-        { "tool": "edit_file", "total": 68, "done": 66, "error": 2 },
-        { "tool": "write_file", "total": 19, "done": 18, "error": 1 },
-        { "tool": "read_file", "total": 13, "done": 13, "error": 0 },
-        { "tool": "search_web", "total": 5, "done": 5, "error": 0 }
+        {
+          "tool": "run_command",
+          "total": 177,
+          "done": 177,
+          "error": 0
+        },
+        {
+          "tool": "manage_task",
+          "total": 105,
+          "done": 105,
+          "error": 0
+        },
+        {
+          "tool": "edit_file",
+          "total": 68,
+          "done": 66,
+          "error": 2
+        },
+        {
+          "tool": "write_file",
+          "total": 19,
+          "done": 18,
+          "error": 1
+        },
+        {
+          "tool": "read_file",
+          "total": 13,
+          "done": 13,
+          "error": 0
+        },
+        {
+          "tool": "search_web",
+          "total": 5,
+          "done": 5,
+          "error": 0
+        }
       ]
     }
   },

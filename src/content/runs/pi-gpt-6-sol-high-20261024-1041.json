@@ -10,7 +10,7 @@
   "tests": {
     "passed": 17,
     "total": 17,
-    "durationSeconds": 39.0,
+    "durationSeconds": 39,
     "details": "Finished in 39.0 seconds (0.00s async, 39.0s sync) — 17 passed"
   },
   "planCompletion": {
@@ -21,6 +21,13 @@
     "S5": true,
     "S6": true,
     "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 17,
+    "agentSuiteTotal": 17
   },
   "interface": {
     "type": "cli",
@@ -35,7 +42,19 @@
     "total": "5.67M",
     "cacheHitRate": "98.28%"
   },
+  "tokenCounts": {
+    "uncachedInput": 96768,
+    "cachedInput": 5536000,
+    "output": 41937,
+    "thinking": 15800,
+    "total": 5674705,
+    "cacheHitRatePct": 98.28
+  },
   "contextWindow": "74.4k peak (1,753 → 74,400 tokens)",
+  "contextMetrics": {
+    "minTokens": 1753,
+    "peakTokens": 74400
+  },
   "calls": {
     "llmCalls": 160,
     "toolCalls": {
@@ -43,10 +62,30 @@
       "done": 133,
       "error": 32,
       "breakdown": [
-        { "tool": "bash", "total": 77, "done": 51, "error": 26 },
-        { "tool": "edit", "total": 70, "done": 64, "error": 6 },
-        { "tool": "read", "total": 11, "done": 11, "error": 0 },
-        { "tool": "write", "total": 7, "done": 7, "error": 0 }
+        {
+          "tool": "bash",
+          "total": 77,
+          "done": 51,
+          "error": 26
+        },
+        {
+          "tool": "edit",
+          "total": 70,
+          "done": 64,
+          "error": 6
+        },
+        {
+          "tool": "read",
+          "total": 11,
+          "done": 11,
+          "error": 0
+        },
+        {
+          "tool": "write",
+          "total": 7,
+          "done": 7,
+          "error": 0
+        }
       ]
     }
   },

@@ -23,6 +23,13 @@
     "S6": false,
     "S7": false
   },
+  "verification": {
+    "holdoutPassed": 0,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "zero-pass",
+    "agentSuitePassed": 0,
+    "agentSuiteTotal": 8
+  },
   "interface": {
     "type": "cli",
     "command": "cursor-agent --print --output-format stream-json --force --sandbox disabled --workspace . \"$(< PROMPT.md)\" > records/20261025T083337Z.events.jsonl 2> records/20261025T083337Z.stderr.log",
@@ -36,7 +43,21 @@
     "total": "2.72M",
     "cacheHitRate": "97.15%"
   },
+  "tokenCounts": {
+    "uncachedInput": 76418,
+    "cachedInput": 2604507,
+    "output": 38254,
+    "thinking": 21875,
+    "total": 2719179,
+    "cacheHitRatePct": 97.15
+  },
   "contextWindow": "29.85% out of 256k (17,896 → 76,418 peak tokens)",
+  "contextMetrics": {
+    "minTokens": 17896,
+    "peakTokens": 76418,
+    "windowLimitTokens": 256000,
+    "peakUtilizationPct": 29.85
+  },
   "calls": {
     "llmCalls": 54,
     "toolCalls": {
@@ -44,13 +65,48 @@
       "done": 81,
       "error": 13,
       "breakdown": [
-        { "tool": "Shell (shellToolCall)", "total": 37, "done": 28, "error": 9 },
-        { "tool": "Read (readToolCall)", "total": 18, "done": 15, "error": 3 },
-        { "tool": "StrReplace (editToolCall)", "total": 18, "done": 18, "error": 0 },
-        { "tool": "Write (editToolCall)", "total": 15, "done": 14, "error": 1 },
-        { "tool": "Glob (globToolCall)", "total": 3, "done": 3, "error": 0 },
-        { "tool": "TodoWrite (updateTodosToolCall)", "total": 2, "done": 2, "error": 0 },
-        { "tool": "GetDynamicTools (getMcpToolsToolCall)", "total": 1, "done": 1, "error": 0 }
+        {
+          "tool": "Shell (shellToolCall)",
+          "total": 37,
+          "done": 28,
+          "error": 9
+        },
+        {
+          "tool": "Read (readToolCall)",
+          "total": 18,
+          "done": 15,
+          "error": 3
+        },
+        {
+          "tool": "StrReplace (editToolCall)",
+          "total": 18,
+          "done": 18,
+          "error": 0
+        },
+        {
+          "tool": "Write (editToolCall)",
+          "total": 15,
+          "done": 14,
+          "error": 1
+        },
+        {
+          "tool": "Glob (globToolCall)",
+          "total": 3,
+          "done": 3,
+          "error": 0
+        },
+        {
+          "tool": "TodoWrite (updateTodosToolCall)",
+          "total": 2,
+          "done": 2,
+          "error": 0
+        },
+        {
+          "tool": "GetDynamicTools (getMcpToolsToolCall)",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
       ]
     }
   },
