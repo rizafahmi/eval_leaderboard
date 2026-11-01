@@ -5,58 +5,55 @@ import {
   formatDuration,
   formatCost,
   formatTimestamp,
-  parseTokenString,
   formatCompactContextWindow,
   formatHarnessName,
   formatProviderName,
-  getPlanStats,
 } from '../utils/format';
+import {
+  analyzeAndRankRuns,
+  computeStageBottleneckMatrix,
+  discoverAblationPresets,
+} from '../utils/telemetry';
 import { BENCHMARK_STAGES } from '../data/benchmark';
 
 const stageTitleMap = new Map(BENCHMARK_STAGES.map((s) => [s.id, s.title]));
 const allRuns = await getCollection('runs', ({ data }) => data.published !== false);
 
-const enrichedRuns = allRuns
-  .map((entry) => {
-    const d = entry.data;
-    const plan = getPlanStats(d.planCompletion);
-    const inputTokens = parseTokenString(d.tokens?.input);
-    const cachedTokens = parseTokenString(d.tokens?.cachedInput);
-    const outputTokens = parseTokenString(d.tokens?.output);
-    const totalTokens =
-      parseTokenString(d.tokens?.total) || inputTokens + cachedTokens + outputTokens;
-    const compactContext = formatCompactContextWindow(d.contextWindow);
-    const hasCalls =
-      d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls?.total !== undefined);
-    const totalCalls = hasCalls
-      ? (d.calls?.llmCalls ?? 0) + (d.calls?.toolCalls?.total ?? 0)
-      : undefined;
-    const testsRatio =
-      d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
-    const testsPassed = d.tests?.passed ?? -1;
-    const timeMs = new Date(d.timestamp).getTime() || 0;
+const analyzedRuns = analyzeAndRankRuns(
+  allRuns.map((entry) => ({ id: entry.id, data: entry.data }))
+);
+const stageMatrix = computeStageBottleneckMatrix(analyzedRuns);
+const ablationPresets = discoverAblationPresets(analyzedRuns).slice(0, 3);
 
-    return {
-      id: entry.id,
-      data: d,
-      plan,
-      inputTokens,
-      cachedTokens,
-      outputTokens,
-      totalTokens,
-      compactContext,
-      totalCalls,
-      testsRatio,
-      testsPassed,
-      timeMs,
-    };
-  })
-  .sort((a, b) => {
-    if (b.plan.ratio !== a.plan.ratio) return b.plan.ratio - a.plan.ratio;
-    if (b.testsRatio !== a.testsRatio) return b.testsRatio - a.testsRatio;
-    if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
-    return a.data.durationMinutes - b.data.durationMinutes;
-  });
+const enrichedRuns = analyzedRuns.map((run) => {
+  const d = run.data;
+  const compactContext = formatCompactContextWindow(d.contextWindow);
+  const hasCalls =
+    d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls?.total !== undefined);
+  const totalCalls = hasCalls
+    ? (d.calls?.llmCalls ?? 0) + (d.calls?.toolCalls?.total ?? 0)
+    : undefined;
+  const testsRatio =
+    d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
+  const testsPassed = d.tests?.passed ?? -1;
+  const timeMs = new Date(d.timestamp).getTime() || 0;
+
+  return {
+    id: run.id,
+    data: d,
+    telemetry: run,
+    plan: run.plan,
+    inputTokens: run.tokens.uncachedInput,
+    cachedTokens: run.tokens.cachedInput,
+    outputTokens: run.tokens.output,
+    totalTokens: run.tokens.total,
+    compactContext,
+    totalCalls,
+    testsRatio,
+    testsPassed,
+    timeMs,
+  };
+});
 
 const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort((a, b) =>
   formatHarnessName(a).localeCompare(formatHarnessName(b), undefined, { sensitivity: 'base' })
@@ -73,6 +70,9 @@ const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
 const highestCost = costs.length > 0 ? Math.max(...costs) : 0;
 const fullPassRuns = enrichedRuns.filter((r) => r.plan.ratio === 1);
 const fullPassCount = fullPassRuns.length;
+const paretoFrontierRuns = fullPassRuns
+  .filter((r) => r.telemetry.isParetoFrontier)
+  .sort((a, b) => (a.telemetry.paretoOrder ?? 99) - (b.telemetry.paretoOrder ?? 99));
 
 const leaderPool = fullPassRuns.length > 0 ? fullPassRuns : enrichedRuns;
 const lowestCostLeader =
@@ -87,17 +87,45 @@ const fastestLeader =
         (a, b) => a.data.durationMinutes - b.data.durationMinutes || a.data.costUsd - b.data.costUsd
       )[0]
     : undefined;
-const deepestTestsLeader =
-  leaderPool.length > 0
-    ? [...leaderPool].sort(
-        (a, b) => b.testsPassed - a.testsPassed || a.data.costUsd - b.data.costUsd
-      )[0]
-    : undefined;
-const passedCounts = enrichedRuns
-  .map((r) => r.testsPassed)
-  .filter((n) => n >= 0);
-const minTestsPassed = passedCounts.length > 0 ? Math.min(...passedCounts) : 0;
-const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
+
+const totalCacheSavingsUsd = enrichedRuns.reduce(
+  (sum, r) => sum + r.telemetry.costMetrics.cacheSavingsUsd,
+  0
+);
+const topCacheSaver = [...enrichedRuns].sort(
+  (a, b) => b.telemetry.costMetrics.cacheSavingsUsd - a.telemetry.costMetrics.cacheSavingsUsd
+)[0];
+
+// SVG coordinates for the 7/7 Speed x Cost Pareto Frontier Plot
+const chartW = 680;
+const chartH = 260;
+const padL = 56;
+const padR = 28;
+const padT = 24;
+const padB = 42;
+const plotW = chartW - padL - padR;
+const plotH = chartH - padT - padB;
+
+const maxPlotDur = Math.max(120, ...fullPassRuns.map((r) => r.data.durationMinutes));
+const maxPlotCost = Math.max(14, ...fullPassRuns.map((r) => r.data.costUsd));
+
+const toSvgX = (dur: number) => padL + (dur / maxPlotDur) * plotW;
+const toSvgY = (cost: number) => padT + plotH - (cost / maxPlotCost) * plotH;
+
+// Build stepped Pareto path from fastest (leftmost) to cheapest (bottommost)
+let paretoStepPath = '';
+if (paretoFrontierRuns.length > 0) {
+  const pts = paretoFrontierRuns.map((r) => ({
+    x: Number(toSvgX(r.data.durationMinutes).toFixed(1)),
+    y: Number(toSvgY(r.data.costUsd).toFixed(1)),
+  }));
+  const segs: string[] = [`M ${pts[0].x} ${pts[0].y}`];
+  for (let i = 1; i < pts.length; i++) {
+    segs.push(`L ${pts[i].x} ${pts[i - 1].y}`);
+    segs.push(`L ${pts[i].x} ${pts[i].y}`);
+  }
+  paretoStepPath = segs.join(' ');
+}
 ---
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
@@ -122,20 +150,23 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
 
     <p class="hero-subtitle">
       Each run challenges a coding harness and model to build a rate-paced HTTP/TLS benchmark CLI
-      from scratch using strict Outside-In TDD—tracking test rigor, wall-clock speed, token
-      efficiency, and real API spend.
+      from scratch using strict Outside-In TDD—verified against an external 7-slice holdout contract
+      and audited for exact token conservation, Pareto efficiency, and stage bottlenecks.
     </p>
   </section>
 
   <!-- 02. EVIDENCE-BACKED METRIC STRIP -->
   <dl class="hero-stats-grid" aria-label="Benchmark summary statistics">
     <div class="card stat-card">
-      <dt class="section-kicker">FULL-SPEC PASS RATE</dt>
+      <dt class="section-kicker">HOLDOUT SPEC PASS RATE</dt>
       <dd class="stat-value">
         {fullPassCount}/{enrichedRuns.length}
       </dd>
       <dd class="stat-meta">
-        {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% completed 7/7 slices · {harnesses.length} harnesses · {providers.length} providers
+        {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% passed 7/7 slices ·{' '}
+        <a href="#pareto-section" class="stat-leader-link">
+          {paretoFrontierRuns.length} on Pareto frontier ↓
+        </a>
       </dd>
     </div>
 
@@ -180,19 +211,17 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </div>
 
     <div class="card stat-card">
-      <dt class="section-kicker">DEEPEST TEST SUITE</dt>
+      <dt class="section-kicker">PROMPT CACHE SAVINGS</dt>
       <dd class="stat-value">
-        {deepestTestsLeader && deepestTestsLeader.testsPassed >= 0
-          ? `${deepestTestsLeader.testsPassed}`
-          : '—'}
+        {formatCost(totalCacheSavingsUsd)}
       </dd>
       <dd class="stat-meta">
-        {deepestTestsLeader && deepestTestsLeader.testsPassed >= 0 ? (
+        {topCacheSaver ? (
           <>
-            <a href={`/runs/${deepestTestsLeader.id}`} class="stat-leader-link">
-              {formatHarnessName(deepestTestsLeader.data.codingHarness)} / {deepestTestsLeader.data.model}
+            Saved vs. uncached · peak{' '}
+            <a href={`/runs/${topCacheSaver.id}`} class="stat-leader-link">
+              {formatCost(topCacheSaver.telemetry.costMetrics.cacheSavingsUsd)} ({topCacheSaver.telemetry.costMetrics.cacheSavingsPct}%)
             </a>
-            {' · '}range {minTestsPassed}–{maxTestsPassed} tests
           </>
         ) : (
           `n=${enrichedRuns.length} runs`
@@ -242,14 +271,23 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       </div>
 
       <div class="control-field">
+        <label class="field-label" for="pricing-lens-select">Pricing Lens</label>
+        <select id="pricing-lens-select" name="lens" class="select control-select">
+          <option value="billed" selected>Billed Cost (Actual USD)</option>
+          <option value="standard">Standard API Rate USD</option>
+          <option value="uncached">Uncached Counterfactual (0% Cache)</option>
+        </select>
+      </div>
+
+      <div class="control-field">
         <label class="field-label" for="sort-select">Sort Metric</label>
         <div class="sort-control-pair">
           <select id="sort-select" name="sort" class="select control-select">
-            <option value="plan" selected>Plan Completion (S1–S7)</option>
+            <option value="plan" selected>Holdout Spec Completion (S1–S7)</option>
             <option value="duration">Duration (Time Elapsed)</option>
-            <option value="cost">Total Cost ($)</option>
-            <option value="tokens">Total Tokens (All Billed)</option>
-            <option value="tests">Tests Passed</option>
+            <option value="cost">Cost (Selected Lens $)</option>
+            <option value="tokens">Total Tokens (Exact Int)</option>
+            <option value="tests">Agent Self-Tests Passed</option>
             <option value="timestamp">Run Date</option>
           </select>
           <button
@@ -266,20 +304,35 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     </div>
 
     <div class="controls-footer-row">
-      <label class="check-label controls-check-label" for="full-pass-toggle">
-        <input
-          id="full-pass-toggle"
-          name="fullPass"
-          type="checkbox"
-          class="check-input"
-        />
-        <span>7/7 Full Pass Only ({fullPassCount})</span>
-      </label>
+      <div class="controls-toggles-wrap">
+        <label class="check-label controls-check-label" for="full-pass-toggle">
+          <input
+            id="full-pass-toggle"
+            name="fullPass"
+            type="checkbox"
+            class="check-input"
+          />
+          <span>7/7 Holdout Full Pass ({fullPassCount})</span>
+        </label>
+
+        <label class="check-label controls-check-label" for="pareto-only-toggle">
+          <input
+            id="pareto-only-toggle"
+            name="paretoOnly"
+            type="checkbox"
+            class="check-input"
+          />
+          <span>Pareto Frontier Only ({paretoFrontierRuns.length})</span>
+        </label>
+      </div>
 
       <div class="controls-meta-actions">
         <span id="visible-count-badge" class="controls-result-count">
           Showing {enrichedRuns.length} of {enrichedRuns.length} runs
         </span>
+        <a href="/compare" class="btn btn-sm btn-secondary">
+          Compare &amp; Ablations →
+        </a>
         <button
           id="reset-filters-btn"
           type="button"
@@ -303,7 +356,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
           ))
         }
       </ul>
-      <a href="/about#stages" class="stage-legend-link">Full spec →</a>
+      <a href="#bottleneck-section" class="stage-legend-link">Bottleneck matrix ↓</a>
     </div>
 
     <div
@@ -319,8 +372,8 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
   <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
     <table class="app-table leaderboard-table" id="leaderboard-table">
       <caption id="leaderboard-caption" class="visually-hidden">
-        Capy Bench evaluation runs ranked by plan completion, tests passed, duration, token usage,
-        and cost
+        Capy Bench evaluation runs ranked by holdout spec completion, agent test suite, duration,
+        exact token usage, and API cost
       </caption>
       <thead>
         <tr>
@@ -330,9 +383,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
             <button
               type="button"
               class="sort-header-btn"
-              title="Sort by S1–S7 plan completion ratio (ties broken by test pass ratio, lowest cost, fastest duration)"
+              title="Sort by S1–S7 external holdout spec completion ratio"
             >
-              <span>Plan Completion</span>
+              <span>Spec Verification</span>
               <span class="sort-indicator" aria-hidden="true">↓</span>
             </button>
           </th>
@@ -340,9 +393,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
             <button
               type="button"
               class="sort-header-btn"
-              title="Sort by test suite pass ratio, then total passing tests"
+              title="Sort by agent-authored ExUnit test suite pass ratio, then total passing tests"
             >
-              <span>Tests &amp; Commits</span>
+              <span>Agent Suite &amp; Git</span>
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
           </th>
@@ -350,7 +403,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
             <button
               type="button"
               class="sort-header-btn"
-              title="Sort by wall-clock run duration"
+              title="Sort by active wall-clock run duration"
             >
               <span>Duration</span>
               <span class="sort-indicator" aria-hidden="true"></span>
@@ -360,7 +413,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
             <button
               type="button"
               class="sort-header-btn"
-              title="Sort by total token volume (uncached input + cached input + output)"
+              title="Sort by exact total token volume (uncached input + cached input + output)"
             >
               <span>Token Usage</span>
               <span class="sort-indicator" aria-hidden="true"></span>
@@ -370,9 +423,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
             <button
               type="button"
               class="sort-header-btn"
-              title="Sort by total API cost in USD"
+              title="Sort by cost in USD under the active pricing lens"
             >
-              <span>Cost</span>
+              <span id="cost-col-header-label">Cost (Billed)</span>
               <span class="sort-indicator" aria-hidden="true"></span>
             </button>
           </th>
@@ -382,7 +435,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       <tbody id="leaderboard-tbody">
         {
           enrichedRuns.map((run, index) => {
-            const { data, plan } = run;
+            const { data, plan, telemetry } = run;
             const rank = index + 1;
             const hasTokens =
               data.tokens && (data.tokens.input || data.tokens.output || data.tokens.cacheHitRate);
@@ -391,11 +444,15 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
               .filter(([, done]) => !done)
               .map(([stageId]) => stageId);
 
-            const displayHarness = formatHarnessName(data.codingHarness);
-            const displayProvider = formatProviderName(data.provider);
+            const displayHarness = telemetry.displayHarness;
+            const displayProvider = telemetry.displayProvider;
             const showInOutSub = Boolean(
               data.tokens?.total && data.tokens?.input && data.tokens?.output
             );
+            const billedCost = data.costUsd;
+            const standardCost = telemetry.costMetrics.standardApiCostUsd;
+            const uncachedCost = telemetry.costMetrics.uncachedCounterfactualCostUsd;
+            const cacheSavings = telemetry.costMetrics.cacheSavingsUsd;
 
             return (
               <tr
@@ -404,10 +461,15 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                 data-href={`/runs/${run.id}`}
                 data-harness={data.codingHarness}
                 data-provider={data.provider}
-                data-search={`${data.codingHarness} ${displayHarness} ${data.model} ${data.provider} ${displayProvider} ${data.effort ?? ''}`.toLowerCase()}
+                data-search={`${data.codingHarness} ${displayHarness} ${data.model} ${data.provider} ${displayProvider} ${data.effort ?? ''} ${telemetry.isParetoFrontier ? 'pareto frontier' : ''}`.toLowerCase()}
                 data-plan={plan.ratio}
+                data-pareto={telemetry.isParetoFrontier ? '1' : '0'}
                 data-duration={data.durationMinutes}
-                data-cost={data.costUsd}
+                data-cost={billedCost}
+                data-cost-billed={billedCost}
+                data-cost-standard={standardCost}
+                data-cost-uncached={uncachedCost}
+                data-cache-savings={cacheSavings}
                 data-tokens={run.totalTokens}
                 data-tests={run.testsRatio}
                 data-tests-passed={run.testsPassed}
@@ -426,12 +488,20 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
 
                 <th scope="row" data-cell="Harness & Model">
                   <div class="cell-stack">
-                    <div class="entry-title">
+                    <div class="entry-title-row">
                       <a href={`/runs/${run.id}`} class="entry-title-link">
                         <span>{displayHarness}</span>
                         <span class="text-muted-sep" aria-hidden="true">/</span>
                         <span class="entry-model">{data.model}</span>
                       </a>
+                      {telemetry.isParetoFrontier && (
+                        <span
+                          class="hl hl-acid pareto-inline-badge"
+                          title={`Pareto Frontier #${telemetry.paretoOrder}: non-dominated on 7/7 speed (${formatDuration(data.durationMinutes)}) and cost (${formatCost(billedCost)})`}
+                        >
+                          PARETO
+                        </span>
+                      )}
                     </div>
                     <div class="entry-meta">
                       <span>{displayProvider}</span>
@@ -455,7 +525,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                   </div>
                 </th>
 
-                <td data-cell="Plan Completion">
+                <td data-cell="Spec Verification">
                   <div class="plan-cell cell-stack">
                     <div class="plan-primary-row">
                       <span class="metric-primary">
@@ -482,10 +552,15 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                     <div class="stage-strip" aria-hidden="true">
                       {plan.entries.map(([stageId, done]) => {
                         const stageTitle = stageTitleMap.get(stageId) ?? stageId;
+                        const isPeak = telemetry.peakStageId === stageId;
                         return (
                           <span
-                            class:list={['stage-pill', done ? 'done' : 'pending']}
-                            title={`${stageId}: ${stageTitle} (${done ? 'Completed' : 'Incomplete'})`}
+                            class:list={[
+                              'stage-pill',
+                              done ? 'done' : 'pending',
+                              { 'is-peak-stage': isPeak },
+                            ]}
+                            title={`${stageId}: ${stageTitle} (${done ? 'Holdout PASS' : 'Holdout MISS'}${isPeak ? ` · Peak cost stage: ${formatCost(telemetry.stages[stageId as keyof typeof telemetry.stages].costUsd)}` : ''})`}
                           >
                             {stageId}
                           </span>
@@ -495,18 +570,29 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                   </div>
                 </td>
 
-                <td data-cell="Tests & Commits">
+                <td data-cell="Agent Suite & Git">
                   <div class="cell-stack">
                     {data.tests ? (
-                      <div class="metric-primary">
-                        {data.tests.passed}/{data.tests.total} passed
+                      <div
+                        class="metric-primary"
+                        title="Agent-authored ExUnit test suite results (separate from holdout S1–S7 spec verification)"
+                      >
+                        {data.tests.passed}/{data.tests.total} ExUnit
                       </div>
                     ) : (
                       <div class="metric-empty">—</div>
                     )}
-                    {data.commits !== undefined && (
-                      <div class="metric-sub">{data.commits} commits</div>
-                    )}
+                    <div class="metric-sub">
+                      {data.commits !== undefined ? `${data.commits} commits` : ''}
+                      {telemetry.toolSuccessRatePct !== null && (
+                        <>
+                          {data.commits !== undefined && <span aria-hidden="true"> · </span>}
+                          <span title={`${telemetry.toolErrorCalls} tool errors out of ${telemetry.toolTotalCalls} tool calls`}>
+                            {telemetry.toolSuccessRatePct}% tool ok
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </td>
 
@@ -514,7 +600,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                   <div class="cell-stack">
                     <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
                     {run.totalCalls !== undefined && (
-                      <div class="metric-sub">{run.totalCalls.toLocaleString()} calls</div>
+                      <div class="metric-sub">
+                        {telemetry.llmCalls} LLM / {telemetry.toolTotalCalls} tool
+                      </div>
                     )}
                   </div>
                 </td>
@@ -524,7 +612,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                     <div class="cell-stack">
                       <div
                         class="metric-primary"
-                        title={`Uncached in: ${data.tokens?.input ?? '—'} · Cached in: ${data.tokens?.cachedInput ?? '—'} · Out: ${data.tokens?.output ?? '—'}${data.tokens?.thinking ? ` · Thinking: ${data.tokens.thinking}` : ''}`}
+                        title={`Exact tokens: ${telemetry.tokens.total.toLocaleString('en-US')} total (${telemetry.tokens.uncachedInput.toLocaleString('en-US')} uncached in · ${telemetry.tokens.cachedInput.toLocaleString('en-US')} cached in · ${telemetry.tokens.output.toLocaleString('en-US')} out · ${telemetry.tokens.thinking.toLocaleString('en-US')} thinking)`}
                       >
                         {data.tokens?.total
                           ? `${data.tokens.total} total`
@@ -558,28 +646,43 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
                 </td>
 
                 <td data-cell="Cost">
-                  {lowestCostLeader && run.id === lowestCostLeader.id ? (
-                    <span
-                      class="hl hl-mint cost-pill"
-                      title="Lowest 7/7 full-pass cost leader"
-                    >
-                      {formatCost(data.costUsd)}
-                    </span>
-                  ) : (
-                    <span class="metric-primary cost-mono">{formatCost(data.costUsd)}</span>
-                  )}
+                  <div class="cell-stack">
+                    <div>
+                      {lowestCostLeader && run.id === lowestCostLeader.id ? (
+                        <span
+                          class="hl hl-mint cost-pill cost-primary-display"
+                          title="Lowest 7/7 full-pass cost leader"
+                        >
+                          {formatCost(billedCost)}
+                        </span>
+                      ) : (
+                        <span class="metric-primary cost-mono cost-primary-display">
+                          {formatCost(billedCost)}
+                        </span>
+                      )}
+                    </div>
+                    <div class="metric-sub cost-sub-display">
+                      {cacheSavings > 0
+                        ? `-${formatCost(cacheSavings)} cache saved`
+                        : standardCost > billedCost
+                          ? `${formatCost(standardCost)} API equiv.`
+                          : 'free tier'}
+                    </div>
+                  </div>
                 </td>
 
                 <td data-cell="Action">
-                  <a
-                    href={`/runs/${run.id}`}
-                    class="btn btn-sm btn-secondary view-btn"
-                    tabindex="-1"
-                    aria-hidden="true"
-                  >
-                    <span>Inspect</span>
-                    <span aria-hidden="true">→</span>
-                  </a>
+                  <div class="row-action-stack">
+                    <a
+                      href={`/runs/${run.id}`}
+                      class="btn btn-sm btn-secondary view-btn"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      <span>Inspect</span>
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
                 </td>
               </tr>
             );
@@ -603,6 +706,302 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- 05. CROSS-RUN ECONOMETRICS: PARETO FRONTIER & STAGE BOTTLENECK MATRIX -->
+  <div class="analytics-grid">
+    <!-- Panel A: 7/7 Speed x Cost Pareto Frontier -->
+    <section
+      class="card analytics-card"
+      id="pareto-section"
+      aria-labelledby="pareto-heading"
+    >
+      <div class="card-title">
+        <div class="card-title-group">
+          <h2 id="pareto-heading" class="card-heading headline-two-tone">
+            Speed × Cost Pareto Frontier{' '}
+            <span class="muted">/ {paretoFrontierRuns.length} Optimal 7/7 Runs</span>
+          </h2>
+        </div>
+        <div class="card-title-group">
+          <a href="/compare?preset=pareto-cost-vs-speed" class="action-link">
+            Diff Frontier Extremes <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <p class="mono section-subnote">
+        Non-dominated 7/7 full-pass runs where no other evaluation is simultaneously faster and cheaper.
+      </p>
+
+      <div class="pareto-layout">
+        <div class="pareto-svg-frame">
+          <svg
+            viewBox={`0 0 ${chartW} ${chartH}`}
+            class="pareto-svg"
+            role="img"
+            aria-labelledby="pareto-svg-title pareto-svg-desc"
+          >
+            <title id="pareto-svg-title">7/7 Full-Pass Speed vs Cost Pareto Frontier</title>
+            <desc id="pareto-svg-desc">
+              Scatter plot of duration in minutes versus cost in USD for all 7/7 passing runs, with a stepped line connecting the {paretoFrontierRuns.length} Pareto-optimal runs from {fastestLeader?.data.durationMinutes}m (${fastestLeader?.data.costUsd}) down to {lowestCostLeader?.data.durationMinutes}m (${lowestCostLeader?.data.costUsd}).
+            </desc>
+
+            <!-- Horizontal Cost Grid Lines -->
+            {[0, 3, 6, 9, 12].map((cVal) => {
+              const y = Number(toSvgY(cVal).toFixed(1));
+              return (
+                <g>
+                  <line
+                    x1={padL}
+                    y1={y}
+                    x2={chartW - padR}
+                    y2={y}
+                    class="pareto-grid-line"
+                  />
+                  <text x={padL - 8} y={y + 4} text-anchor="end" class="pareto-axis-label">
+                    ${cVal}
+                  </text>
+                </g>
+              );
+            })}
+
+            <!-- Vertical Duration Grid Lines -->
+            {[20, 40, 60, 80, 100].map((dVal) => {
+              const x = Number(toSvgX(dVal).toFixed(1));
+              return (
+                <g>
+                  <line
+                    x1={x}
+                    y1={padT}
+                    x2={x}
+                    y2={chartH - padB}
+                    class="pareto-grid-line"
+                  />
+                  <text x={x} y={chartH - padB + 18} text-anchor="middle" class="pareto-axis-label">
+                    {dVal}m
+                  </text>
+                </g>
+              );
+            })}
+
+            <!-- Axes -->
+            <line
+              x1={padL}
+              y1={padT}
+              x2={padL}
+              y2={chartH - padB}
+              class="pareto-axis-line"
+            />
+            <line
+              x1={padL}
+              y1={chartH - padB}
+              x2={chartW - padR}
+              y2={chartH - padB}
+              class="pareto-axis-line"
+            />
+
+            <!-- Stepped Pareto Frontier Path -->
+            {paretoStepPath && (
+              <path d={paretoStepPath} class="pareto-step-path" fill="none" />
+            )}
+
+            <!-- Plot All 7/7 Full Pass Runs -->
+            {fullPassRuns.map((r) => {
+              const cx = Number(toSvgX(r.data.durationMinutes).toFixed(1));
+              const cy = Number(toSvgY(r.data.costUsd).toFixed(1));
+              const isFront = r.telemetry.isParetoFrontier;
+              const shortLabel = `${r.telemetry.displayHarness} / ${r.data.model.replace('-contributor', '')}`;
+              const labelOffsetY =
+                r.data.model === 'gpt-6-sol' && r.telemetry.displayHarness === 'Pi'
+                  ? 15
+                  : -10;
+              return (
+                <a href={`/runs/${r.id}`} class="pareto-point-link">
+                  <title>
+                    {r.telemetry.displayHarness} / {r.data.model} ({r.data.effort ?? 'std'}): {formatDuration(r.data.durationMinutes)} · {formatCost(r.data.costUsd)}{isFront ? ' (PARETO OPTIMAL)' : ''}
+                  </title>
+                  {isFront ? (
+                    <rect
+                      x={cx - 6}
+                      y={cy - 6}
+                      width="12"
+                      height="12"
+                      class="pareto-node-optimal"
+                    />
+                  ) : (
+                    <circle cx={cx} cy={cy} r="5" class="pareto-node-dominated" />
+                  )}
+                  <text
+                    x={cx + 9}
+                    y={cy + labelOffsetY}
+                    class:list={[
+                      'pareto-node-label',
+                      isFront ? 'is-optimal' : 'is-dominated',
+                    ]}
+                  >
+                    {shortLabel} ({r.data.durationMinutes}m, {formatCost(r.data.costUsd)})
+                  </text>
+                </a>
+              );
+            })}
+          </svg>
+        </div>
+
+        <ol class="command-list pareto-step-list" role="list">
+          {paretoFrontierRuns.map((r) => (
+            <li class="command-row pareto-step-row">
+              <div class="pareto-step-left">
+                <span class="hl hl-acid pareto-order-pill">
+                  F{r.telemetry.paretoOrder}
+                </span>
+                <a href={`/runs/${r.id}`} class="pareto-step-link">
+                  <strong>{r.telemetry.displayHarness} / {r.data.model}</strong>
+                </a>
+              </div>
+              <div class="mono pareto-step-metrics">
+                <span>{formatDuration(r.data.durationMinutes)}</span>
+                <span aria-hidden="true">·</span>
+                <strong class="cost-mono">{formatCost(r.data.costUsd)}</strong>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- Panel B: Cross-Run Stage Bottleneck Matrix (S1-S7) -->
+    <section
+      class="card analytics-card"
+      id="bottleneck-section"
+      aria-labelledby="bottleneck-heading"
+    >
+      <div class="card-title">
+        <div class="card-title-group">
+          <h2 id="bottleneck-heading" class="card-heading headline-two-tone">
+            Stage Bottleneck Matrix{' '}
+            <span class="muted">/ S1–S7 Cross-Run Telemetry</span>
+          </h2>
+        </div>
+        <div class="card-title-group">
+          <a href="/about#stages" class="action-link">
+            Stage Specifications <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <p class="mono section-subnote">
+        Aggregated across all {enrichedRuns.length} runs: S3 (streaming HTTP/TLS + 2s timeouts) and S7 (foreground PTY Ctrl-C) dominate token burn, while S5 has the highest spec miss rate.
+      </p>
+
+      <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="bottleneck-heading">
+        <table class="app-table leaderboard-table static-table bottleneck-table">
+          <caption class="visually-hidden">
+            Stage-by-stage pass rate, average LLM call share, average cost share, average thinking tokens, and peak bottleneck frequency across S1 through S7
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Stage</th>
+              <th scope="col">Holdout Pass Rate</th>
+              <th scope="col">Avg Call Share</th>
+              <th scope="col">Avg Cost Share</th>
+              <th scope="col">Avg Thinking</th>
+              <th scope="col">Peak Cost Stage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stageMatrix.map((st) => {
+              const title = stageTitleMap.get(st.stageId) ?? st.stageId;
+              const isTopBottleneck = st.peakCostCount >= 2;
+              const isHighMiss = st.passRatePct < 70;
+              return (
+                <tr>
+                  <th scope="row" data-cell="Stage">
+                    <div class="bottleneck-stage-cell">
+                      <span class:list={['stage-legend-id', { 'hl hl-violet': isTopBottleneck }]}>
+                        {st.stageId}
+                      </span>
+                      <strong>{title}</strong>
+                    </div>
+                  </th>
+                  <td class="mono" data-cell="Holdout Pass Rate">
+                    <span class:list={[isHighMiss ? 'hl hl-magenta' : '']}>
+                      {st.passCount}/{st.totalRuns} ({st.passRatePct}%)
+                    </span>
+                  </td>
+                  <td class="mono" data-cell="Avg Call Share">
+                    {st.avgCallSharePct}% ({st.avgLlmCalls} calls)
+                  </td>
+                  <td class="mono" data-cell="Avg Cost Share">
+                    <div class="bottleneck-bar-wrap">
+                      <span>{st.avgCostSharePct}%</span>
+                      <div class="bottleneck-bar-track" aria-hidden="true">
+                        <span
+                          class:list={[
+                            'bottleneck-bar-fill',
+                            isTopBottleneck ? 'is-peak' : 'is-normal',
+                          ]}
+                          style={`inline-size: ${Math.min(100, st.avgCostSharePct * 3).toFixed(1)}%`}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td class="mono" data-cell="Avg Thinking">
+                    {st.avgThinkingTokens.toLocaleString('en-US')} tok
+                  </td>
+                  <td class="mono" data-cell="Peak Cost Stage">
+                    {st.peakCostCount > 0 ? (
+                      <span class:list={[isTopBottleneck ? 'hl hl-violet' : 'badge-static']}>
+                        {st.peakCostCount} {st.peakCostCount === 1 ? 'run' : 'runs'} #1 peak
+                      </span>
+                    ) : (
+                      <span class="text-muted">0 runs</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Panel C: Featured Controlled Ablations Teaser -->
+    <section
+      class="card analytics-card"
+      id="ablations-teaser"
+      aria-labelledby="ablations-teaser-heading"
+    >
+      <div class="card-title">
+        <div class="card-title-group">
+          <h2 id="ablations-teaser-heading" class="card-heading headline-two-tone">
+            Controlled Ablation Experiments{' '}
+            <span class="muted">/ Isolating Harness, Effort &amp; Model Tier</span>
+          </h2>
+        </div>
+        <div class="card-title-group">
+          <a href="/compare" class="action-link">
+            Open Full Comparison Workbench <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="ablation-cards-grid">
+        {ablationPresets.map((preset) => (
+          <a
+            href={`/compare?a=${preset.runAId}&b=${preset.runBId}&preset=${preset.id}`}
+            class="card card-interactive ablation-teaser-card"
+          >
+            <div class="ablation-teaser-top">
+              <span class="hl hl-sky ablation-badge">{preset.badge}</span>
+              <span class="mono ablation-cta">Diff runs →</span>
+            </div>
+            <strong class="ablation-teaser-title">{preset.title}</strong>
+            <p class="ablation-teaser-copy">{preset.findingHeadline}</p>
+          </a>
+        ))}
+      </div>
+    </section>
   </div>
   </div>
 </BaseLayout>
@@ -699,6 +1098,19 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     padding: 0 0 1rem;
     margin-block-end: 1.25rem;
     gap: 1rem 1.25rem;
+  }
+
+  .leaderboard-quiet .controls-select-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.85rem;
+  }
+
+  .leaderboard-quiet .controls-toggles-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: center;
   }
 
   .leaderboard-quiet .command-input-prefix {
@@ -814,6 +1226,20 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     border-block-end: 2px solid var(--hl-sky);
   }
 
+  .leaderboard-quiet .entry-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .leaderboard-quiet .pareto-inline-badge {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    padding: 0.06rem 0.32rem;
+    letter-spacing: 0.04em;
+  }
+
   /* Quieter row metadata: clean monospace inline line instead of 3 boxed pills per row */
   .leaderboard-quiet .entry-meta {
     font-family: var(--font-mono);
@@ -861,6 +1287,10 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     background-color: transparent;
   }
 
+  .leaderboard-quiet .stage-pill.is-peak-stage {
+    border-block-end: 2px solid var(--hl-violet);
+  }
+
   /* Quieter row action: subtle text affordance that lights up with brand acid on row hover */
   .leaderboard-quiet .view-btn {
     border-width: 1px;
@@ -874,6 +1304,233 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     color: var(--hl-ink);
     border-color: var(--raw-ebony);
   }
+
+  /* ==========================================================================
+     CROSS-RUN ANALYTICS SECTIONS (Pareto Frontier, Stage Matrix, Ablations)
+     ========================================================================== */
+  .analytics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-block-start: 2rem;
+  }
+
+  .analytics-card {
+    background-color: transparent;
+    padding: 1.35rem 1.5rem;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
+  }
+
+  @supports not (content-visibility: auto) {
+    .analytics-card {
+      contain: layout style paint;
+    }
+  }
+
+  .pareto-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+    margin-block-start: 0.75rem;
+  }
+
+  @media (max-width: 960px) {
+    .pareto-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pareto-svg-frame {
+    border: 1px solid var(--border-strong-color);
+    background-color: var(--bg-surface);
+    padding: 0.75rem;
+  }
+
+  .pareto-svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    font-family: var(--font-mono);
+  }
+
+  .pareto-grid-line {
+    stroke: var(--border-subtle-color);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+
+  .pareto-axis-line {
+    stroke: var(--border-strong-color);
+    stroke-width: 1.5;
+  }
+
+  .pareto-axis-label {
+    fill: var(--text-muted);
+    font-size: 10px;
+  }
+
+  .pareto-step-path {
+    stroke: var(--hl-acid);
+    stroke-width: 2.5;
+  }
+
+  :global([data-theme="light"]) .pareto-step-path {
+    stroke: var(--accent-cobalt);
+  }
+
+  .pareto-node-optimal {
+    fill: var(--hl-acid);
+    stroke: var(--raw-ebony);
+    stroke-width: 2;
+  }
+
+  .pareto-node-dominated {
+    fill: var(--bg-canvas);
+    stroke: var(--text-muted);
+    stroke-width: 1.5;
+  }
+
+  .pareto-node-label {
+    font-size: 10px;
+    fill: var(--text-muted);
+  }
+
+  .pareto-node-label.is-optimal {
+    fill: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .pareto-point-link:hover .pareto-node-label {
+    fill: var(--hl-acid);
+    text-decoration: underline;
+  }
+
+  :global([data-theme="light"]) .pareto-point-link:hover .pareto-node-label {
+    fill: var(--accent-cobalt);
+  }
+
+  .pareto-step-list {
+    border: 1px solid var(--border-subtle-color);
+  }
+
+  .pareto-step-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .pareto-step-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-inline-size: 0;
+  }
+
+  .pareto-order-pill {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 0.08rem 0.35rem;
+  }
+
+  .pareto-step-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+
+  .pareto-step-link:hover {
+    text-decoration: underline;
+  }
+
+  .pareto-step-metrics {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  /* Stage Bottleneck Table */
+  .bottleneck-stage-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .bottleneck-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .bottleneck-bar-track {
+    inline-size: 5.5rem;
+    block-size: 0.4rem;
+    border: 1px solid var(--border-subtle-color);
+    background-color: var(--bg-canvas);
+  }
+
+  .bottleneck-bar-fill {
+    display: block;
+    block-size: 100%;
+    background-color: var(--hl-sky);
+  }
+
+  .bottleneck-bar-fill.is-peak {
+    background-color: var(--hl-violet);
+  }
+
+  /* Ablation Teaser Cards */
+  .ablation-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1rem;
+    margin-block-start: 0.75rem;
+  }
+
+  .ablation-teaser-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1rem 1.15rem;
+    text-decoration: none;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--border-strong-color);
+  }
+
+  .ablation-teaser-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ablation-badge {
+    font-size: 0.65rem;
+    padding: 0.08rem 0.35rem;
+  }
+
+  .ablation-cta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .ablation-teaser-title {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .ablation-teaser-copy {
+    font-size: 0.825rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin: 0;
+  }
 </style>
 
 <script>
@@ -885,13 +1542,23 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
   const searchInput = document.getElementById('search-input') as HTMLInputElement | null;
   const harnessFilter = document.getElementById('harness-filter') as HTMLSelectElement | null;
   const providerFilter = document.getElementById('provider-filter') as HTMLSelectElement | null;
+  const pricingLensSelect = document.getElementById('pricing-lens-select') as HTMLSelectElement | null;
+  const costColHeaderLabel = document.getElementById('cost-col-header-label') as HTMLElement | null;
   const fullPassToggle = document.getElementById('full-pass-toggle') as HTMLInputElement | null;
+  const paretoOnlyToggle = document.getElementById('pareto-only-toggle') as HTMLInputElement | null;
   const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
   const sortDirBtn = document.getElementById('sort-dir-btn') as HTMLButtonElement | null;
   const visibleCountBadge = document.getElementById('visible-count-badge') as HTMLElement | null;
   const resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement | null;
   const statusRegion = document.getElementById('leaderboard-status') as HTMLElement | null;
   const sortableHeaders = document.querySelectorAll<HTMLTableCellElement>('th.sortable');
+
+  const usdFmt = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   const defaultSortDirs: Record<string, 'asc' | 'desc'> = {
     plan: 'desc',
@@ -914,11 +1581,63 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     );
   }
 
+  function applyPricingLensToRows(lens: string) {
+    if (!tbody) return;
+    if (costColHeaderLabel) {
+      costColHeaderLabel.textContent =
+        lens === 'standard'
+          ? 'Cost (API Rate)'
+          : lens === 'uncached'
+            ? 'Cost (0% Cache)'
+            : 'Cost (Billed)';
+    }
+
+    const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
+    for (const row of rows) {
+      const billed = parseFloat(row.dataset.costBilled ?? '0');
+      const standard = parseFloat(row.dataset.costStandard ?? '0');
+      const uncached = parseFloat(row.dataset.costUncached ?? '0');
+      const savings = parseFloat(row.dataset.cacheSavings ?? '0');
+
+      const activeCost =
+        lens === 'standard' ? standard : lens === 'uncached' ? uncached : billed;
+      row.dataset.cost = String(activeCost);
+
+      const primaryEl = row.querySelector<HTMLElement>('.cost-primary-display');
+      const subEl = row.querySelector<HTMLElement>('.cost-sub-display');
+      if (primaryEl) {
+        primaryEl.textContent = usdFmt.format(activeCost);
+      }
+      if (subEl) {
+        if (lens === 'uncached') {
+          subEl.textContent =
+            savings > 0 ? `vs ${usdFmt.format(standard)} cached` : 'no cache delta';
+        } else if (lens === 'standard') {
+          subEl.textContent =
+            standard !== billed
+              ? `billed ${usdFmt.format(billed)}`
+              : savings > 0
+                ? `-${usdFmt.format(savings)} cache saved`
+                : 'standard API';
+        } else {
+          subEl.textContent =
+            savings > 0
+              ? `-${usdFmt.format(savings)} cache saved`
+              : standard > billed
+                ? `${usdFmt.format(standard)} API equiv.`
+                : 'free tier';
+        }
+      }
+    }
+  }
+
   function syncUrlState(
     query: string,
     harness: string,
     provider: string,
+    lens: string,
     fullPassOnly: boolean,
+    paretoOnly: boolean,
     sortBy: string,
     sortDir: 'asc' | 'desc'
   ) {
@@ -933,8 +1652,14 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       if (provider !== 'all') params.set('provider', provider);
       else params.delete('provider');
 
+      if (lens !== 'billed') params.set('lens', lens);
+      else params.delete('lens');
+
       if (fullPassOnly) params.set('pass', '1');
       else params.delete('pass');
+
+      if (paretoOnly) params.set('pareto', '1');
+      else params.delete('pareto');
 
       const defaultDir = defaultSortDirs[sortBy] ?? 'desc';
       if (sortBy !== 'plan' || sortDir !== defaultDir) {
@@ -959,7 +1684,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       const q = params.get('q');
       const harness = params.get('harness');
       const provider = params.get('provider');
+      const lens = params.get('lens');
       const pass = params.get('pass');
+      const pareto = params.get('pareto');
       const sort = params.get('sort');
       const dir = params.get('dir');
 
@@ -978,8 +1705,18 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       ) {
         providerFilter.value = provider;
       }
+      if (
+        lens &&
+        pricingLensSelect &&
+        Array.from(pricingLensSelect.options).some((o) => o.value === lens)
+      ) {
+        pricingLensSelect.value = lens;
+      }
       if (pass === '1' && fullPassToggle) {
         fullPassToggle.checked = true;
+      }
+      if (pareto === '1' && paretoOnlyToggle) {
+        paretoOnlyToggle.checked = true;
       }
       if (
         sort &&
@@ -1002,9 +1739,13 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     const query = (searchInput?.value ?? '').trim().toLowerCase();
     const harness = harnessFilter?.value ?? 'all';
     const provider = providerFilter?.value ?? 'all';
+    const lens = pricingLensSelect?.value ?? 'billed';
     const fullPassOnly = Boolean(fullPassToggle?.checked);
+    const paretoOnly = Boolean(paretoOnlyToggle?.checked);
     const sortBy = sortSelect.value;
     const sortDir = (sortDirBtn.dataset.dir as 'asc' | 'desc') || 'desc';
+
+    applyPricingLensToRows(lens);
 
     const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
     const totalCount = rows.length;
@@ -1015,13 +1756,21 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       const rowHarness = row.dataset.harness ?? '';
       const rowProvider = row.dataset.provider ?? '';
       const rowPlan = parseFloat(row.dataset.plan ?? '0');
+      const rowPareto = row.dataset.pareto === '1';
 
       const matchesSearch = !query || rowSearch.includes(query);
       const matchesHarness = harness === 'all' || rowHarness === harness;
       const matchesProvider = provider === 'all' || rowProvider === provider;
       const matchesFullPass = !fullPassOnly || rowPlan === 1;
+      const matchesPareto = !paretoOnly || rowPareto;
 
-      row.hidden = !(matchesSearch && matchesHarness && matchesProvider && matchesFullPass);
+      row.hidden = !(
+        matchesSearch &&
+        matchesHarness &&
+        matchesProvider &&
+        matchesFullPass &&
+        matchesPareto
+      );
     });
 
     // Sort rows
@@ -1047,7 +1796,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
           return sortDir === 'asc' ? passedA - passedB : passedB - passedA;
         }
       }
-      // Canonical 4-key tie-breaker chain: plan ratio -> test pass ratio -> lowest cost -> fastest duration
+      // Canonical tie-breaker chain: plan ratio -> test pass ratio -> lowest cost -> fastest duration
       const planDiff =
         parseFloat(b.dataset.plan ?? '0') - parseFloat(a.dataset.plan ?? '0');
       if (planDiff !== 0) return planDiff;
@@ -1092,7 +1841,12 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
 
     const visibleCount = visibleRank - 1;
     const hasActiveFilters =
-      Boolean(query) || harness !== 'all' || provider !== 'all' || fullPassOnly;
+      Boolean(query) ||
+      harness !== 'all' ||
+      provider !== 'all' ||
+      lens !== 'billed' ||
+      fullPassOnly ||
+      paretoOnly;
     const isNonDefaultSort =
       sortBy !== 'plan' || sortDir !== (defaultSortDirs.plan ?? 'desc');
 
@@ -1103,6 +1857,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
 
     harnessFilter?.classList.toggle('is-active-filter', harness !== 'all');
     providerFilter?.classList.toggle('is-active-filter', provider !== 'all');
+    pricingLensSelect?.classList.toggle('is-active-filter', lens !== 'billed');
     sortSelect?.classList.toggle('is-active-filter', isNonDefaultSort);
     sortDirBtn?.classList.toggle(
       'is-active-filter',
@@ -1111,6 +1866,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     fullPassToggle
       ?.closest('.controls-check-label')
       ?.classList.toggle('is-active-filter', fullPassOnly);
+    paretoOnlyToggle
+      ?.closest('.controls-check-label')
+      ?.classList.toggle('is-active-filter', paretoOnly);
     searchInput?.closest('.command-input-wrap')?.classList.toggle('is-active-filter', Boolean(query));
 
     if (resetFiltersBtn) {
@@ -1127,6 +1885,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
         if (harness !== 'all') activeParts.push(`harness "${harnessLabel}"`);
         if (provider !== 'all') activeParts.push(`provider "${providerLabel}"`);
         if (fullPassOnly) activeParts.push('7/7 full pass only');
+        if (paretoOnly) activeParts.push('Pareto frontier only');
         emptyStateMsg.textContent =
           activeParts.length > 0
             ? `No benchmark runs match ${activeParts.join(' + ')}.`
@@ -1152,7 +1911,7 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
       }
     });
 
-    syncUrlState(query, harness, provider, fullPassOnly, sortBy, sortDir);
+    syncUrlState(query, harness, provider, lens, fullPassOnly, paretoOnly, sortBy, sortDir);
 
     // Debounce polite live region announcement
     if (statusRegion) {
@@ -1177,7 +1936,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
     if (searchInput) searchInput.value = '';
     if (harnessFilter) harnessFilter.value = 'all';
     if (providerFilter) providerFilter.value = 'all';
+    if (pricingLensSelect) pricingLensSelect.value = 'billed';
     if (fullPassToggle) fullPassToggle.checked = false;
+    if (paretoOnlyToggle) paretoOnlyToggle.checked = false;
     if (sortSelect) sortSelect.value = 'plan';
     setSortDirButtonState('desc');
     updateLeaderboard(true);
@@ -1202,7 +1963,9 @@ const maxTestsPassed = passedCounts.length > 0 ? Math.max(...passedCounts) : 0;
   });
   harnessFilter?.addEventListener('change', () => updateLeaderboard(true));
   providerFilter?.addEventListener('change', () => updateLeaderboard(true));
+  pricingLensSelect?.addEventListener('change', () => updateLeaderboard(true));
   fullPassToggle?.addEventListener('change', () => updateLeaderboard(true));
+  paretoOnlyToggle?.addEventListener('change', () => updateLeaderboard(true));
   resetFiltersBtn?.addEventListener('click', resetAllControls);
   emptyResetBtn?.addEventListener('click', resetAllControls);
 

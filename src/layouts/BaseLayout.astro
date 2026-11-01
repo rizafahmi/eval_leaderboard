@@ -10,7 +10,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  activeNav?: 'leaderboard' | 'about';
+  activeNav?: 'leaderboard' | 'compare' | 'about';
   breadcrumbLabel?: string;
   breadcrumbTone?: 'hl-mint' | 'hl-acid' | 'hl-magenta';
   ogType?: 'website' | 'article';
@@ -171,6 +171,15 @@ const jsonLd = {
             </li>
             <li>
               <a
+                href="/compare"
+                class:list={['app-nav-item', { 'is-active': activeNav === 'compare' }]}
+                aria-current={activeNav === 'compare' ? 'page' : undefined}
+              >
+                Compare &amp; Ablations
+              </a>
+            </li>
+            <li>
+              <a
                 href="/about"
                 class:list={['app-nav-item', { 'is-active': activeNav === 'about' }]}
                 aria-current={activeNav === 'about' ? 'page' : undefined}
@@ -237,6 +246,7 @@ const jsonLd = {
             <span class="section-kicker">NAVIGATION</span>
             <ul>
               <li><a href="/">Leaderboard Table</a></li>
+              <li><a href="/compare">Compare &amp; Ablations</a></li>
               <li><a href="/about">Methodology &amp; Judging</a></li>
               <li><a href="/about#stages">Slices</a></li>
               <li><a href="/about#contract-spec-heading">V1 CLI Contract</a></li>
