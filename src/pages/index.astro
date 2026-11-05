@@ -134,15 +134,6 @@ if (paretoFrontierRuns.length > 0) {
   <div class="v1-masthead-grid">
     <div class="v1-masthead-copy">
       <section class="hero-box" aria-labelledby="hero-heading">
-        <div class="pixel-mosaic" aria-hidden="true">
-          <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
-          <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
-          <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
-          <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
-          <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
-          <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
-        </div>
-
         <h1 id="hero-heading" class="headline-two-tone">
           Capy Bench Leaderboard.{' '}
           <span class="muted">
@@ -1034,13 +1025,6 @@ if (paretoFrontierRuns.length > 0) {
     max-inline-size: 92ch;
   }
 
-  .leaderboard-quiet .pixel-mosaic {
-    inset-block-start: 1.35rem;
-    grid-template-columns: repeat(5, 13px);
-    grid-template-rows: repeat(6, 13px);
-    opacity: 0.85;
-  }
-
   /* Unified architectural telemetry strip instead of 4 separated heavy boxes */
   .leaderboard-quiet .hero-stats-grid {
     gap: 0;
@@ -1556,7 +1540,7 @@ if (paretoFrontierRuns.length > 0) {
 
   .leaderboard-quiet.lb-v1 .v1-masthead-copy {
     position: relative;
-    padding: 1.35rem 6.25rem 1.35rem 1.35rem;
+    padding: 1.35rem 1.5rem;
     border-inline-end: var(--border-frame);
     display: flex;
     flex-direction: column;
@@ -1568,11 +1552,6 @@ if (paretoFrontierRuns.length > 0) {
     border: none;
     padding: 0;
     margin: 0;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-copy .pixel-mosaic {
-    inset-block-start: 1.2rem;
-    inset-inline-end: 1.2rem;
   }
 
   .leaderboard-quiet.lb-v1 .v1-masthead-copy .hero-subtitle {
