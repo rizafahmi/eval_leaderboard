@@ -129,131 +129,134 @@ if (paretoFrontierRuns.length > 0) {
 ---
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
-  <div class="leaderboard-quiet">
-  <!-- 01. HERO & TWO-TONE UNBOUNDED TYPOGRAPHY -->
-  <section class="hero-box" aria-labelledby="hero-heading">
-    <div class="pixel-mosaic" aria-hidden="true">
-      <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
-      <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
-      <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
-      <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
-      <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
-      <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+  <div class="leaderboard-quiet lb-v1">
+  <!-- 01+02. SPLIT ARCHITECTURAL MASTHEAD & 2x2 TELEMETRY MATRIX -->
+  <div class="v1-masthead-grid">
+    <div class="v1-masthead-copy">
+      <section class="hero-box" aria-labelledby="hero-heading">
+        <div class="pixel-mosaic" aria-hidden="true">
+          <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
+          <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
+          <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
+          <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
+          <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+          <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
+        </div>
+
+        <h1 id="hero-heading" class="headline-two-tone">
+          Capy Bench Leaderboard.{' '}
+          <span class="muted">
+            Coding harnesses and models, ranked on real-world CLI engineering.
+          </span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Each run challenges a coding harness and model to build a rate-paced HTTP/TLS benchmark CLI
+          from scratch using strict Outside-In TDD—verified against an external 7-slice holdout contract
+          and audited for exact token conservation, Pareto efficiency, and stage bottlenecks.
+        </p>
+      </section>
     </div>
 
-    <h1 id="hero-heading" class="headline-two-tone">
-      Capy Bench Leaderboard.{' '}
-      <span class="muted">
-        Coding harnesses and models, ranked on real-world CLI engineering.
-      </span>
-    </h1>
-
-    <p class="hero-subtitle">
-      Each run challenges a coding harness and model to build a rate-paced HTTP/TLS benchmark CLI
-      from scratch using strict Outside-In TDD—verified against an external 7-slice holdout contract
-      and audited for exact token conservation, Pareto efficiency, and stage bottlenecks.
-    </p>
-  </section>
-
-  <!-- 02. EVIDENCE-BACKED METRIC STRIP -->
-  <dl class="hero-stats-grid" aria-label="Benchmark summary statistics">
-    <div class="card stat-card">
-      <dt class="section-kicker">HOLDOUT SPEC PASS RATE</dt>
-      <dd class="stat-value">
-        {fullPassCount}/{enrichedRuns.length}
-      </dd>
-      <dd class="stat-meta">
-        {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% passed 7/7 slices ·{' '}
-        <a href="#pareto-section" class="stat-leader-link">
-          {paretoFrontierRuns.length} on Pareto frontier ↓
-        </a>
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">LOWEST 7/7 COST</dt>
-      <dd class="stat-value">
-        {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
-      </dd>
-      <dd class="stat-meta">
-        {lowestCostLeader ? (
-          <>
-            <a href={`/runs/${lowestCostLeader.id}`} class="stat-leader-link">
-              {formatHarnessName(lowestCostLeader.data.codingHarness)} / {lowestCostLeader.data.model}
-            </a>
-            {' · '}range {formatCost(lowestCost)}–{formatCost(highestCost)}
-          </>
-        ) : (
-          `n=${enrichedRuns.length} runs · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
-        )}
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">FASTEST 7/7 RUN</dt>
-      <dd class="stat-value">
-        {fastestLeader
-          ? formatDuration(fastestLeader.data.durationMinutes)
-          : formatDuration(fastestMin)}
-      </dd>
-      <dd class="stat-meta">
-        {fastestLeader ? (
-          <>
-            <a href={`/runs/${fastestLeader.id}`} class="stat-leader-link">
-              {formatHarnessName(fastestLeader.data.codingHarness)} / {fastestLeader.data.model}
-            </a>
-            {' · '}range {formatDuration(fastestMin)}–{formatDuration(slowestMin)}
-          </>
-        ) : (
-          `n=${enrichedRuns.length} runs · range ${formatDuration(fastestMin)}–${formatDuration(slowestMin)}`
-        )}
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">PROMPT CACHE SAVINGS</dt>
-      <dd class="stat-value">
-        {formatCost(totalCacheSavingsUsd)}
-      </dd>
-      <dd class="stat-meta">
-        {topCacheSaver ? (
-          <>
-            Saved vs. uncached · peak{' '}
-            <a href={`/runs/${topCacheSaver.id}`} class="stat-leader-link">
-              {formatCost(topCacheSaver.telemetry.costMetrics.cacheSavingsUsd)} ({topCacheSaver.telemetry.costMetrics.cacheSavingsPct}%)
-            </a>
-          </>
-        ) : (
-          `n=${enrichedRuns.length} runs`
-        )}
-      </dd>
-    </div>
-  </dl>
-
-  <!-- 03. FILTER & SORT COMMAND BAR -->
-  <search class="controls-bar" aria-label="Leaderboard filters and sorting">
-    <div class="controls-search-col">
-      <div class="field-label-row">
-        <label class="field-label" for="search-input">Filter Playbook Runs</label>
-        <kbd class="menu-kbd" title="Press / to focus search" aria-hidden="true">/</kbd>
+    <dl class="hero-stats-grid v1-masthead-stats" aria-label="Benchmark summary statistics">
+      <div class="card stat-card">
+        <dt class="section-kicker">HOLDOUT SPEC PASS RATE</dt>
+        <dd class="stat-value">
+          {fullPassCount}/{enrichedRuns.length}
+        </dd>
+        <dd class="stat-meta">
+          {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% passed 7/7 slices ·{' '}
+          <a href="#pareto-section" class="stat-leader-link">
+            {paretoFrontierRuns.length} on Pareto frontier ↓
+          </a>
+        </dd>
       </div>
-      <div class="command-input-wrap">
-        <span class="command-input-prefix">/filter</span>
-        <input
-          id="search-input"
-          name="q"
-          type="search"
-          class="input"
-          placeholder="Harness, model, provider, effort..."
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-        />
-      </div>
-    </div>
 
-    <div class="controls-select-row">
+      <div class="card stat-card">
+        <dt class="section-kicker">LOWEST 7/7 COST</dt>
+        <dd class="stat-value">
+          {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
+        </dd>
+        <dd class="stat-meta">
+          {lowestCostLeader ? (
+            <>
+              <a href={`/runs/${lowestCostLeader.id}`} class="stat-leader-link">
+                {formatHarnessName(lowestCostLeader.data.codingHarness)} / {lowestCostLeader.data.model}
+              </a>
+              {' · '}range {formatCost(lowestCost)}–{formatCost(highestCost)}
+            </>
+          ) : (
+            `n=${enrichedRuns.length} runs · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
+          )}
+        </dd>
+      </div>
+
+      <div class="card stat-card">
+        <dt class="section-kicker">FASTEST 7/7 RUN</dt>
+        <dd class="stat-value">
+          {fastestLeader
+            ? formatDuration(fastestLeader.data.durationMinutes)
+            : formatDuration(fastestMin)}
+        </dd>
+        <dd class="stat-meta">
+          {fastestLeader ? (
+            <>
+              <a href={`/runs/${fastestLeader.id}`} class="stat-leader-link">
+                {formatHarnessName(fastestLeader.data.codingHarness)} / {fastestLeader.data.model}
+              </a>
+              {' · '}range {formatDuration(fastestMin)}–{formatDuration(slowestMin)}
+            </>
+          ) : (
+            `n=${enrichedRuns.length} runs · range ${formatDuration(fastestMin)}–${formatDuration(slowestMin)}`
+          )}
+        </dd>
+      </div>
+
+      <div class="card stat-card">
+        <dt class="section-kicker">PROMPT CACHE SAVINGS</dt>
+        <dd class="stat-value">
+          {formatCost(totalCacheSavingsUsd)}
+        </dd>
+        <dd class="stat-meta">
+          {topCacheSaver ? (
+            <>
+              Saved vs. uncached · peak{' '}
+              <a href={`/runs/${topCacheSaver.id}`} class="stat-leader-link">
+                {formatCost(topCacheSaver.telemetry.costMetrics.cacheSavingsUsd)} ({topCacheSaver.telemetry.costMetrics.cacheSavingsPct}%)
+              </a>
+            </>
+          ) : (
+            `n=${enrichedRuns.length} runs`
+          )}
+        </dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- 03. SINGLE-DECK WORKBENCH FILTER BAR -->
+  <search class="controls-bar v1-command-deck" aria-label="Leaderboard filters and sorting">
+    <div class="v1-deck-top">
+      <div class="controls-search-col">
+        <div class="field-label-row">
+          <label class="field-label" for="search-input">Filter Playbook Runs</label>
+          <kbd class="menu-kbd" title="Press / to focus search" aria-hidden="true">/</kbd>
+        </div>
+        <div class="command-input-wrap">
+          <span class="command-input-prefix">/filter</span>
+          <input
+            id="search-input"
+            name="q"
+            type="search"
+            class="input"
+            placeholder="Harness, model, provider, effort..."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+
       <div class="control-field">
         <label class="field-label" for="harness-filter">Harness</label>
         <select id="harness-filter" name="harness" class="select control-select">
@@ -303,7 +306,7 @@ if (paretoFrontierRuns.length > 0) {
       </div>
     </div>
 
-    <div class="controls-footer-row">
+    <div class="v1-deck-bottom">
       <div class="controls-toggles-wrap">
         <label class="check-label controls-check-label" for="full-pass-toggle">
           <input
@@ -344,21 +347,6 @@ if (paretoFrontierRuns.length > 0) {
       </div>
     </div>
 
-    <div class="stage-legend-bar" aria-label="Benchmark stage key (S1 through S7)">
-      <span class="stage-legend-kicker">Stages:</span>
-      <ul class="stage-legend-list">
-        {
-          BENCHMARK_STAGES.map((stage) => (
-            <li class="stage-legend-item">
-              <span class="stage-legend-id">{stage.id}</span>
-              <span class="stage-legend-title">{stage.title}</span>
-            </li>
-          ))
-        }
-      </ul>
-      <a href="#bottleneck-section" class="stage-legend-link">Bottleneck matrix ↓</a>
-    </div>
-
     <div
       id="leaderboard-status"
       class="visually-hidden"
@@ -368,6 +356,8 @@ if (paretoFrontierRuns.length > 0) {
     ></div>
   </search>
 
+  <!-- 04. LEADERBOARD DATA TABLE + INTEGRATED STAGE COLOPHON -->
+  <div class="v1-table-ledger">
   <!-- 04. LEADERBOARD DATA TABLE -->
   <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
     <table class="app-table leaderboard-table" id="leaderboard-table">
@@ -707,9 +697,24 @@ if (paretoFrontierRuns.length > 0) {
       </tbody>
     </table>
   </div>
+    <div class="stage-legend-bar v1-table-colophon" aria-label="Benchmark stage key (S1 through S7)">
+      <span class="stage-legend-kicker">Stages:</span>
+      <ul class="stage-legend-list">
+        {
+          BENCHMARK_STAGES.map((stage) => (
+            <li class="stage-legend-item">
+              <span class="stage-legend-id">{stage.id}</span>
+              <span class="stage-legend-title">{stage.title}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <a href="#bottleneck-section" class="stage-legend-link">Bottleneck matrix ↓</a>
+    </div>
+  </div>
 
-  <!-- 05. CROSS-RUN ECONOMETRICS: PARETO FRONTIER & STAGE BOTTLENECK MATRIX -->
-  <div class="analytics-grid">
+  <!-- 05. 2-COLUMN ECONOMETRICS BENTO -->
+  <div class="analytics-grid v1-analytics-bento">
     <!-- Panel A: 7/7 Speed x Cost Pareto Frontier -->
     <section
       class="card analytics-card"
@@ -1530,6 +1535,186 @@ if (paretoFrontierRuns.length > 0) {
     line-height: 1.5;
     color: var(--text-secondary);
     margin: 0;
+  }
+
+  /* ==========================================================================
+     SPLIT ARCHITECTURAL MASTHEAD + SINGLE-DECK TOOLBAR + 2-COL ECONOMETRICS BENTO
+     ========================================================================== */
+  .leaderboard-quiet.lb-v1 {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    container-type: inline-size;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(22rem, 1fr);
+    border: var(--border-frame);
+    background-color: var(--bg-canvas);
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-copy {
+    position: relative;
+    padding: 1.35rem 6.25rem 1.35rem 1.35rem;
+    border-inline-end: var(--border-frame);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-copy .hero-box {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-copy .pixel-mosaic {
+    inset-block-start: 1.2rem;
+    inset-inline-end: 1.2rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-copy .hero-subtitle {
+    max-inline-size: 68ch;
+    margin-block-start: 0.55rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-stats {
+    margin: 0;
+    border: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, 1fr);
+    background-color: var(--bg-surface);
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card {
+    padding: 0.95rem 1.1rem;
+    border: none;
+    border-inline-end: var(--border-row);
+    border-block-end: var(--border-row);
+    background-color: transparent;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card:nth-child(2n) {
+    border-inline-end: none;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card:nth-child(n + 3) {
+    border-block-end: none;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-command-deck {
+    border: var(--border-frame);
+    background-color: var(--bg-surface);
+    padding: 0.85rem 1.1rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-deck-top {
+    display: grid;
+    grid-template-columns: minmax(15rem, 1.35fr) repeat(4, minmax(9.5rem, 1fr));
+    gap: 0.7rem;
+    align-items: end;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-deck-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    flex-wrap: balance;
+    justify-content: space-between;
+    align-items: safe center;
+    gap: 0.65rem 1.25rem;
+    padding-block-start: 0.65rem;
+    border-block-start: var(--border-row);
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-table-ledger {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-table-ledger .leaderboard-table :is(td, tbody th, tfoot th) {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-table-colophon {
+    border: var(--border-frame);
+    border-block-start: none;
+    background-color: var(--bg-surface);
+    padding: 0.55rem 0.95rem;
+    margin: 0;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    margin-block-start: 0.35rem;
+    align-items: stretch;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento > .analytics-card {
+    padding: 1.2rem 1.3rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento > #pareto-section .pareto-layout {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento > #ablations-teaser {
+    grid-column: 1 / -1;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+    gap: 0.95rem;
+  }
+
+  .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-teaser-card {
+    grid-row: span 3;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    grid-template-rows: subgrid;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 1024px) {
+    .leaderboard-quiet.lb-v1 .v1-masthead-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-masthead-copy {
+      border-inline-end: none;
+      border-block-end: var(--border-frame);
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-deck-top {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-deck-top > .controls-search-col {
+      grid-column: 1 / -1;
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-analytics-bento {
+      grid-template-columns: 1fr;
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-cards-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
