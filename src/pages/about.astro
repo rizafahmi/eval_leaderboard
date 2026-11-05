@@ -71,419 +71,335 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   description="Methodology, V1 CLI product contract, and S1–S7 Outside-In TDD implementation slices for the Capy Bench Elixir/OTP coding agent benchmark."
   activeNav="about"
 >
-  <div class="about-quiet">
-  <!-- 01. HERO -->
-  <section class="hero-box" aria-labelledby="about-hero-heading">
-    <div class="pixel-mosaic" aria-hidden="true">
-      <div class="px-acid"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-white"></div><div class="px-acid"></div>
-      <div class="px-gray"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-soft"></div>
-      <div class="px-mint"></div><div class="px-gray"></div><div class="px-acid"></div><div class="px-white"></div><div class="px-acid"></div>
-      <div class="px-mint"></div><div class="px-white"></div><div class="px-gray"></div><div class="px-mint"></div><div class="px-0"></div>
-      <div class="px-acid"></div><div class="px-gray"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
-      <div class="px-mint"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div><div class="px-0"></div>
-    </div>
-
-    <h1 id="about-hero-heading" class="headline-two-tone">
-      One starter repo, seven TDD slices.{' '}
-      <span class="muted">
-        The rest is the coding agent shipping a real HTTP benchmark CLI.
-      </span>
-    </h1>
-
-    <p class="hero-subtitle">
-      Capy Bench is a backend-focused Elixir/OTP command-line HTTP benchmark (<code>./cb</code>)
-      for macOS and Linux. Every Coding Harness + Model pair receives the identical starter
-      repository (<code>README.md</code> V1 product contract, <code>PLAN.md</code> implementation
-      slices <code>S1</code>–<code>S7</code>, and <code>AGENTS.md</code> conventions) and is judged
-      on completion, test rigor, wall-clock duration, token efficiency, and cost.
-    </p>
-
-    <div class="callout callout-violet hero-callout">
-      <div class="row-wrap">
-        <span class="hl hl-sky">Backend &amp; CLI Focus</span>
-        <span class="hl hl-mint">Outside-In TDD</span>
-        <span class="hero-callout-copy">
-          Zero UI/frontend boilerplate — evaluates core backend engineering fundamentals including
-          HTTP/TLS networking, local test servers, monotonic rate pacing, in-flight timeout
-          cancellation, and OS signal handling (<code>Ctrl-C</code>).
-        </span>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTRACT PARAMETERS -->
-  <dl class="hero-stats-grid" aria-label="Benchmark specification parameters">
-    <div class="card stat-card">
-      <dt class="section-kicker">SPECIFICATION CHECKPOINTS</dt>
-      <dd class="stat-value">S1–S7</dd>
-      <dd class="stat-meta">
-        <a href="#stages" class="stat-leader-link">Preparation + 7 sequential TDD slices</a>
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">PACING WINDOW &amp; TIMEOUT</dt>
-      <dd class="stat-value">5s / 2s</dd>
-      <dd class="stat-meta">
-        <a href="#contract-spec" class="stat-leader-link">5s pacing window · 2s per-request cap</a>
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">MAX REQUESTS CAP</dt>
-      <dd class="stat-value">50</dd>
-      <dd class="stat-meta">
-        <a href="#stage-s4" class="stat-leader-link">10 req/sec single-flight GET pacing</a>
-      </dd>
-    </div>
-
-    <div class="card stat-card">
-      <dt class="section-kicker">TARGET RUNTIME STACK</dt>
-      <dd class="stat-value">Elixir</dd>
-      <dd class="stat-meta">
-        <a href="#end-product" class="stat-leader-link">OTP escript ./cb · macOS &amp; Linux</a>
-      </dd>
-    </div>
-  </dl>
-
-  <nav aria-label="On this page" class="detail-jump-bar" id="about-jump-bar">
-    <span class="mono detail-jump-label">JUMP TO:</span>
-    <div class="detail-jump-links" id="about-jump-links">
-      {
-        aboutSections.map((sec) => (
-          <a href={`#${sec.id}`} class="mono detail-jump-link">
-            {sec.label}
-          </a>
-        ))
-      }
-    </div>
-  </nav>
-
-  <div class="section-grid">
-    <!-- The S1 - S7 Implementation Plan -->
-    <section class="card col-12" id="stages" aria-labelledby="stages-heading">
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="stages-heading" class="card-heading headline-two-tone">
-            The Implementation Slices{' '}<span class="muted">/ Preparation &amp; S1–S7</span>
-          </h2>
-        </div>
-        <span class="badge-static">Preparation + 7 Slices · Outside-In TDD</span>
-      </div>
-      <p class="section-lead">
-        With <strong>Preparation</strong> (establishing the <code>README.md</code> contract) already
-        checked off, agents complete <code>S1</code> through <code>S7</code> in order. Within each
-        slice, agents add one failing behavior test at a time, implement only what passes it, keep{' '}
-        <code>./cb</code> runnable after <code>S1</code>, simplify after each green step, and record
-        verification commands and blockers beneath each task in <code>PLAN.md</code>.
-      </p>
-
-      <ol class="stage-spec-grid" role="list">
-        <li id="stage-prep" class="stage-spec-card stage-spec-card-prep">
-          <div class="stage-spec-header">
-            <div class="stage-spec-meta">
-              <span class="hl hl-mint" aria-hidden="true">PREP</span>
-              <span class="badge-static">Pre-checked [x]</span>
-            </div>
-            <h3 class="stage-spec-title">
-              <span class="visually-hidden">PREP: </span>Establish README Contract
-            </h3>
-          </div>
-          <p class="stage-spec-desc">
-            Move the V1 CLI product contract and example output into README.md and link to it from
-            PLAN.md without retaining a duplicate.
+  <div class="about-quiet about-v1">
+      <header class="v1-masthead" aria-labelledby="about-hero-heading">
+        <div>
+          <h1 id="about-hero-heading" class="headline-two-tone">
+            One starter repo, seven TDD slices.{' '}
+            <span class="muted">
+              The rest is the coding agent shipping a real HTTP benchmark CLI.
+            </span>
+          </h1>
+          <p class="hero-subtitle">
+            Capy Bench is a backend-focused Elixir/OTP command-line HTTP benchmark (<code>./cb</code>)
+            for macOS and Linux. Every Coding Harness + Model pair receives the identical starter
+            repository (<code>README.md</code> V1 product contract, <code>PLAN.md</code> implementation
+            slices <code>S1</code>–<code>S7</code>, and <code>AGENTS.md</code> conventions) and is judged
+            on completion, test rigor, wall-clock duration, token efficiency, and cost.
           </p>
-          <ul class="stage-deliverables-list" role="list">
-            <li class="stage-deliverable-item">
-              <span class="check-icon" aria-hidden="true">✓</span>
-              <span>V1 CLI product contract documented in README.md</span>
-            </li>
-            <li class="stage-deliverable-item">
-              <span class="check-icon" aria-hidden="true">✓</span>
-              <span>Duplicate contract text replaced with README link in PLAN.md</span>
-            </li>
-            <li class="stage-deliverable-item">
-              <span class="check-icon" aria-hidden="true">✓</span>
-              <span>Baseline repository state committed before S1 dispatch</span>
-            </li>
-          </ul>
-        </li>
-        {
-          BENCHMARK_STAGES.map((stage) => (
-            <li id={`stage-${stage.id.toLowerCase()}`} class="stage-spec-card">
-              <div class="stage-spec-header">
-                <div class="stage-spec-meta">
-                  <span class="hl hl-violet" aria-hidden="true">{stage.id}</span>
-                  <span class="badge-static">{stage.deliverables.length} checks</span>
-                </div>
-                <h3 class="stage-spec-title">
-                  <span class="visually-hidden">{stage.id}: </span>{stage.title}
-                </h3>
+        </div>
+
+        <div class="v1-masthead-note">
+          <div class="row-wrap">
+            <span class="hl hl-sky">Backend &amp; CLI Focus</span>
+            <span class="hl hl-mint">Outside-In TDD</span>
+          </div>
+          <p class="hero-callout-copy" style="margin: 0; font-size: 0.875rem;">
+            Zero UI/frontend boilerplate — evaluates HTTP/TLS networking, local test servers,
+            monotonic rate pacing, in-flight timeout cancellation, and foreground <code>Ctrl-C</code>.
+          </p>
+        </div>
+      </header>
+
+      <div class="v1-doc-shell">
+        <aside class="v1-doc-rail" aria-label="Specification navigation and parameters">
+          <nav aria-label="On this page" class="v1-toc-box" id="about-jump-bar">
+            <h2 class="v1-toc-title">Specification Index</h2>
+            <div class="v1-toc-list" id="about-jump-links">
+              {aboutSections.map((sec) => (
+                <a href={`#${sec.id}`} class="mono detail-jump-link">
+                  {sec.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+
+          <dl class="v1-rail-stats" aria-label="Benchmark specification parameters">
+            <div class="card stat-card">
+              <dt class="section-kicker">CHECKPOINTS</dt>
+              <dd class="stat-value">S1–S7</dd>
+              <dd class="stat-meta">7 TDD slices</dd>
+            </div>
+            <div class="card stat-card">
+              <dt class="section-kicker">WINDOW / CAP</dt>
+              <dd class="stat-value">5s / 2s</dd>
+              <dd class="stat-meta">Pacing &amp; timeout</dd>
+            </div>
+            <div class="card stat-card">
+              <dt class="section-kicker">MAX REQUESTS</dt>
+              <dd class="stat-value">50</dd>
+              <dd class="stat-meta">10 req/s GET</dd>
+            </div>
+            <div class="card stat-card">
+              <dt class="section-kicker">RUNTIME</dt>
+              <dd class="stat-value">Elixir</dd>
+              <dd class="stat-meta">OTP escript ./cb</dd>
+            </div>
+          </dl>
+        </aside>
+
+        <div class="v1-doc-spine section-grid">
+          <section class="card col-12" id="stages" aria-labelledby="stages-heading">
+            <div class="card-title">
+              <div class="card-title-group">
+                <h2 id="stages-heading" class="card-heading headline-two-tone">
+                  The Implementation Slices{' '}<span class="muted">/ Preparation &amp; S1–S7</span>
+                </h2>
               </div>
-              <p class="stage-spec-desc">{stage.description}</p>
-              <ul class="stage-deliverables-list" role="list">
-                {stage.deliverables.map((item) => (
+              <span class="badge-static">Preparation + 7 Slices · Outside-In TDD</span>
+            </div>
+            <p class="section-lead">
+              With <strong>Preparation</strong> (establishing the <code>README.md</code> contract) already
+              checked off, agents complete <code>S1</code> through <code>S7</code> in order. Within each
+              slice, agents add one failing behavior test at a time, implement only what passes it, keep{' '}
+              <code>./cb</code> runnable after <code>S1</code>, simplify after each green step, and record
+              verification commands and blockers beneath each task in <code>PLAN.md</code>.
+            </p>
+
+            <ol class="stage-spec-grid" role="list">
+              <li id="stage-prep" class="stage-spec-card stage-spec-card-prep">
+                <div class="stage-spec-header">
+                  <div class="stage-spec-meta">
+                    <span class="hl hl-mint" aria-hidden="true">PREP</span>
+                    <span class="badge-static">Pre-checked [x]</span>
+                  </div>
+                  <h3 class="stage-spec-title">
+                    <span class="visually-hidden">PREP: </span>Establish README Contract
+                  </h3>
+                </div>
+                <p class="stage-spec-desc">
+                  Move the V1 CLI product contract and example output into README.md and link to it from
+                  PLAN.md without retaining a duplicate.
+                </p>
+                <ul class="stage-deliverables-list" role="list">
                   <li class="stage-deliverable-item">
-                    <span class="check-icon" aria-hidden="true">✓</span>
-                    <span>{item}</span>
+                    <span class="check-box-mark" aria-hidden="true"></span>
+                    <span>V1 CLI product contract documented in README.md</span>
                   </li>
-                ))}
-              </ul>
-            </li>
-          ))
-        }
-      </ol>
-    </section>
+                  <li class="stage-deliverable-item">
+                    <span class="check-box-mark" aria-hidden="true"></span>
+                    <span>Duplicate contract text replaced with README link in PLAN.md</span>
+                  </li>
+                  <li class="stage-deliverable-item">
+                    <span class="check-box-mark" aria-hidden="true"></span>
+                    <span>Baseline repository state committed before S1 dispatch</span>
+                  </li>
+                </ul>
+              </li>
+              {BENCHMARK_STAGES.map((stage) => (
+                <li id={`stage-${stage.id.toLowerCase()}`} class="stage-spec-card">
+                  <div class="stage-spec-header">
+                    <div class="stage-spec-meta">
+                      <span class="hl hl-violet" aria-hidden="true">{stage.id}</span>
+                      <span class="badge-static">{stage.deliverables.length} checks</span>
+                    </div>
+                    <h3 class="stage-spec-title">
+                      <span class="visually-hidden">{stage.id}: </span>{stage.title}
+                    </h3>
+                  </div>
+                  <p class="stage-spec-desc">{stage.description}</p>
+                  <ul class="stage-deliverables-list" role="list">
+                    {stage.deliverables.map((item) => (
+                      <li class="stage-deliverable-item">
+                        <span class="check-box-mark" aria-hidden="true"></span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          </section>
 
-    <!-- Glimpse of the End Product -->
-    <section class="card col-6" id="end-product" aria-labelledby="end-product-heading">
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="end-product-heading" class="card-heading headline-two-tone">
-            Glimpse of the End Product{' '}<span class="muted">/ Target CLI Output</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
-          <span class="badge-static">Target State</span>
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            id="copy-cli-btn"
-            data-prompt={sampleEndProductOutput}
-          >
-            Copy CLI Transcript
-          </button>
-          <span
-            id="copy-cli-status"
-            class="visually-hidden"
-            role="status"
-            aria-live="polite"
-          ></span>
+          <div class="v1-dual-row col-12">
+            <section class="card" id="end-product" aria-labelledby="end-product-heading">
+              <div class="card-title">
+                <div class="card-title-group">
+                  <h2 id="end-product-heading" class="card-heading headline-two-tone">
+                    Glimpse of the End Product{' '}<span class="muted">/ Target CLI Output</span>
+                  </h2>
+                </div>
+                <div class="card-title-group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    id="copy-cli-btn"
+                    data-prompt={sampleEndProductOutput}
+                  >
+                    Copy CLI Transcript
+                  </button>
+                  <span id="copy-cli-status" class="visually-hidden" role="status" aria-live="polite"></span>
+                </div>
+              </div>
+              <p class="section-body-copy">
+                A completed run produces the <code>./cb</code> escript executable that paces single-flight
+                GET requests over a 5-second window, enforces a 2-second per-request total timeout,
+                calculates completed-response <code>p50</code>/<code>p95</code> latencies via{' '}
+                <code>ceil(p * count)</code>, and handles foreground <code>Ctrl-C</code> gracefully:
+              </p>
+              <Code
+                code={sampleEndProductOutput}
+                lang="bash"
+                theme={neoAcidCodeTheme}
+                wrap={null}
+                transformers={[shikiResetTransformer]}
+                class="terminal-box"
+              />
+            </section>
+
+            <section class="card" id="judging" aria-labelledby="judging-heading">
+              <div class="card-title">
+                <div class="card-title-group">
+                  <h2 id="judging-heading" class="card-heading headline-two-tone">
+                    How Runs Are Judged{' '}<span class="muted">/ Evaluation Rubric</span>
+                  </h2>
+                </div>
+                <span class="badge-static">Verification Rules</span>
+              </div>
+              <dl class="judging-list">
+                <div class="callout callout-mint">
+                  <dt class="section-kicker callout-kicker">SLICE VERIFICATION &amp; RELEASE CHECKS</dt>
+                  <dd class="judging-desc">
+                    Deterministic unit tests verify exact timing rules and percentile ranks, while actual CLI
+                    tests run against local HTTP/HTTPS servers. After <code>S7</code>, agents must verify{' '}
+                    <code>mix format --check-formatted</code>, <code>mix test</code>, the documented lint
+                    command, live HTTP/HTTPS runs, and foreground-terminal <code>Ctrl-C</code>.
+                  </dd>
+                </div>
+                <div class="callout callout-sky">
+                  <dt class="section-kicker callout-kicker">CACHE HIT RATE FORMULA</dt>
+                  <dd class="judging-desc">
+                    Calculated as <code>CacheRead / (input + cacheRead + cacheWrite)</code>. High cache hit
+                    rates drastically reduce cost on long multi-step agent runs.
+                  </dd>
+                </div>
+                <div class="callout callout-magenta">
+                  <dt class="section-kicker callout-kicker">V1 DISCIPLINE &amp; NON-GOALS</dt>
+                  <dd class="judging-desc">
+                    V1 excludes configurable duration/timeout/concurrency, distributed execution, non-GET
+                    workloads, and dashboards — agents are expected to avoid premature architecture.
+                  </dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+
+          <section class="card col-12 deferred-section" id="plan-spec" aria-labelledby="plan-spec-heading">
+            <div class="card-title">
+              <div class="card-title-group">
+                <h2 id="plan-spec-heading" class="card-heading headline-two-tone">
+                  Implementation Plan{' '}<span class="muted">/ PLAN.md</span>
+                </h2>
+              </div>
+              <div class="card-title-group">
+                <span class="badge-static">starter-repo/PLAN.md</span>
+                <button type="button" class="btn btn-sm btn-secondary" id="copy-plan-btn" data-prompt={BENCHMARK_PLAN}>
+                  Copy PLAN.md
+                </button>
+                <span id="copy-plan-status" class="visually-hidden" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+            <p class="section-body-copy">
+              Checked into the root of the benchmark starter repository. Agents update task checkboxes
+              (<code>[x]</code>) and record verification commands and blockers in place as they progress
+              from <code>S1</code> through <code>S7</code>.
+            </p>
+            <Code
+              code={BENCHMARK_PLAN}
+              lang="markdown"
+              theme={neoAcidCodeTheme}
+              wrap={null}
+              transformers={[shikiResetTransformer]}
+              class="terminal-box terminal-box-wrap"
+            />
+          </section>
+
+          <section class="card col-12 deferred-section" id="contract-spec" aria-labelledby="contract-spec-heading">
+            <div class="card-title">
+              <div class="card-title-group">
+                <h2 id="contract-spec-heading" class="card-heading headline-two-tone">
+                  V1 CLI Product Contract{' '}<span class="muted">/ README.md</span>
+                </h2>
+              </div>
+              <div class="card-title-group">
+                <span class="badge-static">starter-repo/README.md</span>
+                <button type="button" class="btn btn-sm btn-secondary" id="copy-contract-btn" data-prompt={BENCHMARK_README_CONTRACT}>
+                  Copy V1 Contract
+                </button>
+                <span id="copy-contract-status" class="visually-hidden" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+            <p class="section-body-copy">
+              Established during the pre-checked Preparation step as the single source of truth for
+              invocation syntax, 5-second pacing, 2-second timeout cancellation, output formatting, and
+              exit codes (<code>0</code>, <code>2</code>, <code>130</code>).
+            </p>
+            <Code
+              code={BENCHMARK_README_CONTRACT}
+              lang="markdown"
+              theme={neoAcidCodeTheme}
+              wrap={null}
+              transformers={[shikiResetTransformer]}
+              class="terminal-box terminal-box-wrap"
+            />
+          </section>
+
+          <section class="card col-12 deferred-section" id="prompt-spec" aria-labelledby="prompt-spec-heading">
+            <div class="card-title">
+              <div class="card-title-group">
+                <h2 id="prompt-spec-heading" class="card-heading headline-two-tone">
+                  Agent Dispatch Prompt{' '}<span class="muted">/ PROMPT.md</span>
+                </h2>
+              </div>
+              <div class="card-title-group">
+                <span class="badge-static">starter-repo/PROMPT.md</span>
+                <button type="button" class="btn btn-sm btn-secondary" id="copy-prompt-btn" data-prompt={BENCHMARK_PROMPT}>
+                  Copy PROMPT.md
+                </button>
+                <span id="copy-prompt-status" class="visually-hidden" role="status" aria-live="polite"></span>
+              </div>
+            </div>
+            <p class="section-body-copy">
+              Exact initial prompt dispatched to every Coding Harness + Model pair to initiate the
+              autonomous Outside-In TDD loop across <code>S1</code>–<code>S7</code>.
+            </p>
+            <Code
+              code={BENCHMARK_PROMPT}
+              lang="markdown"
+              theme={neoAcidCodeTheme}
+              wrap={null}
+              transformers={[shikiResetTransformer]}
+              class="terminal-box terminal-box-wrap"
+            />
+          </section>
         </div>
       </div>
-      <p class="section-body-copy">
-        A completed run produces the <code>./cb</code> escript executable that paces single-flight
-        GET requests over a 5-second window, enforces a 2-second per-request total timeout,
-        calculates completed-response <code>p50</code>/<code>p95</code> latencies via{' '}
-        <code>ceil(p * count)</code>, and handles foreground <code>Ctrl-C</code> gracefully (exit{' '}
-        <code>130</code> with a partial summary):
-      </p>
-      <Code
-        code={sampleEndProductOutput}
-        lang="bash"
-        theme={neoAcidCodeTheme}
-        wrap={null}
-        transformers={[shikiResetTransformer]}
-        class="terminal-box"
-      />
-    </section>
 
-    <!-- How We Judge & Calculate Metrics -->
-    <section class="card col-6" id="judging" aria-labelledby="judging-heading">
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="judging-heading" class="card-heading headline-two-tone">
-            How Runs Are Judged{' '}<span class="muted">/ Evaluation Rubric</span>
-          </h2>
-        </div>
-        <span class="badge-static">Verification Rules</span>
-      </div>
-      <dl class="judging-list">
-        <div class="callout callout-mint">
-          <dt class="section-kicker callout-kicker">SLICE VERIFICATION &amp; RELEASE CHECKS</dt>
-          <dd class="judging-desc">
-            Deterministic unit tests verify exact timing rules and percentile ranks, while actual CLI
-            tests run against local HTTP/HTTPS servers. After <code>S7</code>, agents must verify{' '}
-            <code>mix format --check-formatted</code>, <code>mix test</code>, the documented lint
-            command, live HTTP/HTTPS runs, and foreground-terminal <code>Ctrl-C</code>.
-          </dd>
-        </div>
-
-        <div class="callout callout-sky">
-          <dt class="section-kicker callout-kicker">CACHE HIT RATE FORMULA</dt>
-          <dd class="judging-desc">
-            Calculated as <code>CacheRead / (input + cacheRead + cacheWrite)</code>. High cache hit
-            rates drastically reduce cost on long multi-step agent runs.
-          </dd>
-        </div>
-
-        <div class="callout callout-magenta">
-          <dt class="section-kicker callout-kicker">V1 DISCIPLINE &amp; NON-GOALS</dt>
-          <dd class="judging-desc">
-            V1 excludes configurable duration/timeout/concurrency, distributed execution, non-GET
-            workloads, and dashboards — agents are expected to avoid premature architecture and keep
-            telemetry fields optional across CLI, Desktop, and Web harnesses.
-          </dd>
-        </div>
-      </dl>
-    </section>
-
-    <!-- Implementation Plan (PLAN.md) -->
-    <section class="card col-12 deferred-section" id="plan-spec" aria-labelledby="plan-spec-heading">
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="plan-spec-heading" class="card-heading headline-two-tone">
-            Implementation Plan{' '}<span class="muted">/ PLAN.md</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
-          <span class="badge-static">starter-repo/PLAN.md</span>
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            id="copy-plan-btn"
-            data-prompt={BENCHMARK_PLAN}
-          >
-            Copy PLAN.md
-          </button>
-          <span
-            id="copy-plan-status"
-            class="visually-hidden"
-            role="status"
-            aria-live="polite"
-          ></span>
-        </div>
-      </div>
-      <p class="section-body-copy">
-        Checked into the root of the benchmark starter repository. Agents update task checkboxes
-        (<code>[x]</code>) and record verification commands and blockers in place as they progress
-        from <code>S1</code> through <code>S7</code>.
-      </p>
-      <Code
-        code={BENCHMARK_PLAN}
-        lang="markdown"
-        theme={neoAcidCodeTheme}
-        wrap={null}
-        transformers={[shikiResetTransformer]}
-        class="terminal-box terminal-box-wrap"
-      />
-    </section>
-
-    <!-- V1 CLI Contract (README.md) -->
-    <section
-      class="card col-12 deferred-section"
-      id="contract-spec"
-      aria-labelledby="contract-spec-heading"
-    >
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="contract-spec-heading" class="card-heading headline-two-tone">
-            V1 CLI Product Contract{' '}<span class="muted">/ README.md</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
-          <span class="badge-static">starter-repo/README.md</span>
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            id="copy-contract-btn"
-            data-prompt={BENCHMARK_README_CONTRACT}
-          >
-            Copy V1 Contract
-          </button>
-          <span
-            id="copy-contract-status"
-            class="visually-hidden"
-            role="status"
-            aria-live="polite"
-          ></span>
-        </div>
-      </div>
-      <p class="section-body-copy">
-        Established during the pre-checked Preparation step as the single source of truth for
-        invocation syntax, 5-second pacing, 2-second timeout cancellation, output formatting, and
-        exit codes (<code>0</code>, <code>2</code>, <code>130</code>).
-      </p>
-      <Code
-        code={BENCHMARK_README_CONTRACT}
-        lang="markdown"
-        theme={neoAcidCodeTheme}
-        wrap={null}
-        transformers={[shikiResetTransformer]}
-        class="terminal-box terminal-box-wrap"
-      />
-    </section>
-
-    <!-- Instructions Given to the Coding Agent (PROMPT.md) -->
-    <section
-      class="card col-12 deferred-section"
-      id="prompt-spec"
-      aria-labelledby="prompt-spec-heading"
-    >
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="prompt-spec-heading" class="card-heading headline-two-tone">
-            Agent Dispatch Prompt{' '}<span class="muted">/ PROMPT.md</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
-          <span class="badge-static">starter-repo/PROMPT.md</span>
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            id="copy-prompt-btn"
-            data-prompt={BENCHMARK_PROMPT}
-          >
-            Copy PROMPT.md
-          </button>
-          <span
-            id="copy-prompt-status"
-            class="visually-hidden"
-            role="status"
-            aria-live="polite"
-          ></span>
-        </div>
-      </div>
-      <p class="section-body-copy">
-        Exact initial prompt dispatched to every Coding Harness + Model pair to initiate the
-        autonomous Outside-In TDD loop across <code>S1</code>–<code>S7</code>.
-      </p>
-      <Code
-        code={BENCHMARK_PROMPT}
-        lang="markdown"
-        theme={neoAcidCodeTheme}
-        wrap={null}
-        transformers={[shikiResetTransformer]}
-        class="terminal-box terminal-box-wrap"
-      />
-    </section>
-  </div>
-
-  <nav aria-label="Benchmark navigation" class="detail-bottom-pager">
-    <a href="/" class="card card-interactive detail-pager-card">
-      <span class="mono detail-pager-dir">← LEADERBOARD TABLE</span>
-      <strong class="detail-pager-title">
-        Compare All {sortedRuns.length} Verified Agent Runs
-      </strong>
-      <span class="mono detail-pager-meta">
-        Filter &amp; sort S1–S7 completion, test pass rates, token efficiency, and API cost
-      </span>
-    </a>
-    {
-      topRun && topRunPlan ? (
-        <a href={`/runs/${topRun.id}`} class="card card-interactive detail-pager-card">
-          <span class="mono detail-pager-dir">INSPECT #1 VERIFIED RUN →</span>
+      <nav aria-label="Benchmark navigation" class="detail-bottom-pager">
+        <a href="/" class="card card-interactive detail-pager-card">
+          <span class="mono detail-pager-dir">← LEADERBOARD TABLE</span>
           <strong class="detail-pager-title">
-            {formatHarnessName(topRun.data.codingHarness)} / {topRun.data.model}
-            {topRun.data.effort ? ` (${topRun.data.effort})` : ''}
+            Compare All {sortedRuns.length} Verified Agent Runs
           </strong>
           <span class="mono detail-pager-meta">
-            {topRunPlan.completed}/{topRunPlan.total} slices · {formatCost(topRun.data.costUsd)} ·{' '}
-            {formatDuration(topRun.data.durationMinutes)}
+            Filter &amp; sort S1–S7 completion, test pass rates, token efficiency, and API cost
           </span>
         </a>
-      ) : (
-        <a href="/?fullPass=1" class="card card-interactive detail-pager-card">
-          <span class="mono detail-pager-dir">FULL 7/7 PASSES →</span>
-          <strong class="detail-pager-title">View Verified 7/7 Completions</strong>
-          <span class="mono detail-pager-meta">
-            Filter leaderboard to runs passing every S1–S7 slice and release check
-          </span>
-        </a>
-      )
-    }
-  </nav>
-  </div>
+        {topRun && topRunPlan ? (
+          <a href={`/runs/${topRun.id}`} class="card card-interactive detail-pager-card">
+            <span class="mono detail-pager-dir">INSPECT #1 VERIFIED RUN →</span>
+            <strong class="detail-pager-title">
+              {formatHarnessName(topRun.data.codingHarness)} / {topRun.data.model}
+              {topRun.data.effort ? ` (${topRun.data.effort})` : ''}
+            </strong>
+            <span class="mono detail-pager-meta">
+              {topRunPlan.completed}/{topRunPlan.total} slices · {formatCost(topRun.data.costUsd)} ·{' '}
+              {formatDuration(topRun.data.durationMinutes)}
+            </span>
+          </a>
+        ) : null}
+      </nav>
+    </div>
 </BaseLayout>
 
 <style>
@@ -493,127 +409,189 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
      (--hl-acid, --hl-mint, --hl-sky, --hl-violet, --hl-magenta) for earned
      markers while removing nested box chrome and widening reading measures.
      ========================================================================== */
-  .about-quiet .hero-box {
-    padding: 1.5rem 100px 1.35rem 0;
-    margin-block-end: 1.25rem;
+  .about-quiet {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    padding-block-start: 0.5rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .about-quiet .headline-two-tone {
-    font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+    text-wrap: balance;
   }
 
-  .about-quiet .hero-subtitle {
+  .about-quiet .terminal-box {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong-color) var(--bg-surface);
+  }
+
+  .about-quiet .check-box-mark {
+    display: inline-block;
+    inline-size: 0.48rem;
+    block-size: 0.48rem;
+    background-color: var(--hl-mint);
+    margin-block-start: 0.42rem;
+    flex-shrink: 0;
+  }
+
+  .v1-masthead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+    gap: 1.5rem;
+    align-items: end;
+    padding-block-end: 1.15rem;
+    border-block-end: var(--border-frame);
+  }
+
+  .v1-masthead .headline-two-tone {
+    font-size: clamp(1.45rem, 2.7vw, 2rem);
+    margin: 0 0 0.6rem;
+  }
+
+  .v1-masthead .hero-subtitle {
     font-size: 0.96875rem;
     line-height: 1.55;
-    margin-block-start: 0.65rem;
-    max-inline-size: 92ch;
+    margin: 0;
+    max-inline-size: 68ch;
   }
 
-  .about-quiet .pixel-mosaic {
-    inset-block-start: 1.35rem;
-    grid-template-columns: repeat(5, 13px);
-    grid-template-rows: repeat(6, 13px);
-    opacity: 0.85;
-  }
-
-  /* Quieter Hero Callout: open top-bordered note instead of a heavy 8px-left-border box */
-  .about-quiet .hero-callout {
-    max-inline-size: 92ch;
-    margin-block-start: 1rem;
-    padding: 0.85rem 0 0;
-    border: none;
-    border-block-start: var(--border-row);
-    background-color: transparent;
-  }
-
-  /* Unified 4-Column Contract Parameters Strip */
-  .about-quiet .hero-stats-grid {
-    gap: 0;
-    margin-block: 0 1.5rem;
+  .v1-masthead-note {
     border: var(--border-frame);
-    background-color: transparent;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    background-color: var(--bg-surface);
+    padding: 0.95rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
   }
 
-  .about-quiet .stat-card {
-    border: none;
-    border-inline-end: var(--border-row);
-    background-color: transparent;
-    padding: 1rem 1.2rem;
-    gap: 0.3rem;
+  .v1-doc-shell {
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
   }
 
-  .about-quiet .stat-card:last-child {
-    border-inline-end: none;
+  .v1-doc-rail {
+    position: sticky;
+    inset-block-start: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .about-quiet .stat-value {
-    font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+  .v1-toc-box {
+    border: var(--border-frame);
+    background-color: var(--bg-surface);
   }
 
-  @media (max-width: 900px) {
-    .about-quiet .hero-stats-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .about-quiet .stat-card:nth-child(2) {
-      border-inline-end: none;
-    }
-
-    .about-quiet .stat-card:nth-child(-n + 2) {
-      border-block-end: var(--border-row);
-    }
-  }
-
-  @media (max-width: 520px) {
-    .about-quiet .hero-stats-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .about-quiet .stat-card {
-      border-inline-end: none;
-      border-block-end: var(--border-row);
-    }
-
-    .about-quiet .stat-card:last-child {
-      border-block-end: none;
-    }
-  }
-
-  /* Open Underline Sticky Jump Bar */
-  .about-quiet .detail-jump-bar {
-    background-color: var(--bg-canvas);
-    border: none;
+  .v1-toc-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+    margin: 0;
+    padding: 0.7rem 0.9rem;
     border-block-end: var(--border-frame);
-    padding: 0.55rem 0;
-    margin-block-end: 1.5rem;
   }
 
-  .about-quiet .detail-jump-link {
+  .v1-toc-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .v1-toc-list .detail-jump-link {
+    display: block;
+    padding: 0.55rem 0.9rem;
     background-color: transparent;
     border: none;
-    border-block-end: 3px solid transparent;
-    padding: 0.35rem 0.65rem;
+    border-block-end: var(--border-row);
+    border-inline-start: 3px solid transparent;
+    text-decoration: none;
+    font-size: 0.78rem;
     color: var(--text-muted);
   }
 
-  .about-quiet .detail-jump-link:hover {
-    background-color: var(--bg-surface);
+  .v1-toc-list .detail-jump-link:last-child {
+    border-block-end: none;
+  }
+
+  .v1-toc-list .detail-jump-link:hover,
+  .v1-toc-list .detail-jump-link:target-current,
+  .v1-toc-list .detail-jump-link.\:target-current {
+    background-color: var(--bg-elevated);
     color: var(--text-primary);
+    border-inline-start-color: var(--hl-acid);
   }
 
-  .about-quiet .detail-jump-link:target-current,
-  .about-quiet .detail-jump-link.\:target-current {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-block-end-color: var(--hl-acid);
+  :global([data-theme="light"]) .v1-toc-list .detail-jump-link:target-current,
+  :global([data-theme="light"]) .v1-toc-list .detail-jump-link.\:target-current {
+    border-inline-start-color: var(--accent-cobalt);
   }
 
-  :global([data-theme="light"]) .about-quiet .detail-jump-link:target-current,
-  :global([data-theme="light"]) .about-quiet .detail-jump-link.\:target-current {
-    border-block-end-color: var(--accent-cobalt);
+  .v1-rail-stats {
+    border: var(--border-frame);
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background-color: transparent;
   }
 
+  .v1-rail-stats .stat-card {
+    padding: 0.75rem;
+    border: none;
+    border-block-end: var(--border-row);
+    border-inline-end: var(--border-row);
+    background-color: transparent;
+    gap: 0.25rem;
+  }
+
+  .v1-rail-stats .stat-card:nth-child(2n) {
+    border-inline-end: none;
+  }
+
+  .v1-rail-stats .stat-card:nth-last-child(-n + 2) {
+    border-block-end: none;
+  }
+
+  .v1-rail-stats .stat-value {
+    font-size: 1.15rem;
+  }
+
+  .v1-doc-spine {
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+    min-inline-size: 0;
+  }
+
+  .v1-dual-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .v1-dual-row > .card {
+    background-color: transparent;
+    padding: 1.35rem 1.5rem;
+  }
+
+  .v1-doc-spine .deferred-section .terminal-box {
+    max-block-size: 28rem;
+    overflow-y: auto;
+  }
+
+  @media (max-width: 980px) {
+    .v1-masthead,
+    .v1-doc-shell,
+    .v1-dual-row {
+      grid-template-columns: 1fr;
+    }
+
+    .v1-doc-rail {
+      position: static;
+    }
+  }
   /* Section Cards & Widen Full-Width Lead Paragraphs */
   .about-quiet .section-grid > .card {
     background-color: transparent;
@@ -776,66 +754,61 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 </style>
 
 <script>
-  function bindCopyButton(btnId: string, statusId: string, label: string, sectionId?: string) {
-    const btn = document.getElementById(btnId) as HTMLButtonElement | null;
-    const status = document.getElementById(statusId) as HTMLElement | null;
+  const copyLabels: Record<string, string> = {
+    'copy-cli-btn': 'CLI Transcript',
+    'copy-plan-btn': 'PLAN.md',
+    'copy-contract-btn': 'V1 Contract',
+    'copy-prompt-btn': 'PROMPT.md',
+  };
+
+  document.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    const btn = target.closest<HTMLButtonElement>(
+      '[id="copy-cli-btn"], [id="copy-plan-btn"], [id="copy-contract-btn"], [id="copy-prompt-btn"]'
+    );
     if (!btn) return;
 
-    const originalText = btn.textContent?.trim() || `Copy ${label}`;
-    let resetTimer: number | undefined;
+    const label = copyLabels[btn.id] || 'Snippet';
+    const originalText = btn.dataset.origLabel || btn.textContent?.trim() || `Copy ${label}`;
+    btn.dataset.origLabel = originalText;
+    const text = btn.dataset.prompt;
+    if (!text) return;
 
-    btn.addEventListener('click', async () => {
-      const text = btn.dataset.prompt;
-      if (!text) return;
-
-      if (resetTimer !== undefined) {
-        window.clearTimeout(resetTimer);
-      }
-
-      try {
-        await navigator.clipboard.writeText(text);
-        btn.textContent = `✓ Copied ${label}`;
-        btn.classList.add('btn-acid');
-        btn.classList.remove('btn-secondary');
-        if (status) status.textContent = `${label} copied to clipboard.`;
-        resetTimer = window.setTimeout(() => {
-          btn.textContent = originalText;
-          btn.classList.remove('btn-acid');
-          btn.classList.add('btn-secondary');
-          if (status) status.textContent = '';
-          resetTimer = undefined;
-        }, 1800);
-      } catch {
-        const container =
-          (sectionId ? document.getElementById(sectionId) : null) ?? btn.closest('section');
-        const codeEl = container?.querySelector<HTMLElement>('.terminal-box');
-        if (codeEl && window.getSelection) {
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(codeEl);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        }
-        btn.textContent = 'Select text: press ⌘C / Ctrl+C';
+    const status = btn.parentElement?.querySelector<HTMLElement>('[role="status"]');
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = `Copied ${label}`;
+      btn.classList.add('btn-acid');
+      btn.classList.remove('btn-secondary');
+      if (status) status.textContent = `${label} copied to clipboard.`;
+      window.setTimeout(() => {
+        btn.textContent = originalText;
         btn.classList.remove('btn-acid');
         btn.classList.add('btn-secondary');
-        if (status) {
-          status.textContent = `Clipboard unavailable. Selected ${label} text—press Ctrl+C or Command+C to copy.`;
-        }
-        resetTimer = window.setTimeout(() => {
-          btn.textContent = originalText;
-          if (status) status.textContent = '';
-          resetTimer = undefined;
-        }, 3200);
+        if (status) status.textContent = '';
+      }, 1800);
+    } catch {
+      const container = btn.closest('section, .v2-dossier-right');
+      const codeEl = container?.querySelector<HTMLElement>('.terminal-box');
+      if (codeEl && window.getSelection) {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(codeEl);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
       }
-    });
-  }
-
-  bindCopyButton('copy-cli-btn', 'copy-cli-status', 'CLI Transcript', 'end-product');
-  bindCopyButton('copy-plan-btn', 'copy-plan-status', 'PLAN.md', 'plan-spec');
-  bindCopyButton('copy-contract-btn', 'copy-contract-status', 'V1 Contract', 'contract-spec');
-  bindCopyButton('copy-prompt-btn', 'copy-prompt-status', 'PROMPT.md', 'prompt-spec');
-
+      btn.textContent = 'Select text: press ⌘C / Ctrl+C';
+      if (status) {
+        status.textContent = `Clipboard unavailable. Selected ${label} text—press Ctrl+C or Command+C to copy.`;
+      }
+      window.setTimeout(() => {
+        btn.textContent = originalText;
+        if (status) status.textContent = '';
+      }, 3200);
+    }
+  });
   const jumpLinks = Array.from(
     document.querySelectorAll<HTMLAnchorElement>('#about-jump-bar .detail-jump-link')
   );
@@ -855,7 +828,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     syncAriaCurrent();
     document.addEventListener('scrollend', syncAriaCurrent);
   } else if (jumpLinks.length > 0 && 'IntersectionObserver' in window) {
-    const sections = document.querySelectorAll<HTMLElement>('.section-grid > section[id]');
+    const sections = document.querySelectorAll<HTMLElement>('.v1-doc-spine section[id]');
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
