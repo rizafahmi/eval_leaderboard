@@ -627,6 +627,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 1b. Harness Ablation: Pi vs Muse Code on muse-spark-1.3-contributor (High)
+  const piMuseSpark = runs.find(
+    (r) => r.displayHarness === 'Pi' && r.data.model === 'muse-spark-1.3-contributor'
+  );
+  const museCodeMuseSpark = runs.find(
+    (r) => r.displayHarness === 'Muse Code' && r.data.model === 'muse-spark-1.3-contributor'
+  );
+  if (piMuseSpark && museCodeMuseSpark) {
+    presets.push({
+      id: 'harness-muse-spark-1-3-contrib',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'Pi vs. Muse Code (muse-spark-1.3-contributor · High)',
+      subtitle: 'Unsandboxed host execution (3.4k initial prompt) vs. Seatbelt sandbox (29.2k initial prompt + 384k compaction)',
+      runAId: piMuseSpark.id,
+      runBId: museCodeMuseSpark.id,
+      findingHeadline: `Pi achieved 7/7 (85/85 tests) in 56m for $0.14 (29.74M tokens), whereas Muse Code's Seatbelt socket/PTY sandbox blinded the agent to 16 test failures and S7 (6/7, 77m, $0.25, 74.07M tokens).`,
+    });
+  }
+
   // 2. Effort Scaling: ZCode glm-5.3-flash High vs Low (and High vs Max)
   const flashHigh = runs.find(
     (r) => r.data.model === 'glm-5.3-flash' && r.data.effort?.toLowerCase() === 'high'

@@ -104,6 +104,7 @@ const HARNESS_DISPLAY_MAP: Record<string, string> = {
   'antigravity cli': 'Antigravity CLI',
   'codex cli': 'Codex CLI',
   'cursor-agent cli': 'Cursor Agent CLI',
+  'muse code': 'Muse Code',
   pi: 'Pi',
   zcode: 'ZCode',
 };
