@@ -55,11 +55,10 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
           ? parsed.stepIndex
           : stepCounter;
 
+    const msg = parsed.message as Record<string, unknown> | undefined;
     const usage =
       (parsed.usage as Record<string, unknown> | undefined) ??
-      ((parsed.message as Record<string, unknown> | undefined)?.usage as
-        | Record<string, unknown>
-        | undefined) ??
+      (msg?.usage as Record<string, unknown> | undefined) ??
       {};
 
     const cachedInputTokens = Number(
@@ -72,7 +71,11 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     );
 
     const rawInput = Number(
-      usage.input_tokens ?? usage.prompt_tokens ?? usage.uncachedInputTokens ?? 0
+      usage.input_tokens ??
+        usage.prompt_tokens ??
+        usage.uncachedInputTokens ??
+        usage.input ??
+        0
     );
     const uncachedInputTokens = Number(
       usage.uncached_input_tokens ??
@@ -85,6 +88,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       usage.reasoning_tokens ??
         usage.thinking_tokens ??
         usage.thinkingTokens ??
+        usage.reasoning ??
         (
           usage.output_tokens_details as Record<string, unknown> | undefined
         )?.reasoning_tokens ??
@@ -92,11 +96,15 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     );
 
     const outputTokens = Number(
-      usage.output_tokens ?? usage.completion_tokens ?? usage.outputTokens ?? 0
+      usage.output_tokens ??
+        usage.completion_tokens ??
+        usage.outputTokens ??
+        usage.output ??
+        0
     );
 
     let role: RawTurnEvent['role'] = 'system';
-    const rawType = String(parsed.type ?? parsed.role ?? '').toLowerCase();
+    const rawType = String(msg?.role ?? parsed.type ?? parsed.role ?? '').toLowerCase();
     if (
       rawType.includes('assistant') ||
       rawType.includes('planner_response') ||
@@ -116,10 +124,13 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         ? parsed.tool_name
         : typeof parsed.tool === 'string'
           ? parsed.tool
-          : undefined;
+          : typeof msg?.toolName === 'string'
+            ? msg.toolName
+            : undefined;
     const toolError = Boolean(
       parsed.isError === true ||
         parsed.is_error === true ||
+        msg?.isError === true ||
         String(parsed.status ?? '').toLowerCase() === 'error'
     );
 

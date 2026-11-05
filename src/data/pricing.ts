@@ -86,6 +86,29 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 10.0,
     },
   },
+  'gpt-6.1-terra': {
+    modelKey: 'gpt-6.1-terra',
+    displayName: 'gpt-6.1-terra',
+    provider: 'OpenAI Codex',
+    billedTier: {
+      label: 'gpt-6.1-terra API (95% cache off)',
+      inputPerMillionUsd: 1.0,
+      cachedInputPerMillionUsd: 0.05,
+      outputPerMillionUsd: 5.0,
+    },
+    standardApiTier: {
+      label: 'gpt-6.1-terra API',
+      inputPerMillionUsd: 1.0,
+      cachedInputPerMillionUsd: 0.05,
+      outputPerMillionUsd: 5.0,
+    },
+    comparisonTier: {
+      label: 'gpt-6.1-sol API (95% cache off)',
+      inputPerMillionUsd: 2.0,
+      cachedInputPerMillionUsd: 0.1,
+      outputPerMillionUsd: 10.0,
+    },
+  },
   'auto (grok-4.5)': {
     modelKey: 'auto (grok-4.5)',
     displayName: 'auto (grok-4.5)',
