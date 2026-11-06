@@ -4,12 +4,10 @@ import { getCollection } from 'astro:content';
 import {
   formatDuration,
   formatCost,
-  formatHarnessName,
 } from '../utils/format';
 import {
   analyzeAndRankRuns,
   discoverAblationPresets,
-  STAGE_IDS,
 } from '../utils/telemetry';
 import { BENCHMARK_STAGES } from '../data/benchmark';
 
@@ -18,9 +16,17 @@ const analyzedRuns = analyzeAndRankRuns(
   allRuns.map((entry) => ({ id: entry.id, data: entry.data }))
 );
 const ablationPresets = discoverAblationPresets(analyzedRuns);
-const stageTitleMap = new Map(BENCHMARK_STAGES.map((s) => [s.id, s.title]));
 
-// Default pair: Pi vs Codex CLI on gpt-6-sol (Harness Ablation) or top 2 runs
+const shortPresetLabels: Record<string, string> = {
+  'harness-gpt6-sol': 'Pi vs. Codex (gpt-6-sol)',
+  'harness-muse-spark-1-3-contrib': 'Pi vs. Muse Code',
+  'effort-glm-flash-high-vs-low': 'Flash: High vs. Low',
+  'effort-glm-flash-high-vs-max': 'Flash: High vs. Max',
+  'model-gpt61-vs-gpt6': 'gpt-6.1 vs. gpt-6.0',
+  'model-glm-flash-vs-flagship': 'Flash vs. Flagship',
+  'pareto-cost-vs-speed': 'Lowest Cost vs. Fastest',
+};
+
 const defaultPreset = ablationPresets[0];
 const defaultRunA =
   analyzedRuns.find((r) => r.id === defaultPreset?.runAId) ?? analyzedRuns[0];
@@ -71,226 +77,157 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   description="Side-by-side econometric and stage-by-stage (S1–S7) comparison workbench for Capy Bench coding agent runs—isolating harness overhead, reasoning effort scaling, and model generation."
   activeNav="compare"
   breadcrumbLabel="Compare & Ablations"
-  breadcrumbTone="hl-sky"
+  breadcrumbTone="hl-acid"
 >
   <div class="compare-quiet compare-v3">
-      <header class="v3-top-header">
-        <div class="v3-title-row">
-          <h1 id="compare-hero-heading" class="headline-two-tone">
-            Controlled Ablation Workbench.{' '}
-            <span class="muted">
-              Verdict-first contender dossier &amp; slice telemetry.
-            </span>
-          </h1>
-          <span class="badge-static mono">HOLDOUT VERIFICATION DOSSIER</span>
-        </div>
+    <header class="v3-top-header">
+      <h1 id="compare-hero-heading" class="headline-two-tone">
+        Compare Runs.{' '}
+        <span class="muted">
+          Head-to-head telemetry &amp; S1–S7 stage diff.
+        </span>
+      </h1>
 
-        <div class="v3-preset-bar" role="list" aria-label="Controlled ablation presets">
-          {ablationPresets.map((preset, idx) => (
-            <button
-              type="button"
-              role="listitem"
-              class:list={['card preset-btn', { 'is-active': idx === 0 }]}
-              data-preset-id={preset.id}
-              data-run-a={preset.runAId}
-              data-run-b={preset.runBId}
-              data-finding={preset.findingHeadline}
-              data-badge={preset.badge}
-              data-title={preset.title}
-            >
-              <div class="preset-btn-top">
-                <span
-                  class:list={[
-                    'hl',
-                    preset.category === 'harness'
-                      ? 'hl-acid'
-                      : preset.category === 'effort'
-                        ? 'hl-violet'
-                        : 'hl-sky',
-                    'preset-badge',
-                  ]}
-                >
-                  {preset.badge}
-                </span>
-              </div>
-              <strong class="preset-title">{preset.title}</strong>
-              <span class="mono preset-sub">{preset.subtitle}</span>
-            </button>
-          ))}
-        </div>
-      </header>
-
-      <!-- Executive Verdict & Twin Contender Dossier Frame -->
-      <section class="v3-dossier-frame" aria-label="Executive ablation verdict and contender comparison">
-        <div class="v3-verdict-banner" id="ablation-finding-banner" role="status" aria-live="polite">
-          <span class="hl hl-acid" id="finding-badge">{defaultPreset?.badge ?? 'HEAD-TO-HEAD DIFF'}</span>
-          <p class="mono finding-copy" id="finding-copy">
-            {defaultPreset?.findingHeadline ?? 'Comparing telemetry and stage-by-stage cost profiles.'}
-          </p>
-        </div>
-
-        <div class="v3-contenders-grid">
-          <div class="v3-contender-card v3-contender-a">
-            <label class="field-label" for="select-run-a">
-              <span class="hl hl-mint selector-tag">CONTENDER A · BASELINE</span>
-            </label>
-            <select id="select-run-a" class="select control-select">
-              {serializedRuns.map((r) => (
-                <option value={r.id} selected={r.id === defaultRunA.id}>
-                  #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)} · {formatDuration(r.durationMinutes)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div class="v3-swap-bridge">
-            <button
-              type="button"
-              id="swap-runs-btn"
-              class="btn btn-sm btn-secondary"
-              title="Swap Run A and Run B"
-            >
-              <svg class="swap-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path d="M3 5h10M10 2l3 3-3 3M13 11H3M6 8l-3 3 3 3" />
-              </svg>
-              Swap
-            </button>
-          </div>
-
-          <div class="v3-contender-card v3-contender-b">
-            <label class="field-label" for="select-run-b">
-              <span class="hl hl-sky selector-tag">CONTENDER B · COMPARISON</span>
-            </label>
-            <select id="select-run-b" class="select control-select">
-              {serializedRuns.map((r) => (
-                <option value={r.id} selected={r.id === defaultRunB.id}>
-                  #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)} · {formatDuration(r.durationMinutes)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <dl class="hero-stats-grid delta-kpi-strip" aria-label="Head-to-head delta summary">
-          <div class="card stat-card">
-            <dt class="section-kicker">SPEC VERIFICATION DELTA</dt>
-            <dd class="stat-value" id="delta-spec-val">
-              {defaultRunA.plan.completed}/7 vs {defaultRunB.plan.completed}/7
-            </dd>
-            <dd class="stat-meta mono" id="delta-spec-sub">
-              {defaultRunA.plan.completed === defaultRunB.plan.completed
-                ? 'Identical holdout spec completion'
-                : `${Math.abs(defaultRunA.plan.completed - defaultRunB.plan.completed)} slice difference`}
-            </dd>
-          </div>
-
-          <div class="card stat-card">
-            <dt class="section-kicker">BILLED COST DELTA</dt>
-            <dd class="stat-value" id="delta-cost-val">
-              {formatCost(defaultRunA.data.costUsd)} vs {formatCost(defaultRunB.data.costUsd)}
-            </dd>
-            <dd class="stat-meta mono" id="delta-cost-sub">
-              {defaultRunB.data.costUsd > 0
-                ? `${Math.round(((defaultRunA.data.costUsd - defaultRunB.data.costUsd) / defaultRunB.data.costUsd) * 100)}% relative difference`
-                : 'Comparing billed API spend'}
-            </dd>
-          </div>
-
-          <div class="card stat-card">
-            <dt class="section-kicker">WALL-CLOCK DURATION DELTA</dt>
-            <dd class="stat-value" id="delta-dur-val">
-              {formatDuration(defaultRunA.data.durationMinutes)} vs {formatDuration(defaultRunB.data.durationMinutes)}
-            </dd>
-            <dd class="stat-meta mono" id="delta-dur-sub">
-              {Math.abs(defaultRunA.data.durationMinutes - defaultRunB.data.durationMinutes)}m active runtime delta
-            </dd>
-          </div>
-
-          <div class="card stat-card">
-            <dt class="section-kicker">TOTAL TOKEN VOLUME DELTA</dt>
-            <dd class="stat-value" id="delta-tok-val">
-              {defaultRunA.data.tokens?.total ?? '—'} vs {defaultRunB.data.tokens?.total ?? '—'}
-            </dd>
-            <dd class="stat-meta mono" id="delta-tok-sub">
-              Peak context: {defaultRunA.context.peakTokens?.toLocaleString('en-US') ?? '—'} vs {defaultRunB.context.peakTokens?.toLocaleString('en-US') ?? '—'}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <div class="v3-deep-dive">
-        <section class="card compare-section-card" aria-labelledby="stage-diff-heading">
-          <div class="card-title">
-            <div class="card-title-group">
-              <h2 id="stage-diff-heading" class="card-heading headline-two-tone">
-                Stage-by-Stage Burn Profile{' '}
-                <span class="muted">/ S1–S7 Slice Telemetry</span>
-              </h2>
-            </div>
-          </div>
-          <p class="mono section-subnote">
-            Compares LLM turns, reasoning token intensity, and API spend for each implementation slice from S1 (Launch CLI) through S7 (Foreground PTY Ctrl-C).
-          </p>
-
-          <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="stage-diff-heading">
-            <table class="app-table leaderboard-table static-table compare-stage-table">
-              <caption class="visually-hidden">
-                Per-stage S1 through S7 comparison of pass status, LLM calls, thinking tokens, and cost between Run A and Run B
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Stage</th>
-                  <th scope="col" id="stage-th-a">Run A (Calls · Thinking · Cost)</th>
-                  <th scope="col" id="stage-th-b">Run B (Calls · Thinking · Cost)</th>
-                  <th scope="col">Stage Delta</th>
-                </tr>
-              </thead>
-              <tbody id="stage-diff-tbody">
-                <!-- Populated deterministically -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="card compare-section-card" aria-labelledby="telemetry-diff-heading">
-          <div class="card-title">
-            <div class="card-title-group">
-              <h2 id="telemetry-diff-heading" class="card-heading headline-two-tone">
-                Econometric &amp; Telemetry Diff{' '}
-                <span class="muted">/ Full-Run Accounting</span>
-              </h2>
-            </div>
-          </div>
-
-          <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="telemetry-diff-heading">
-            <table class="app-table leaderboard-table static-table compare-table">
-              <caption class="visually-hidden">
-                Side-by-side comparison of Run A and Run B across spec completion, cost tiers, exact tokens, context window, tool calls, and test suites
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Metric / Dimension</th>
-                  <th scope="col" id="th-run-a">
-                    <a href={`/runs/${defaultRunA.id}`} class="compare-th-link" id="th-link-a">
-                      Run A: {defaultRunA.displayHarness} / {defaultRunA.data.model}
-                    </a>
-                  </th>
-                  <th scope="col" id="th-run-b">
-                    <a href={`/runs/${defaultRunB.id}`} class="compare-th-link" id="th-link-b">
-                      Run B: {defaultRunB.displayHarness} / {defaultRunB.data.model}
-                    </a>
-                  </th>
-                  <th scope="col">Delta (A vs B)</th>
-                </tr>
-              </thead>
-              <tbody id="telemetry-diff-tbody">
-                <!-- Populated and hydrated deterministically -->
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <div class="v3-preset-bar" role="list" aria-label="Controlled ablation presets">
+        <span class="mono preset-bar-label">Presets:</span>
+        {ablationPresets.map((preset, idx) => (
+          <button
+            type="button"
+            role="listitem"
+            class:list={['preset-btn', { 'is-active': idx === 0 }]}
+            data-preset-id={preset.id}
+            data-run-a={preset.runAId}
+            data-run-b={preset.runBId}
+            data-finding={preset.findingHeadline}
+            data-badge={preset.badge}
+            data-title={preset.title}
+            title={`${preset.badge}: ${preset.title}`}
+          >
+            <span class="preset-title">{shortPresetLabels[preset.id] ?? preset.title}</span>
+          </button>
+        ))}
       </div>
-    </div>
+    </header>
+
+    <!-- Unified Single-Sheet Comparison Workbench -->
+    <section class="v3-dossier-frame" aria-label="Head-to-head run comparison">
+      <div class="v3-verdict-banner" id="ablation-finding-banner" role="status" aria-live="polite">
+        <span class="hl hl-acid" id="finding-badge">{defaultPreset?.badge ?? 'HEAD-TO-HEAD DIFF'}</span>
+        <p class="mono finding-copy" id="finding-copy">
+          {defaultPreset?.findingHeadline ?? 'Comparing telemetry and stage-by-stage cost profiles.'}
+        </p>
+      </div>
+
+      <div class="v3-contenders-grid">
+        <div class="v3-contender-card v3-contender-a">
+          <div class="contender-card-head">
+            <label class="field-label contender-label" for="select-run-a">
+              <span class="contender-index contender-index-a">A</span>
+              <span class="mono contender-role">BASELINE</span>
+            </label>
+            <div class="mono contender-meta-inline">
+              <span id="contender-meta-a">Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunA.id) + 1} · {defaultRunA.displayProvider}</span>
+              <span aria-hidden="true">·</span>
+              <a href={`/runs/${defaultRunA.id}`} class="contender-inspect-link" id="contender-link-a">
+                Inspect →
+              </a>
+            </div>
+          </div>
+          <select id="select-run-a" class="select control-select">
+            {serializedRuns.map((r) => (
+              <option value={r.id} selected={r.id === defaultRunA.id}>
+                #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div class="v3-swap-bridge">
+          <button
+            type="button"
+            id="swap-runs-btn"
+            class="btn btn-sm btn-secondary swap-btn"
+            title="Swap Run A and Run B"
+          >
+            <svg class="swap-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M3 5h10M10 2l3 3-3 3M13 11H3M6 8l-3 3 3 3" />
+            </svg>
+            Swap
+          </button>
+        </div>
+
+        <div class="v3-contender-card v3-contender-b">
+          <div class="contender-card-head">
+            <label class="field-label contender-label" for="select-run-b">
+              <span class="contender-index contender-index-b">B</span>
+              <span class="mono contender-role">COMPARISON</span>
+            </label>
+            <div class="mono contender-meta-inline">
+              <span id="contender-meta-b">Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunB.id) + 1} · {defaultRunB.displayProvider}</span>
+              <span aria-hidden="true">·</span>
+              <a href={`/runs/${defaultRunB.id}`} class="contender-inspect-link" id="contender-link-b">
+                Inspect →
+              </a>
+            </div>
+          </div>
+          <select id="select-run-b" class="select control-select">
+            {serializedRuns.map((r) => (
+              <option value={r.id} selected={r.id === defaultRunB.id}>
+                #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrapper unified-table-wrap" tabindex="0" role="region" aria-label="Side-by-side comparison table">
+        <table class="app-table leaderboard-table static-table compare-table">
+          <caption class="visually-hidden">
+            Side-by-side comparison of Run A and Run B across core metrics and S1 through S7 implementation slices
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-metric">Dimension</th>
+              <th scope="col" class="col-run-a" id="th-run-a">
+                <a href={`/runs/${defaultRunA.id}`} class="compare-th-link" id="th-link-a">
+                  A · {defaultRunA.displayHarness} / {defaultRunA.data.model}
+                </a>
+              </th>
+              <th scope="col" class="col-run-b" id="th-run-b">
+                <a href={`/runs/${defaultRunB.id}`} class="compare-th-link" id="th-link-b">
+                  B · {defaultRunB.displayHarness} / {defaultRunB.data.model}
+                </a>
+              </th>
+              <th scope="col" class="col-delta">Delta</th>
+            </tr>
+          </thead>
+          <tbody id="telemetry-diff-tbody">
+            <!-- Core 6 metrics populated deterministically -->
+          </tbody>
+          <tbody id="stage-diff-tbody">
+            <!-- S1-S7 stages populated deterministically -->
+          </tbody>
+          <tfoot id="stage-diff-tfoot">
+            <!-- Stage total populated deterministically -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <details class="deep-accounting-details">
+      <summary class="mono deep-accounting-summary">
+        <span>Deep Token &amp; Cache Accounting (5 secondary metrics)</span>
+        <span class="deep-summary-hint">Expand +</span>
+      </summary>
+      <div class="table-wrapper deep-table-wrap" tabindex="0" role="region" aria-label="Deep token and cache accounting">
+        <table class="app-table leaderboard-table static-table compare-table">
+          <tbody id="deep-accounting-tbody">
+            <!-- Secondary accounting rows populated deterministically -->
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
 
   <script
     is:inline
@@ -308,14 +245,9 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   .compare-quiet {
     display: flex;
     flex-direction: column;
-    gap: 1.35rem;
-    padding-block-start: 0.5rem;
+    gap: 1rem;
+    padding-block-start: 0.25rem;
     font-variant-numeric: tabular-nums;
-  }
-
-  .table-wrapper {
-    scrollbar-color: var(--border-strong-color) var(--bg-surface);
-    scrollbar-width: thin;
   }
 
   .headline-two-tone {
@@ -323,92 +255,78 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   }
 
   .swap-svg {
-    inline-size: 0.95rem;
-    block-size: 0.95rem;
-    vertical-align: -0.15em;
-    margin-inline-end: 0.35rem;
+    inline-size: 0.85rem;
+    block-size: 0.85rem;
+    vertical-align: -0.12em;
+    margin-inline-end: 0.25rem;
     flex-shrink: 0;
   }
 
+  /* 1. COMPACT HEADER & SINGLE-LINE PRESET STRIP */
   .v3-top-header {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: 0.65rem;
   }
 
-  .v3-title-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .v3-title-row .headline-two-tone {
-    font-size: clamp(1.4rem, 2.6vw, 1.95rem);
+  .v3-top-header .headline-two-tone {
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
     margin: 0;
   }
 
   .v3-preset-bar {
     display: flex;
-    flex-wrap: nowrap;
-    gap: 0.55rem;
-    overflow-x: auto;
-    padding-block-end: 0.25rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-strong-color) var(--bg-surface);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .preset-bar-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-inline-end: 0.2rem;
   }
 
   .preset-btn {
-    flex: 1 0 15.5rem;
-    text-align: left;
+    text-align: start;
     cursor: pointer;
     background-color: transparent;
-    border: 1px solid var(--border-strong-color);
-    padding: 0.65rem 0.85rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    color: var(--text-primary);
-    font-family: var(--font-body);
+    border: 1px solid var(--border-subtle-color);
+    border-radius: var(--radius-none);
+    padding: 0.32rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
   }
 
   .preset-btn:hover {
     background-color: var(--bg-surface);
+    border-color: var(--border-strong-color);
+    color: var(--text-primary);
   }
 
   .preset-btn.is-active {
-    border: 2px solid var(--hl-acid);
+    border-color: var(--border-strong-color);
+    box-shadow: inset 0 -2px 0 var(--hl-acid);
     background-color: var(--bg-surface);
+    color: var(--text-primary);
   }
 
   :global([data-theme="light"]) .preset-btn.is-active {
-    border-color: var(--accent-cobalt);
+    border-color: var(--raw-ebony);
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
   }
 
-  .preset-badge {
-    font-size: 0.625rem;
-    padding: 0.06rem 0.35rem;
-  }
-
-  .preset-title {
-    font-size: 0.875rem;
-    line-height: 1.35;
-  }
-
-  .preset-sub {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    line-height: 1.4;
-  }
-
-  .selector-tag {
-    font-size: 0.68rem;
-    padding: 0.08rem 0.4rem;
-  }
-
+  /* 2. UNIFIED SINGLE-SHEET WORKBENCH */
   .v3-dossier-frame {
-    border: var(--border-split);
+    border: var(--border-frame);
     background-color: transparent;
   }
 
@@ -416,17 +334,17 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.85rem;
-    padding: 1rem 1.35rem;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
     background-color: var(--bg-surface);
-    border-block-end: var(--border-frame);
+    border-block-end: var(--border-row);
   }
 
   .finding-copy {
     margin: 0;
-    font-size: 0.92rem;
-    font-weight: 700;
+    font-size: 0.8125rem;
     color: var(--text-primary);
+    line-height: 1.4;
   }
 
   .v3-contenders-grid {
@@ -436,90 +354,137 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   }
 
   .v3-contender-card {
-    padding: 1.1rem 1.35rem;
+    padding: 0.75rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.4rem;
+    min-inline-size: 0;
   }
 
-  .v3-contender-a {
-    border-block-start: 4px solid var(--hl-mint);
+  .contender-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
-  .v3-contender-b {
-    border-block-start: 4px solid var(--hl-sky);
+  .contender-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+  }
+
+  .contender-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .contender-index-a {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border: 1px solid var(--raw-ebony);
+  }
+
+  .contender-index-b {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong-color);
+  }
+
+  .contender-role {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .contender-meta-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  .contender-inspect-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-block-end: 1px solid var(--border-strong-color);
+  }
+
+  .contender-inspect-link:hover {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-block-end-color: var(--raw-ebony);
+  }
+
+  .control-select {
+    border-width: 1px;
+    background-color: var(--bg-canvas);
+    font-size: 0.78rem;
+    padding: 0.45rem 1.8rem 0.45rem 0.65rem;
   }
 
   .v3-swap-bridge {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-inline: 0.75rem;
+    padding-inline: 0.55rem;
     border-inline: var(--border-row);
+  }
+
+  .swap-btn {
+    border-width: 1px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  /* 3. UNIFIED TABLE */
+  .unified-table-wrap {
+    border: none;
+  }
+
+  .compare-table {
+    table-layout: fixed;
+  }
+
+  .compare-table .col-metric {
+    inline-size: 25%;
+  }
+
+  .compare-table .col-run-a,
+  .compare-table .col-run-b {
+    inline-size: 27%;
+  }
+
+  .compare-table .col-delta {
+    inline-size: 21%;
+  }
+
+  .compare-quiet .leaderboard-table thead th {
     background-color: var(--bg-surface);
+    padding: 0.55rem 0.9rem;
+    font-size: 0.7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .delta-kpi-strip {
-    gap: 0;
-    margin: 0;
-    border: none;
-    background-color: transparent;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .compare-quiet .leaderboard-table :is(td, tbody th, tfoot th) {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.8125rem;
+    vertical-align: middle;
   }
 
-  .delta-kpi-strip .stat-card {
-    border: none;
-    border-inline-end: var(--border-row);
-    border-block-end: var(--border-row);
-    background-color: transparent;
-    padding: 1rem 1.35rem;
-    gap: 0.3rem;
-  }
-
-  .delta-kpi-strip .stat-card:nth-child(2n) {
-    border-inline-end: none;
-  }
-
-  .delta-kpi-strip .stat-card:nth-last-child(-n + 2) {
-    border-block-end: none;
-  }
-
-  .delta-kpi-strip .stat-value {
-    font-size: clamp(1.15rem, 1.9vw, 1.45rem);
-  }
-
-  .v3-deep-dive {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.35rem;
-  }
-
-  .compare-section-card {
-    background-color: transparent;
-    padding: 1.2rem 1.4rem;
-    margin: 0;
-    min-inline-size: 0;
-  }
-
-  @media (max-width: 900px) {
-    .v3-contenders-grid,
-    .delta-kpi-strip {
-      grid-template-columns: 1fr;
-    }
-
-    .v3-swap-bridge {
-      padding-block: 0.6rem;
-      border-inline: none;
-      border-block: var(--border-row);
-    }
-
-    .delta-kpi-strip .stat-card {
-      border-inline-end: none;
-      border-block-end: var(--border-row);
-    }
-
-    .delta-kpi-strip .stat-card:last-child {
-      border-block-end: none;
+  @container (width >= 32rem) {
+    .compare-quiet .leaderboard-table :is(thead, tbody, tfoot) tr:not(.compare-group-row) > :is(th, td):not(:first-child) {
+      border-inline-start: var(--border-row);
     }
   }
 
@@ -535,42 +500,198 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     text-decoration: none;
   }
 
-  :global(.delta-better) {
-    color: var(--hl-mint);
+  :global(.compare-group-row th) {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-muted) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 0.36rem 0.9rem !important;
+    border-block-start: var(--border-row) !important;
+    border-block-end: var(--border-row) !important;
+  }
+
+  :global(.cell-primary) {
+    color: var(--text-secondary);
+  }
+
+  :global(.cell-primary.is-lead) {
+    color: var(--text-primary);
     font-weight: 700;
   }
 
-  :global([data-theme="light"] .delta-better) {
-    color: #0b6b28;
+  :global(.cell-inline-muted) {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-inline-start: 0.3rem;
   }
 
-  :global(.delta-worse) {
-    color: var(--hl-magenta);
+  /* Quiet Delta cell layout */
+  :global(.delta-cell-wrap) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
   }
 
-  :global([data-theme="light"] .delta-worse) {
-    color: #a8006b;
+  :global(.adv-pill) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.04rem 0.28rem;
+    border: 1px solid var(--border-subtle-color);
+    color: var(--text-muted);
+    background-color: transparent;
+    line-height: 1.2;
+    flex-shrink: 0;
+  }
+
+  :global(.adv-pill.adv-a) {
+    color: var(--hl-acid);
+    border-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"] .adv-pill.adv-a) {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+  }
+
+  :global(.adv-pill.adv-b) {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+  }
+
+  :global(.delta-figure) {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  :global(.delta-neutral) {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  /* Stage-by-Stage single-line cell structure */
+  :global(.stage-cell-line) {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  :global(.stage-cost) {
+    color: var(--text-secondary);
+  }
+
+  :global(.stage-cost.is-lead) {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  :global(.stage-inline-meta) {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  :global(.stage-miss-tag) {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.03rem 0.26rem;
+    line-height: 1.2;
+    background-color: var(--hl-magenta);
+    color: var(--hl-ink);
+    border: 1px solid var(--raw-ebony);
   }
 
   :global(.stage-compare-bar-track) {
     inline-size: 100%;
     max-inline-size: 9rem;
-    block-size: 0.38rem;
-    border: 1px solid var(--border-subtle-color);
-    background-color: var(--bg-canvas);
-    margin-block-start: 0.25rem;
+    block-size: 0.2rem;
+    background-color: var(--bg-surface);
+    margin-block-start: 0.22rem;
+    overflow: hidden;
   }
 
   :global(.stage-compare-bar-fill-a) {
     display: block;
     block-size: 100%;
-    background-color: var(--hl-mint);
+    background-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"] .stage-compare-bar-fill-a) {
+    background-color: var(--raw-ebony);
   }
 
   :global(.stage-compare-bar-fill-b) {
     display: block;
     block-size: 100%;
-    background-color: var(--hl-sky);
+    background-color: var(--text-muted);
+  }
+
+  :global(#stage-diff-tfoot tr) {
+    background-color: var(--bg-surface);
+    border-block-start: var(--border-frame);
+  }
+
+  /* 4. COLLAPSIBLE DEEP ACCOUNTING DRAWER */
+  .deep-accounting-details {
+    border: 1px solid var(--border-subtle-color);
+    background-color: transparent;
+  }
+
+  .deep-accounting-summary {
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+  }
+
+  .deep-accounting-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .deep-accounting-summary:hover {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .deep-accounting-details[open] .deep-accounting-summary {
+    border-block-end: var(--border-row);
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .deep-table-wrap {
+    border: none;
+  }
+
+  @media (max-width: 760px) {
+    .v3-contenders-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .v3-swap-bridge {
+      padding-block: 0.45rem;
+      border-inline: none;
+      border-block: var(--border-row);
+    }
+
+    .compare-table {
+      table-layout: auto;
+    }
   }
 </style>
 
@@ -715,7 +836,6 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       if (selB.value !== b.id) selB.value = b.id;
     }
 
-    // Highlight matching preset button if any
     for (const btn of qAll<HTMLButtonElement>('.preset-btn')) {
       const pA = btn.dataset.runA;
       const pB = btn.dataset.runB;
@@ -729,198 +849,157 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
 
     for (const linkA of qAll<HTMLAnchorElement>('[id="th-link-a"]')) {
       linkA.href = `/runs/${a.id}`;
-      linkA.textContent = `Run A: ${a.harness} / ${a.model} (${a.effort})`;
+      linkA.textContent = `A · ${a.harness} / ${a.model}`;
     }
     for (const linkB of qAll<HTMLAnchorElement>('[id="th-link-b"]')) {
       linkB.href = `/runs/${b.id}`;
-      linkB.textContent = `Run B: ${b.harness} / ${b.model} (${b.effort})`;
+      linkB.textContent = `B · ${b.harness} / ${b.model}`;
     }
-    for (const el of qAll('[id="stage-th-a"]')) el.textContent = `Run A: ${a.harness} / ${a.model}`;
-    for (const el of qAll('[id="stage-th-b"]')) el.textContent = `Run B: ${b.harness} / ${b.model}`;
+    for (const linkA of qAll<HTMLAnchorElement>('[id="contender-link-a"]')) {
+      linkA.href = `/runs/${a.id}`;
+    }
+    for (const linkB of qAll<HTMLAnchorElement>('[id="contender-link-b"]')) {
+      linkB.href = `/runs/${b.id}`;
+    }
+    for (const metaA of qAll('[id="contender-meta-a"]')) {
+      metaA.textContent = `Rank #${a.rank} · ${a.provider} · ${a.effort}`;
+    }
+    for (const metaB of qAll('[id="contender-meta-b"]')) {
+      metaB.textContent = `Rank #${b.rank} · ${b.provider} · ${b.effort}`;
+    }
 
-    // Update 4 KPI Delta Cards
-    for (const el of qAll('[id="delta-spec-val"]')) {
-      el.textContent = `${a.planCompleted}/7 vs ${b.planCompleted}/7`;
-    }
-    const diff = a.planCompleted - b.planCompleted;
-    const specSubText =
-      diff === 0
-        ? `Both passed ${a.planCompleted}/7 holdout stages`
-        : diff > 0
-          ? `Run A passed +${diff} more holdout ${diff === 1 ? 'stage' : 'stages'}`
-          : `Run B passed +${Math.abs(diff)} more holdout ${Math.abs(diff) === 1 ? 'stage' : 'stages'}`;
-    for (const el of qAll('[id="delta-spec-sub"]')) el.textContent = specSubText;
-
-    for (const el of qAll('[id="delta-cost-val"]')) {
-      el.textContent = `${usd.format(a.costUsd)} vs ${usd.format(b.costUsd)}`;
-    }
     const cDiff = a.costUsd - b.costUsd;
     const pct = b.costUsd > 0 ? Math.round((Math.abs(cDiff) / b.costUsd) * 100) : 0;
-    const costSubText =
-      Math.abs(cDiff) < 0.005
-        ? 'Identical billed spend'
-        : cDiff < 0
-          ? `Run A is ${usd.format(Math.abs(cDiff))} cheaper (-${pct}%)`
-          : `Run A is ${usd.format(cDiff)} pricier (+${pct}%)`;
-    for (const el of qAll('[id="delta-cost-sub"]')) el.textContent = costSubText;
+    const tDiff = a.tokens.total - b.tokens.total;
+    const tokPct = b.tokens.total > 0 ? Math.round((Math.abs(tDiff) / b.tokens.total) * 100) : 0;
 
-    for (const el of qAll('[id="delta-dur-val"]')) {
-      el.textContent = `${fmtDur(a.durationMinutes)} vs ${fmtDur(b.durationMinutes)}`;
-    }
-    const dDiff = a.durationMinutes - b.durationMinutes;
-    const durSubText =
-      dDiff === 0
-        ? 'Identical active runtime'
-        : dDiff < 0
-          ? `Run A finished ${fmtDur(Math.abs(dDiff))} faster`
-          : `Run A took ${fmtDur(dDiff)} longer`;
-    for (const el of qAll('[id="delta-dur-sub"]')) el.textContent = durSubText;
+    const fmtDeltaCell = (winner: 'a' | 'b' | 'par' | 'info', text: string) => {
+      if (winner === 'par') {
+        return `<span class="delta-cell-wrap"><span class="adv-pill">PAR</span><span class="delta-neutral">${text}</span></span>`;
+      }
+      if (winner === 'info') {
+        return `<span class="delta-neutral">${text}</span>`;
+      }
+      const tag = winner === 'a' ? `<span class="adv-pill adv-a">A</span>` : `<span class="adv-pill adv-b">B</span>`;
+      return `<span class="delta-cell-wrap">${tag}<span class="delta-figure">${text}</span></span>`;
+    };
 
-    for (const el of qAll('[id="delta-tok-val"]')) {
-      el.textContent = `${fmtCompact(a.tokens.total)} vs ${fmtCompact(b.tokens.total)}`;
-    }
-    const pA = a.peakContextTokens ? fmtCompact(a.peakContextTokens) : '—';
-    const pB = b.peakContextTokens ? fmtCompact(b.peakContextTokens) : '—';
-    for (const el of qAll('[id="delta-tok-sub"]')) {
-      el.textContent = `Peak context: ${pA} vs ${pB}`;
-    }
+    const specLead: 'a' | 'b' | 'par' =
+      a.planCompleted > b.planCompleted ? 'a' : a.planCompleted < b.planCompleted ? 'b' : 'par';
+    const costLead: 'a' | 'b' | 'par' =
+      Math.abs(a.costUsd - b.costUsd) < 0.005 ? 'par' : a.costUsd < b.costUsd ? 'a' : 'b';
+    const durLead: 'a' | 'b' | 'par' =
+      a.durationMinutes < b.durationMinutes ? 'a' : a.durationMinutes > b.durationMinutes ? 'b' : 'par';
+    const tokLead: 'a' | 'b' | 'par' =
+      a.tokens.total < b.tokens.total ? 'a' : a.tokens.total > b.tokens.total ? 'b' : 'par';
+    const peakLead: 'a' | 'b' | 'par' =
+      a.peakContextTokens && b.peakContextTokens
+        ? a.peakContextTokens < b.peakContextTokens
+          ? 'a'
+          : a.peakContextTokens > b.peakContextTokens
+            ? 'b'
+            : 'par'
+        : 'par';
+    const callLead: 'a' | 'b' | 'par' =
+      a.llmCalls < b.llmCalls ? 'a' : a.llmCalls > b.llmCalls ? 'b' : 'par';
 
-    // Populate Telemetry Table across all variants
-    {
-      const rowsHtml = [
-        {
-          label: 'Holdout Spec Verification (S1–S7)',
-          valA: `<strong>${a.planCompleted}/${a.planTotal}</strong> (${Math.round(a.planRatio * 100)}%)${a.isPareto ? ' <span class="hl hl-acid">PARETO</span>' : ''}`,
-          valB: `<strong>${b.planCompleted}/${b.planTotal}</strong> (${Math.round(b.planRatio * 100)}%)${b.isPareto ? ' <span class="hl hl-acid">PARETO</span>' : ''}`,
-          delta:
-            a.planCompleted === b.planCompleted
-              ? 'Par (0 slice diff)'
-              : a.planCompleted > b.planCompleted
-                ? `<span class="delta-better">+${a.planCompleted - b.planCompleted} slices (Run A)</span>`
-                : `<span class="delta-worse">${a.planCompleted - b.planCompleted} slices (Run A)</span>`,
-        },
-        {
-          label: 'Billed Cost (Actual USD)',
-          valA: `<strong>${usd.format(a.costUsd)}</strong>`,
-          valB: `<strong>${usd.format(b.costUsd)}</strong>`,
-          delta:
-            a.costUsd === b.costUsd
-              ? 'Par ($0.00)'
-              : a.costUsd < b.costUsd
-                ? `<span class="delta-better">-${usd.format(b.costUsd - a.costUsd)} cheaper (Run A)</span>`
-                : `<span class="delta-worse">+${usd.format(a.costUsd - b.costUsd)} pricier (Run A)</span>`,
-        },
-        {
-          label: 'Standard API Equivalent Cost',
-          valA: usd.format(a.standardApiCostUsd),
-          valB: usd.format(b.standardApiCostUsd),
-          delta:
-            a.standardApiCostUsd <= b.standardApiCostUsd
-              ? `<span class="delta-better">-${usd.format(b.standardApiCostUsd - a.standardApiCostUsd)}</span>`
-              : `<span class="delta-worse">+${usd.format(a.standardApiCostUsd - b.standardApiCostUsd)}</span>`,
-        },
-        {
-          label: 'Uncached Counterfactual (0% Cache)',
-          valA: `${usd.format(a.uncachedCostUsd)} <span class="text-muted">(-${usd.format(a.cacheSavingsUsd)} saved)</span>`,
-          valB: `${usd.format(b.uncachedCostUsd)} <span class="text-muted">(-${usd.format(b.cacheSavingsUsd)} saved)</span>`,
-          delta: `Cache discount: ${a.cacheSavingsPct}% vs ${b.cacheSavingsPct}%`,
-        },
-        {
-          label: 'Active Wall-Clock Duration',
-          valA: fmtDur(a.durationMinutes),
-          valB: fmtDur(b.durationMinutes),
-          delta:
-            a.durationMinutes === b.durationMinutes
-              ? 'Par (0m)'
-              : a.durationMinutes < b.durationMinutes
-                ? `<span class="delta-better">-${b.durationMinutes - a.durationMinutes}m faster (Run A)</span>`
-                : `<span class="delta-worse">+${a.durationMinutes - b.durationMinutes}m slower (Run A)</span>`,
-        },
-        {
-          label: 'Total Tokens (Exact Integer)',
-          valA: `${a.tokens.total.toLocaleString('en-US')} <span class="text-muted">(${fmtCompact(a.tokens.total)})</span>`,
-          valB: `${b.tokens.total.toLocaleString('en-US')} <span class="text-muted">(${fmtCompact(b.tokens.total)})</span>`,
-          delta:
-            a.tokens.total <= b.tokens.total
-              ? `<span class="delta-better">-${fmtCompact(b.tokens.total - a.tokens.total)} tok</span>`
-              : `<span class="delta-worse">+${fmtCompact(a.tokens.total - b.tokens.total)} tok</span>`,
-        },
-        {
-          label: 'Uncached Input / Cached Input',
-          valA: `${a.tokens.uncachedInput.toLocaleString('en-US')} in / ${a.tokens.cachedInput.toLocaleString('en-US')} cached (${a.tokens.cacheHitRatePct}%)`,
-          valB: `${b.tokens.uncachedInput.toLocaleString('en-US')} in / ${b.tokens.cachedInput.toLocaleString('en-US')} cached (${b.tokens.cacheHitRatePct}%)`,
-          delta: `Cache hit: ${(a.tokens.cacheHitRatePct - b.tokens.cacheHitRatePct).toFixed(2)}%pt`,
-        },
-        {
-          label: 'Output & Reasoning (Thinking) Tokens',
-          valA: `${a.tokens.output.toLocaleString('en-US')} out (${a.tokens.thinking.toLocaleString('en-US')} thinking)`,
-          valB: `${b.tokens.output.toLocaleString('en-US')} out (${b.tokens.thinking.toLocaleString('en-US')} thinking)`,
-          delta: `Thinking delta: ${(a.tokens.thinking - b.tokens.thinking).toLocaleString('en-US')} tok`,
-        },
-        {
-          label: 'Peak Context Window',
-          valA: a.peakContextTokens ? `${a.peakContextTokens.toLocaleString('en-US')} tok` : a.contextWindowStr,
-          valB: b.peakContextTokens ? `${b.peakContextTokens.toLocaleString('en-US')} tok` : b.contextWindowStr,
-          delta:
-            a.peakContextTokens && b.peakContextTokens
-              ? a.peakContextTokens <= b.peakContextTokens
-                ? `<span class="delta-better">-${(b.peakContextTokens - a.peakContextTokens).toLocaleString('en-US')} peak tok</span>`
-                : `<span class="delta-worse">+${(a.peakContextTokens - b.peakContextTokens).toLocaleString('en-US')} peak tok</span>`
-              : '—',
-        },
-        {
-          label: 'LLM Calls & Tool Precision',
-          valA: `${a.llmCalls} LLM · ${a.toolTotalCalls} tool (${a.toolSuccessRatePct ?? 100}% ok, ${a.toolErrorCalls} err)`,
-          valB: `${b.llmCalls} LLM · ${b.toolTotalCalls} tool (${b.toolSuccessRatePct ?? 100}% ok, ${b.toolErrorCalls} err)`,
-          delta: `${a.llmCalls - b.llmCalls >= 0 ? '+' : ''}${a.llmCalls - b.llmCalls} LLM calls · ${a.toolErrorCalls - b.toolErrorCalls >= 0 ? '+' : ''}${a.toolErrorCalls - b.toolErrorCalls} errors`,
-        },
-        {
-          label: 'Task Polling Overhead (manage_task)',
-          valA:
-            a.pollingCalls > 0
-              ? `${a.pollingCalls} polls (${a.pollingSharePct}% of turns · ~${usd.format(a.estimatedPollingWasteUsd)})`
-              : '0 polls (0% waste)',
-          valB:
-            b.pollingCalls > 0
-              ? `${b.pollingCalls} polls (${b.pollingSharePct}% of turns · ~${usd.format(b.estimatedPollingWasteUsd)})`
-              : '0 polls (0% waste)',
-          delta: `${a.pollingCalls - b.pollingCalls} poll turns`,
-        },
-        {
-          label: 'Agent Self-Test Suite (ExUnit)',
-          valA:
-            a.testsPassed !== null
-              ? `${a.testsPassed}/${a.testsTotal} passed${a.testsDurationSec ? ` (${a.testsDurationSec}s)` : ''}`
-              : '—',
-          valB:
-            b.testsPassed !== null
-              ? `${b.testsPassed}/${b.testsTotal} passed${b.testsDurationSec ? ` (${b.testsDurationSec}s)` : ''}`
-              : '—',
-          delta:
-            a.testsPassed !== null && b.testsPassed !== null
-              ? `${a.testsPassed - b.testsPassed >= 0 ? '+' : ''}${a.testsPassed - b.testsPassed} agent tests`
-              : '—',
-        },
-      ];
+    // 1. Core 6 Metrics (Single-line per cell, zero duplication)
+    const coreRows = [
+      {
+        label: 'Holdout Spec (S1–S7)',
+        valA: `${a.planCompleted}/${a.planTotal} (${Math.round(a.planRatio * 100)}%)`,
+        valB: `${b.planCompleted}/${b.planTotal} (${Math.round(b.planRatio * 100)}%)`,
+        lead: specLead,
+        deltaHtml:
+          specLead === 'par'
+            ? fmtDeltaCell('par', 'Same completion')
+            : specLead === 'a'
+              ? fmtDeltaCell('a', `+${a.planCompleted - b.planCompleted} stages`)
+              : fmtDeltaCell('b', `+${b.planCompleted - a.planCompleted} stages`),
+      },
+      {
+        label: 'Billed API Cost',
+        valA: usd.format(a.costUsd),
+        valB: usd.format(b.costUsd),
+        lead: costLead,
+        deltaHtml:
+          costLead === 'par'
+            ? fmtDeltaCell('par', '$0.00')
+            : costLead === 'a'
+              ? fmtDeltaCell('a', `-${usd.format(b.costUsd - a.costUsd)} (-${pct}%)`)
+              : fmtDeltaCell('b', `-${usd.format(a.costUsd - b.costUsd)}`),
+      },
+      {
+        label: 'Wall-Clock Duration',
+        valA: fmtDur(a.durationMinutes),
+        valB: fmtDur(b.durationMinutes),
+        lead: durLead,
+        deltaHtml:
+          durLead === 'par'
+            ? fmtDeltaCell('par', '0m diff')
+            : durLead === 'a'
+              ? fmtDeltaCell('a', `-${fmtDur(b.durationMinutes - a.durationMinutes)} faster`)
+              : fmtDeltaCell('b', `-${fmtDur(a.durationMinutes - b.durationMinutes)} faster`),
+      },
+      {
+        label: 'Total Token Volume',
+        valA: fmtCompact(a.tokens.total),
+        valB: fmtCompact(b.tokens.total),
+        lead: tokLead,
+        deltaHtml:
+          tokLead === 'par'
+            ? fmtDeltaCell('par', '0 tok')
+            : tokLead === 'a'
+              ? fmtDeltaCell('a', `-${fmtCompact(b.tokens.total - a.tokens.total)} (-${tokPct}%)`)
+              : fmtDeltaCell('b', `-${fmtCompact(a.tokens.total - b.tokens.total)}`),
+      },
+      {
+        label: 'Peak Context Window',
+        valA: a.peakContextTokens ? fmtCompact(a.peakContextTokens) : a.contextWindowStr,
+        valB: b.peakContextTokens ? fmtCompact(b.peakContextTokens) : b.contextWindowStr,
+        lead: peakLead,
+        deltaHtml:
+          a.peakContextTokens && b.peakContextTokens
+            ? peakLead === 'par'
+              ? fmtDeltaCell('par', '0 tok')
+              : peakLead === 'a'
+                ? fmtDeltaCell('a', `-${fmtCompact(b.peakContextTokens - a.peakContextTokens)} lower`)
+                : fmtDeltaCell('b', `-${fmtCompact(a.peakContextTokens - b.peakContextTokens)} lower`)
+            : fmtDeltaCell('info', '—'),
+      },
+      {
+        label: 'LLM Turns & ExUnit Suite',
+        valA: `${a.llmCalls} turns${a.testsPassed !== null ? ` <span class="cell-inline-muted">· ${a.testsPassed}/${a.testsTotal} tests</span>` : ''}`,
+        valB: `${b.llmCalls} turns${b.testsPassed !== null ? ` <span class="cell-inline-muted">· ${b.testsPassed}/${b.testsTotal} tests</span>` : ''}`,
+        lead: callLead,
+        deltaHtml:
+          callLead === 'par'
+            ? fmtDeltaCell('par', '0 turn diff')
+            : callLead === 'a'
+              ? fmtDeltaCell('a', `-${b.llmCalls - a.llmCalls} fewer turns`)
+              : fmtDeltaCell('b', `-${a.llmCalls - b.llmCalls} fewer turns`),
+      },
+    ];
 
-      const telemetryMarkup = rowsHtml
-        .map(
-          (r) => `
+    const coreMarkup = [
+      `<tr class="compare-group-row"><th colspan="4" scope="colgroup">Core Run Summary</th></tr>`,
+      ...coreRows.map(
+        (r) => `
         <tr>
-          <th scope="row" data-cell="Metric"><strong>${r.label}</strong></th>
-          <td class="mono" data-cell="Run A">${r.valA}</td>
-          <td class="mono" data-cell="Run B">${r.valB}</td>
-          <td class="mono" data-cell="Delta">${r.delta}</td>
+          <th scope="row"><strong>${r.label}</strong></th>
+          <td class="mono" data-cell="Run A"><span class="cell-primary ${r.lead === 'a' ? 'is-lead' : ''}">${r.valA}</span></td>
+          <td class="mono" data-cell="Run B"><span class="cell-primary ${r.lead === 'b' ? 'is-lead' : ''}">${r.valB}</span></td>
+          <td class="mono" data-cell="Delta">${r.deltaHtml}</td>
         </tr>
       `
-        )
-        .join('');
-      for (const tbody of qAll('[id="telemetry-diff-tbody"]')) {
-        tbody.innerHTML = telemetryMarkup;
-      }
+      ),
+    ].join('');
+
+    for (const tbody of qAll('[id="telemetry-diff-tbody"]')) {
+      tbody.innerHTML = coreMarkup;
     }
 
-    // Populate Stage-by-Stage Table across all variants
+    // 2. Stage-by-Stage S1-S7 Rows (Integrated into the same table)
     {
       const maxStageCost = Math.max(
         0.01,
@@ -930,41 +1009,90 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
         ])
       );
 
-      const stageMarkup = stagesList
+      let sumCallsA = 0;
+      let sumCallsB = 0;
+      let sumCostA = 0;
+      let sumCostB = 0;
+      let hasAnySliceA = false;
+      let hasAnySliceB = false;
+
+      const stageRowsMarkup = stagesList
         .map((st) => {
           const sA = a.stages[st.id];
           const sB = b.stages[st.id];
+          const hasA = Boolean(sA && sA.llmCalls > 0);
+          const hasB = Boolean(sB && sB.llmCalls > 0);
+
+          if (hasA && sA) {
+            hasAnySliceA = true;
+            sumCallsA += sA.llmCalls;
+            sumCostA += sA.costUsd;
+          }
+          if (hasB && sB) {
+            hasAnySliceB = true;
+            sumCallsB += sB.llmCalls;
+            sumCostB += sB.costUsd;
+          }
+
           const wA = Math.min(100, ((sA?.costUsd ?? 0) / maxStageCost) * 100).toFixed(1);
           const wB = Math.min(100, ((sB?.costUsd ?? 0) / maxStageCost) * 100).toFixed(1);
-          const badgeA = sA?.completed
-            ? `<span class="hl hl-mint">PASS</span>`
-            : `<span class="hl hl-magenta">MISS</span>`;
-          const badgeB = sB?.completed
-            ? `<span class="hl hl-mint">PASS</span>`
-            : `<span class="hl hl-magenta">MISS</span>`;
+
+          const solePassA = Boolean(sA?.completed && !sB?.completed);
+          const solePassB = Boolean(sB?.completed && !sA?.completed);
+          const missA = !sA?.completed ? `<span class="stage-miss-tag">MISS</span>` : '';
+          const missB = !sB?.completed ? `<span class="stage-miss-tag">MISS</span>` : '';
+
+          const leadCostA = hasA && hasB && sA && sB && sA.costUsd < sB.costUsd;
+          const leadCostB = hasA && hasB && sA && sB && sB.costUsd < sA.costUsd;
 
           const cellAText =
-            sA && sA.llmCalls > 0
-              ? `${badgeA} ${sA.llmCalls} calls · ${sA.thinkingTokens.toLocaleString('en-US')} think · <strong>${usd.format(sA.costUsd)}</strong>
+            hasA && sA
+              ? `<div class="stage-cell-line">
+                   ${missA}
+                   <span class="stage-cost ${leadCostA ? 'is-lead' : ''}">${usd.format(sA.costUsd)}</span>
+                   <span class="stage-inline-meta">· ${sA.llmCalls} turns</span>
+                 </div>
                  <div class="stage-compare-bar-track" aria-hidden="true"><span class="stage-compare-bar-fill-a" style="inline-size:${wA}%"></span></div>`
-              : `${badgeA} <span class="text-muted">Per-slice n/a</span>`;
+              : `<div class="stage-cell-line">
+                   ${missA}
+                   <span class="delta-neutral">${sA?.completed ? 'Passed (no slice log)' : 'Missed'}</span>
+                 </div>`;
 
           const cellBText =
-            sB && sB.llmCalls > 0
-              ? `${badgeB} ${sB.llmCalls} calls · ${sB.thinkingTokens.toLocaleString('en-US')} think · <strong>${usd.format(sB.costUsd)}</strong>
+            hasB && sB
+              ? `<div class="stage-cell-line">
+                   ${missB}
+                   <span class="stage-cost ${leadCostB ? 'is-lead' : ''}">${usd.format(sB.costUsd)}</span>
+                   <span class="stage-inline-meta">· ${sB.llmCalls} turns</span>
+                 </div>
                  <div class="stage-compare-bar-track" aria-hidden="true"><span class="stage-compare-bar-fill-b" style="inline-size:${wB}%"></span></div>`
-              : `${badgeB} <span class="text-muted">Per-slice n/a</span>`;
+              : `<div class="stage-cell-line">
+                   ${missB}
+                   <span class="delta-neutral">${sB?.completed ? 'Passed (no slice log)' : 'Missed'}</span>
+                 </div>`;
 
-          const callDiff = (sA?.llmCalls ?? 0) - (sB?.llmCalls ?? 0);
-          const costDiff = (sA?.costUsd ?? 0) - (sB?.costUsd ?? 0);
-          const deltaStr =
-            sA && sB && (sA.llmCalls > 0 || sB.llmCalls > 0)
-              ? `${callDiff >= 0 ? '+' : ''}${callDiff} calls · ${costDiff <= 0 ? `<span class="delta-better">${usd.format(costDiff)}</span>` : `<span class="delta-worse">+${usd.format(costDiff)}</span>`}`
-              : '—';
+          let deltaStr = '<span class="delta-neutral">—</span>';
+          if (solePassA || solePassB) {
+            const passWin: 'a' | 'b' = solePassA ? 'a' : 'b';
+            deltaStr = fmtDeltaCell(passWin, solePassA ? 'A passed (B missed)' : 'B passed (A missed)');
+          } else if (hasA && hasB && sA && sB) {
+            const callDiff = sA.llmCalls - sB.llmCalls;
+            const costDiff = sA.costUsd - sB.costUsd;
+            const stWinner: 'a' | 'b' | 'par' =
+              Math.abs(costDiff) < 0.005 ? 'par' : costDiff < 0 ? 'a' : 'b';
+            deltaStr = fmtDeltaCell(
+              stWinner,
+              stWinner === 'par'
+                ? `Par (${callDiff >= 0 ? '+' : ''}${callDiff}t)`
+                : `-${usd.format(Math.abs(costDiff))} (${callDiff >= 0 ? '+' : ''}${callDiff}t)`
+            );
+          } else if (sA?.completed && sB?.completed) {
+            deltaStr = `<span class="delta-neutral">Both passed</span>`;
+          }
 
           return `
             <tr>
-              <th scope="row" data-cell="Stage">
+              <th scope="row">
                 <strong>${st.id}: ${st.title}</strong>
               </th>
               <td class="mono" data-cell="Run A">${cellAText}</td>
@@ -974,12 +1102,129 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
           `;
         })
         .join('');
+
       for (const tbody of qAll('[id="stage-diff-tbody"]')) {
-        tbody.innerHTML = stageMarkup;
+        tbody.innerHTML = `<tr class="compare-group-row"><th colspan="4" scope="colgroup">S1–S7 Stage Breakdown</th></tr>${stageRowsMarkup}`;
+      }
+
+      const footWinner: 'a' | 'b' | 'par' =
+        hasAnySliceA && hasAnySliceB
+          ? Math.abs(sumCostA - sumCostB) < 0.005
+            ? 'par'
+            : sumCostA < sumCostB
+              ? 'a'
+              : 'b'
+          : 'par';
+
+      const footCallDiff = sumCallsA - sumCallsB;
+      const footMarkup = `
+        <tr>
+          <th scope="row"><strong>S1–S7 Total</strong></th>
+          <td class="mono" data-cell="Run A">
+            ${
+              hasAnySliceA
+                ? `<span class="cell-primary ${footWinner === 'a' ? 'is-lead' : ''}">${usd.format(sumCostA)}</span> <span class="cell-inline-muted">· ${sumCallsA} turns</span>`
+                : `<span class="delta-neutral">${usd.format(a.costUsd)} (${a.llmCalls} turns)</span>`
+            }
+          </td>
+          <td class="mono" data-cell="Run B">
+            ${
+              hasAnySliceB
+                ? `<span class="cell-primary ${footWinner === 'b' ? 'is-lead' : ''}">${usd.format(sumCostB)}</span> <span class="cell-inline-muted">· ${sumCallsB} turns</span>`
+                : `<span class="delta-neutral">${usd.format(b.costUsd)} (${b.llmCalls} turns)</span>`
+            }
+          </td>
+          <td class="mono" data-cell="Stage Delta">
+            ${
+              hasAnySliceA && hasAnySliceB
+                ? fmtDeltaCell(
+                    footWinner,
+                    footWinner === 'par'
+                      ? '$0.00'
+                      : `-${usd.format(Math.abs(sumCostA - sumCostB))} (${footCallDiff >= 0 ? '+' : ''}${footCallDiff}t)`
+                  )
+                : `<span class="delta-neutral">Diff: ${usd.format(Math.abs(a.costUsd - b.costUsd))}</span>`
+            }
+          </td>
+        </tr>
+      `;
+      for (const tfoot of qAll('[id="stage-diff-tfoot"]')) {
+        tfoot.innerHTML = footMarkup;
       }
     }
 
-    // Sync URL search params
+    // 3. Populate Collapsible Deep Accounting Drawer
+    {
+      const stdCostLead: 'a' | 'b' | 'par' =
+        Math.abs(a.standardApiCostUsd - b.standardApiCostUsd) < 0.005
+          ? 'par'
+          : a.standardApiCostUsd < b.standardApiCostUsd
+            ? 'a'
+            : 'b';
+      const deepRows = [
+        {
+          label: 'Standard API Equivalent Cost',
+          valA: usd.format(a.standardApiCostUsd),
+          valB: usd.format(b.standardApiCostUsd),
+          delta:
+            stdCostLead === 'par'
+              ? fmtDeltaCell('par', '$0.00')
+              : fmtDeltaCell(
+                  stdCostLead,
+                  `-${usd.format(Math.abs(a.standardApiCostUsd - b.standardApiCostUsd))}`
+                ),
+        },
+        {
+          label: 'Uncached Counterfactual (0% Cache)',
+          valA: `${usd.format(a.uncachedCostUsd)} <span class="cell-inline-muted">(-${usd.format(a.cacheSavingsUsd)} saved)</span>`,
+          valB: `${usd.format(b.uncachedCostUsd)} <span class="cell-inline-muted">(-${usd.format(b.cacheSavingsUsd)} saved)</span>`,
+          delta: fmtDeltaCell('info', `Discount: ${a.cacheSavingsPct}% vs ${b.cacheSavingsPct}%`),
+        },
+        {
+          label: 'Prefix Cache Hit Rate',
+          valA: `${a.tokens.cacheHitRatePct}% <span class="cell-inline-muted">(${fmtCompact(a.tokens.uncachedInput)} uncached)</span>`,
+          valB: `${b.tokens.cacheHitRatePct}% <span class="cell-inline-muted">(${fmtCompact(b.tokens.uncachedInput)} uncached)</span>`,
+          delta: fmtDeltaCell(
+            'info',
+            `${a.tokens.cacheHitRatePct >= b.tokens.cacheHitRatePct ? '+' : ''}${(a.tokens.cacheHitRatePct - b.tokens.cacheHitRatePct).toFixed(2)}%pt`
+          ),
+        },
+        {
+          label: 'Output & Reasoning Tokens',
+          valA: `${fmtCompact(a.tokens.output)} out <span class="cell-inline-muted">(${fmtCompact(a.tokens.thinking)} think)</span>`,
+          valB: `${fmtCompact(b.tokens.output)} out <span class="cell-inline-muted">(${fmtCompact(b.tokens.thinking)} think)</span>`,
+          delta: fmtDeltaCell(
+            'info',
+            `${a.tokens.thinking >= b.tokens.thinking ? '+' : ''}${fmtCompact(a.tokens.thinking - b.tokens.thinking)} think`
+          ),
+        },
+        {
+          label: 'Tool Errors & Task Polling',
+          valA: `${a.toolErrorCalls} err · ${a.pollingCalls} polls`,
+          valB: `${b.toolErrorCalls} err · ${b.pollingCalls} polls`,
+          delta: fmtDeltaCell(
+            'info',
+            `${a.toolErrorCalls - b.toolErrorCalls >= 0 ? '+' : ''}${a.toolErrorCalls - b.toolErrorCalls} err · ${a.pollingCalls - b.pollingCalls >= 0 ? '+' : ''}${a.pollingCalls - b.pollingCalls} polls`
+          ),
+        },
+      ];
+
+      for (const tbody of qAll('[id="deep-accounting-tbody"]')) {
+        tbody.innerHTML = deepRows
+          .map(
+            (r) => `
+            <tr>
+              <th scope="row" class="col-metric"><strong>${r.label}</strong></th>
+              <td class="mono col-run-a" data-cell="Run A">${r.valA}</td>
+              <td class="mono col-run-b" data-cell="Run B">${r.valB}</td>
+              <td class="mono col-delta" data-cell="Delta">${r.delta}</td>
+            </tr>
+          `
+          )
+          .join('');
+      }
+    }
+
     try {
       const params = new URLSearchParams(window.location.search);
       params.set('a', a.id);
@@ -991,7 +1236,6 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     } catch {}
   }
 
-  // Hydrate from URL params if present
   try {
     const params = new URLSearchParams(window.location.search);
     const paramPreset = params.get('preset');
@@ -1049,5 +1293,4 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       }
     }
   });
-
 </script>

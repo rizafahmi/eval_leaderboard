@@ -52,8 +52,25 @@ const enrichedRuns = analyzedRuns.map((run) => {
     testsRatio,
     testsPassed,
     timeMs,
+    leadNotes: [
+      ...(d.notes ?? []),
+      ...(d.notesDetails ?? []).flatMap((n) => n.bullets ?? []),
+    ]
+      .slice(0, 2)
+      .map((b) => (b.length > 220 ? `${b.slice(0, 217)}...` : b)),
+    shortDate: new Date(d.timestamp).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }),
+    peakCtxCompact: run.context.peakTokens
+      ? `${Math.round(run.context.peakTokens / 1000)}k peak`
+      : compactContext,
   };
 });
+
+const underOneDollarCount = enrichedRuns.filter((r) => r.data.costUsd < 1.0).length;
+const specMissCount = enrichedRuns.filter((r) => r.plan.ratio < 1).length;
 
 const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort((a, b) =>
   formatHarnessName(a).localeCompare(formatHarnessName(b), undefined, { sensitivity: 'base' })
@@ -65,9 +82,7 @@ const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort((a
 const durations = enrichedRuns.map((r) => r.data.durationMinutes);
 const costs = enrichedRuns.map((r) => r.data.costUsd);
 const fastestMin = durations.length > 0 ? Math.min(...durations) : 0;
-const slowestMin = durations.length > 0 ? Math.max(...durations) : 0;
 const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
-const highestCost = costs.length > 0 ? Math.max(...costs) : 0;
 const fullPassRuns = enrichedRuns.filter((r) => r.plan.ratio === 1);
 const fullPassCount = fullPassRuns.length;
 const paretoFrontierRuns = fullPassRuns
@@ -92,17 +107,14 @@ const totalCacheSavingsUsd = enrichedRuns.reduce(
   (sum, r) => sum + r.telemetry.costMetrics.cacheSavingsUsd,
   0
 );
-const topCacheSaver = [...enrichedRuns].sort(
-  (a, b) => b.telemetry.costMetrics.cacheSavingsUsd - a.telemetry.costMetrics.cacheSavingsUsd
-)[0];
 
 // SVG coordinates for the 7/7 Speed x Cost Pareto Frontier Plot
 const chartW = 680;
-const chartH = 260;
-const padL = 56;
-const padR = 28;
-const padT = 24;
-const padB = 42;
+const chartH = 250;
+const padL = 52;
+const padR = 24;
+const padT = 22;
+const padB = 38;
 const plotW = chartW - padL - padR;
 const plotH = chartH - padT - padB;
 
@@ -112,7 +124,6 @@ const maxPlotCost = Math.max(14, ...fullPassRuns.map((r) => r.data.costUsd));
 const toSvgX = (dur: number) => padL + (dur / maxPlotDur) * plotW;
 const toSvgY = (cost: number) => padT + plotH - (cost / maxPlotCost) * plotH;
 
-// Build stepped Pareto path from fastest (leftmost) to cheapest (bottommost)
 let paretoStepPath = '';
 if (paretoFrontierRuns.length > 0) {
   const pts = paretoFrontierRuns.map((r) => ({
@@ -130,1021 +141,1182 @@ if (paretoFrontierRuns.length > 0) {
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
   <div class="leaderboard-quiet lb-v1">
-  <!-- 01+02. SPLIT ARCHITECTURAL MASTHEAD & 2x2 TELEMETRY MATRIX -->
-  <div class="v1-masthead-grid">
-    <div class="v1-masthead-copy">
-      <section class="hero-box" aria-labelledby="hero-heading">
+    <!-- 01. COMPACT MASTHEAD & 4-METRIC STRIP -->
+    <header class="v1-masthead-bar">
+      <div class="v1-masthead-head">
         <h1 id="hero-heading" class="headline-two-tone">
           Capy Bench Leaderboard.{' '}
           <span class="muted">
-            Coding harnesses and models, ranked on real-world CLI engineering.
+            Coding harnesses &amp; models ranked on Outside-In TDD CLI engineering.
           </span>
         </h1>
-
-        <p class="hero-subtitle">
-          Each run challenges a coding harness and model to build a rate-paced HTTP/TLS benchmark CLI
-          from scratch using strict Outside-In TDD—verified against an external 7-slice holdout contract
-          and audited for exact token conservation, Pareto efficiency, and stage bottlenecks.
-        </p>
-      </section>
-    </div>
-
-    <dl class="hero-stats-grid v1-masthead-stats" aria-label="Benchmark summary statistics">
-      <div class="card stat-card">
-        <dt class="section-kicker">HOLDOUT SPEC PASS RATE</dt>
-        <dd class="stat-value">
-          {fullPassCount}/{enrichedRuns.length}
-        </dd>
-        <dd class="stat-meta">
-          {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% passed 7/7 slices ·{' '}
-          <a href="#pareto-section" class="stat-leader-link">
-            {paretoFrontierRuns.length} on Pareto frontier ↓
-          </a>
-        </dd>
       </div>
 
-      <div class="card stat-card">
-        <dt class="section-kicker">LOWEST 7/7 COST</dt>
-        <dd class="stat-value">
-          {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
-        </dd>
-        <dd class="stat-meta">
-          {lowestCostLeader ? (
-            <>
+      <dl class="hero-stats-grid v1-kpi-strip" aria-label="Benchmark summary statistics">
+        <div class="stat-card">
+          <dt class="mono kpi-label">7/7 SPEC PASS RATE</dt>
+          <dd class="stat-value">
+            {fullPassCount}<span class="stat-denom">/{enrichedRuns.length}</span>
+          </dd>
+          <dd class="stat-meta">
+            {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% full pass · {paretoFrontierRuns.length} Pareto optimal
+          </dd>
+        </div>
+
+        <div class="stat-card">
+          <dt class="mono kpi-label">LOWEST 7/7 COST</dt>
+          <dd class="stat-value">
+            {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
+          </dd>
+          <dd class="stat-meta">
+            {lowestCostLeader ? (
               <a href={`/runs/${lowestCostLeader.id}`} class="stat-leader-link">
                 {formatHarnessName(lowestCostLeader.data.codingHarness)} / {lowestCostLeader.data.model}
               </a>
-              {' · '}range {formatCost(lowestCost)}–{formatCost(highestCost)}
-            </>
-          ) : (
-            `n=${enrichedRuns.length} runs · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
-          )}
-        </dd>
-      </div>
+            ) : (
+              `n=${enrichedRuns.length} runs`
+            )}
+          </dd>
+        </div>
 
-      <div class="card stat-card">
-        <dt class="section-kicker">FASTEST 7/7 RUN</dt>
-        <dd class="stat-value">
-          {fastestLeader
-            ? formatDuration(fastestLeader.data.durationMinutes)
-            : formatDuration(fastestMin)}
-        </dd>
-        <dd class="stat-meta">
-          {fastestLeader ? (
-            <>
+        <div class="stat-card">
+          <dt class="mono kpi-label">FASTEST 7/7 RUN</dt>
+          <dd class="stat-value">
+            {fastestLeader ? formatDuration(fastestLeader.data.durationMinutes) : formatDuration(fastestMin)}
+          </dd>
+          <dd class="stat-meta">
+            {fastestLeader ? (
               <a href={`/runs/${fastestLeader.id}`} class="stat-leader-link">
                 {formatHarnessName(fastestLeader.data.codingHarness)} / {fastestLeader.data.model}
               </a>
-              {' · '}range {formatDuration(fastestMin)}–{formatDuration(slowestMin)}
-            </>
-          ) : (
-            `n=${enrichedRuns.length} runs · range ${formatDuration(fastestMin)}–${formatDuration(slowestMin)}`
-          )}
-        </dd>
-      </div>
-
-      <div class="card stat-card">
-        <dt class="section-kicker">PROMPT CACHE SAVINGS</dt>
-        <dd class="stat-value">
-          {formatCost(totalCacheSavingsUsd)}
-        </dd>
-        <dd class="stat-meta">
-          {topCacheSaver ? (
-            <>
-              Saved vs. uncached · peak{' '}
-              <a href={`/runs/${topCacheSaver.id}`} class="stat-leader-link">
-                {formatCost(topCacheSaver.telemetry.costMetrics.cacheSavingsUsd)} ({topCacheSaver.telemetry.costMetrics.cacheSavingsPct}%)
-              </a>
-            </>
-          ) : (
-            `n=${enrichedRuns.length} runs`
-          )}
-        </dd>
-      </div>
-    </dl>
-  </div>
-
-  <!-- 03. SINGLE-DECK WORKBENCH FILTER BAR -->
-  <search class="controls-bar v1-command-deck" aria-label="Leaderboard filters and sorting">
-    <div class="v1-deck-top">
-      <div class="controls-search-col">
-        <div class="field-label-row">
-          <label class="field-label" for="search-input">Filter Playbook Runs</label>
-          <kbd class="menu-kbd" title="Press / to focus search" aria-hidden="true">/</kbd>
+            ) : (
+              `n=${enrichedRuns.length} runs`
+            )}
+          </dd>
         </div>
-        <div class="command-input-wrap">
-          <span class="command-input-prefix">/filter</span>
+
+        <div class="stat-card">
+          <dt class="mono kpi-label">PROMPT CACHE SAVED</dt>
+          <dd class="stat-value">
+            {formatCost(totalCacheSavingsUsd)}
+          </dd>
+          <dd class="stat-meta">
+            90–98% prefix cache discount
+          </dd>
+        </div>
+      </dl>
+    </header>
+
+    <!-- 02. SINGLE-ROW WORKBENCH TOOLBAR -->
+    <search class="controls-bar v1-toolbar" aria-label="Leaderboard filters and cost lens">
+      <div class="toolbar-left">
+        <div class="scenario-pills-group" role="group" aria-label="Quick filters">
+          <button type="button" class="scenario-pill is-active" data-scenario="all">
+            All <span class="scenario-count">{enrichedRuns.length}</span>
+          </button>
+          <button type="button" class="scenario-pill" data-scenario="pareto">
+            Pareto <span class="scenario-count">{paretoFrontierRuns.length}</span>
+          </button>
+          <button type="button" class="scenario-pill" data-scenario="full-pass">
+            7/7 <span class="scenario-count">{fullPassCount}</span>
+          </button>
+          <button type="button" class="scenario-pill" data-scenario="under-1">
+            &lt; $1 <span class="scenario-count">{underOneDollarCount}</span>
+          </button>
+          <button type="button" class="scenario-pill" data-scenario="spec-miss">
+            Misses <span class="scenario-count">{specMissCount}</span>
+          </button>
+        </div>
+
+        <div class="command-input-wrap toolbar-search">
+          <span class="command-input-prefix">/</span>
           <input
             id="search-input"
             name="q"
             type="search"
             class="input"
-            placeholder="Harness, model, provider, effort..."
+            placeholder="Filter harness or model..."
+            aria-label="Filter runs by harness, model, provider, or effort"
             autocomplete="off"
             autocorrect="off"
             autocapitalize="off"
             spellcheck="false"
           />
         </div>
-      </div>
 
-      <div class="control-field">
-        <label class="field-label" for="harness-filter">Harness</label>
-        <select id="harness-filter" name="harness" class="select control-select">
+        <select
+          id="harness-filter"
+          name="harness"
+          class="select toolbar-select"
+          aria-label="Filter by coding harness"
+        >
           <option value="all">All Harnesses</option>
           {harnesses.map((h) => <option value={h}>{formatHarnessName(h)}</option>)}
         </select>
+
+        <button
+          id="reset-filters-btn"
+          type="button"
+          class="btn btn-sm btn-secondary toolbar-reset-btn"
+          hidden
+        >
+          Reset
+        </button>
       </div>
 
-      <div class="control-field">
-        <label class="field-label" for="provider-filter">Provider</label>
-        <select id="provider-filter" name="provider" class="select control-select">
+      <div class="toolbar-right">
+        <div class="lens-segmented" role="group" aria-label="Cost pricing lens">
+          <span class="mono scenario-kicker">Cost:</span>
+          <button type="button" class="lens-seg-btn is-active" data-lens-btn="billed">
+            Billed
+          </button>
+          <button type="button" class="lens-seg-btn" data-lens-btn="standard">
+            API Rate
+          </button>
+          <button type="button" class="lens-seg-btn" data-lens-btn="uncached">
+            0% Cache
+          </button>
+        </div>
+
+        <span id="visible-count-badge" class="mono controls-result-count">
+          {enrichedRuns.length} runs
+        </span>
+      </div>
+
+      <!-- Hidden state controls preserved for URL query sync & keyboard/header sorting -->
+      <div hidden>
+        <select id="provider-filter" name="provider">
           <option value="all">All Providers</option>
           {providers.map((p) => <option value={p}>{formatProviderName(p)}</option>)}
         </select>
-      </div>
-
-      <div class="control-field">
-        <label class="field-label" for="pricing-lens-select">Pricing Lens</label>
-        <select id="pricing-lens-select" name="lens" class="select control-select">
+        <select id="pricing-lens-select" name="lens">
           <option value="billed" selected>Billed Cost (Actual USD)</option>
           <option value="standard">Standard API Rate USD</option>
           <option value="uncached">Uncached Counterfactual (0% Cache)</option>
         </select>
+        <select id="sort-select" name="sort">
+          <option value="plan" selected>Holdout Spec Completion (S1–S7)</option>
+          <option value="duration">Duration (Time Elapsed)</option>
+          <option value="cost">Cost (Selected Lens $)</option>
+          <option value="tokens">Total Tokens (Exact Int)</option>
+          <option value="tests">Agent Self-Tests Passed</option>
+          <option value="timestamp">Run Date</option>
+        </select>
+        <button id="sort-dir-btn" type="button" data-dir="desc">DESC</button>
+        <input id="full-pass-toggle" type="checkbox" />
+        <input id="pareto-only-toggle" type="checkbox" />
       </div>
 
-      <div class="control-field">
-        <label class="field-label" for="sort-select">Sort Metric</label>
-        <div class="sort-control-pair">
-          <select id="sort-select" name="sort" class="select control-select">
-            <option value="plan" selected>Holdout Spec Completion (S1–S7)</option>
-            <option value="duration">Duration (Time Elapsed)</option>
-            <option value="cost">Cost (Selected Lens $)</option>
-            <option value="tokens">Total Tokens (Exact Int)</option>
-            <option value="tests">Agent Self-Tests Passed</option>
-            <option value="timestamp">Run Date</option>
-          </select>
-          <button
-            id="sort-dir-btn"
-            type="button"
-            class="btn btn-sm btn-secondary sort-dir-btn"
-            data-dir="desc"
-            aria-label="Sort direction: descending. Activate to switch to ascending"
-          >
-            <span aria-hidden="true">↓</span> DESC
+      <div
+        id="leaderboard-status"
+        class="visually-hidden"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      ></div>
+    </search>
+
+    <!-- 03. CALM LEADERBOARD DATA TABLE -->
+    <div class="v1-table-ledger">
+      <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
+        <table class="app-table leaderboard-table" id="leaderboard-table">
+          <caption id="leaderboard-caption" class="visually-hidden">
+            Capy Bench evaluation runs ranked by holdout spec completion, agent test suite, duration,
+            exact token usage, and API cost
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-rank">#</th>
+              <th scope="col">Model &amp; Coding Harness</th>
+              <th scope="col" class="sortable active-sort" data-sort-col="plan" aria-sort="descending">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by S1–S7 external holdout spec completion ratio"
+                >
+                  <span>Spec (S1–S7)</span>
+                  <span class="sort-indicator" aria-hidden="true">↓</span>
+                </button>
+              </th>
+              <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by agent-authored ExUnit test suite pass ratio"
+                >
+                  <span>Agent Tests</span>
+                  <span class="sort-indicator" aria-hidden="true"></span>
+                </button>
+              </th>
+              <th scope="col" class="sortable" data-sort-col="duration" aria-sort="none">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by active wall-clock run duration"
+                >
+                  <span>Duration</span>
+                  <span class="sort-indicator" aria-hidden="true"></span>
+                </button>
+              </th>
+              <th scope="col" class="sortable" data-sort-col="tokens" aria-sort="none">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by exact total token volume"
+                >
+                  <span>Tokens</span>
+                  <span class="sort-indicator" aria-hidden="true"></span>
+                </button>
+              </th>
+              <th scope="col" class="sortable" data-sort-col="cost" aria-sort="none">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by cost in USD under the active pricing lens"
+                >
+                  <span id="cost-col-header-label">Cost (Billed)</span>
+                  <span class="sort-indicator" aria-hidden="true"></span>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-tbody">
+            {
+              enrichedRuns.map((run, index) => {
+                const { data, plan, telemetry } = run;
+                const rank = index + 1;
+                const hasTokens =
+                  data.tokens && (data.tokens.input || data.tokens.output || data.tokens.cacheHitRate);
+                const vtName = `run-${run.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+                const incompleteStages = plan.entries
+                  .filter(([, done]) => !done)
+                  .map(([stageId]) => stageId);
+
+                const displayHarness = telemetry.displayHarness;
+                const displayProvider = telemetry.displayProvider;
+                const billedCost = data.costUsd;
+                const standardCost = telemetry.costMetrics.standardApiCostUsd;
+                const uncachedCost = telemetry.costMetrics.uncachedCounterfactualCostUsd;
+                const cacheSavings = telemetry.costMetrics.cacheSavingsUsd;
+
+                const maxRowStageCost = Math.max(
+                  0.01,
+                  ...BENCHMARK_STAGES.map(
+                    (st) => telemetry.stages[st.id as keyof typeof telemetry.stages]?.costUsd ?? 0
+                  )
+                );
+                const hasPerSlice = BENCHMARK_STAGES.some(
+                  (st) => (telemetry.stages[st.id as keyof typeof telemetry.stages]?.llmCalls ?? 0) > 0
+                );
+
+                return (
+                  <>
+                    <tr
+                      class="run-row"
+                      style={`--vt-name: ${vtName};`}
+                      data-run-id={run.id}
+                      data-run-label={`${displayHarness} / ${data.model}`}
+                      data-href={`/runs/${run.id}`}
+                      data-harness={data.codingHarness}
+                      data-provider={data.provider}
+                      data-search={`${data.codingHarness} ${displayHarness} ${data.model} ${data.provider} ${displayProvider} ${data.effort ?? ''} ${telemetry.isParetoFrontier ? 'pareto frontier' : ''}`.toLowerCase()}
+                      data-plan={plan.ratio}
+                      data-plan-str={`${plan.completed}/${plan.total}`}
+                      data-pareto={telemetry.isParetoFrontier ? '1' : '0'}
+                      data-duration={data.durationMinutes}
+                      data-duration-str={formatDuration(data.durationMinutes)}
+                      data-cost={billedCost}
+                      data-cost-str={formatCost(billedCost)}
+                      data-cost-billed={billedCost}
+                      data-cost-standard={standardCost}
+                      data-cost-uncached={uncachedCost}
+                      data-cache-savings={cacheSavings}
+                      data-tokens={run.totalTokens}
+                      data-tokens-str={data.tokens?.total ?? '—'}
+                      data-tests={run.testsRatio}
+                      data-tests-passed={run.testsPassed}
+                      data-timestamp={run.timeMs}
+                    >
+                      <td data-cell="Rank">
+                        <span
+                          class:list={[
+                            'rank-badge',
+                            { 'rank-1': rank === 1, 'rank-2': rank === 2, 'rank-3': rank === 3 },
+                          ]}
+                        >
+                          #{rank}
+                        </span>
+                      </td>
+
+                      <th scope="row" data-cell="Model & Harness">
+                        <div class="cell-stack">
+                          <div class="entry-title-row">
+                            <a href={`/runs/${run.id}`} class="entry-title-link">
+                              <span class="entry-model">{data.model}</span>
+                            </a>
+                            {telemetry.isParetoFrontier && (
+                              <span
+                                class="pareto-inline-badge"
+                                title={`Pareto Frontier #${telemetry.paretoOrder}: non-dominated on 7/7 speed (${formatDuration(data.durationMinutes)}) and cost (${formatCost(billedCost)})`}
+                              >
+                                PARETO
+                              </span>
+                            )}
+                          </div>
+                          <div class="entry-meta">
+                            <span class="entry-meta-harness">{displayHarness}</span>
+                            <span class="entry-meta-sep" aria-hidden="true">·</span>
+                            <span>{displayProvider}</span>
+                            {data.effort && (
+                              <>
+                                <span class="entry-meta-sep" aria-hidden="true">·</span>
+                                <span>{data.effort}</span>
+                              </>
+                            )}
+                            <span class="entry-meta-sep" aria-hidden="true">·</span>
+                            <time
+                              datetime={data.timestamp}
+                              title={formatTimestamp(data.timestamp)}
+                              class="metric-sub metric-inline entry-timestamp"
+                            >
+                              {run.shortDate}
+                            </time>
+                          </div>
+                        </div>
+                      </th>
+
+                      <td data-cell="Spec (S1–S7)">
+                        <div class="plan-cell cell-stack">
+                          <div class="plan-primary-row">
+                            <span class="metric-primary">
+                              {plan.completed}/{plan.total}
+                            </span>
+                            {plan.ratio < 1 && (
+                              <span
+                                class:list={[
+                                  'plan-pct-badge',
+                                  plan.ratio >= 0.7 ? 'plan-pct-partial' : 'hl hl-magenta',
+                                ]}
+                              >
+                                {Math.round(plan.ratio * 100)}%
+                              </span>
+                            )}
+                            {incompleteStages.length > 0 && (
+                              <span class="visually-hidden">
+                                (Incomplete stages: {incompleteStages.join(', ')})
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            class="stage-strip stage-strip-btn"
+                            data-peek-toggle={run.id}
+                            title="Click to toggle inline S1–S7 stage burn & field notes"
+                            aria-expanded="false"
+                          >
+                            {plan.entries.map(([stageId, done]) => {
+                              const stageTitle = stageTitleMap.get(stageId) ?? stageId;
+                              const isPeak = telemetry.peakStageId === stageId;
+                              return (
+                                <span
+                                  class:list={[
+                                    'stage-pill',
+                                    done ? 'done' : 'pending',
+                                    { 'is-peak-stage': isPeak },
+                                  ]}
+                                  title={`${stageId}: ${stageTitle} (${done ? 'Holdout PASS' : 'Holdout MISS'}${isPeak ? ` · Peak cost stage: ${formatCost(telemetry.stages[stageId as keyof typeof telemetry.stages].costUsd)}` : ''})`}
+                                >
+                                  {stageId.replace(/^S/, '')}
+                                </span>
+                              );
+                            })}
+                          </button>
+                        </div>
+                      </td>
+
+                      <td data-cell="Agent Tests">
+                        <div class="cell-stack">
+                          {data.tests ? (
+                            <div
+                              class="metric-primary"
+                              title="Agent-authored ExUnit test suite results"
+                            >
+                              {data.tests.passed}/{data.tests.total} ExUnit
+                            </div>
+                          ) : (
+                            <div class="metric-empty">—</div>
+                          )}
+                          <div class="metric-sub">
+                            {data.commits !== undefined ? `${data.commits} commits` : ''}
+                            {telemetry.toolSuccessRatePct !== null && (
+                              <>
+                                {data.commits !== undefined && <span aria-hidden="true"> · </span>}
+                                <span title={`${telemetry.toolErrorCalls} tool errors out of ${telemetry.toolTotalCalls} tool calls`}>
+                                  {Math.round(telemetry.toolSuccessRatePct)}% ok
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td data-cell="Duration">
+                        <div class="cell-stack">
+                          <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
+                          {run.totalCalls !== undefined && (
+                            <div class="metric-sub">
+                              {telemetry.llmCalls} LLM · {telemetry.toolTotalCalls} tool
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      <td data-cell="Tokens">
+                        {hasTokens ? (
+                          <div class="cell-stack">
+                            <div
+                              class="metric-primary"
+                              title={`Exact tokens: ${telemetry.tokens.total.toLocaleString('en-US')} total`}
+                            >
+                              {data.tokens?.total ?? '—'}
+                            </div>
+                            <div class="metric-sub">
+                              {data.tokens?.cacheHitRate && <span>{data.tokens.cacheHitRate} hit</span>}
+                              {run.peakCtxCompact && (
+                                <>
+                                  {Boolean(data.tokens?.cacheHitRate) && <span aria-hidden="true"> · </span>}
+                                  <span title={data.contextWindow}>{run.peakCtxCompact}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span class="metric-empty">—</span>
+                        )}
+                      </td>
+
+                      <td data-cell="Cost">
+                        <div class="cell-stack">
+                          <div class="cost-cell-head">
+                            <span class="metric-primary cost-mono cost-primary-display">
+                              {formatCost(billedCost)}
+                            </span>
+                            {lowestCostLeader && run.id === lowestCostLeader.id && (
+                              <span class="cost-leader-tag" title="Lowest 7/7 full-pass cost leader">
+                                LOWEST
+                              </span>
+                            )}
+                          </div>
+                          <div class="metric-sub cost-sub-display">
+                            {cacheSavings > 0
+                              ? `-${formatCost(cacheSavings)} saved`
+                              : standardCost > billedCost
+                                ? `${formatCost(standardCost)} API equiv.`
+                                : 'free tier'}
+                          </div>
+                        </div>
+                      </td>
+
+                    </tr>
+
+                    <tr
+                      class="forensic-drawer-row"
+                      data-drawer-for={run.id}
+                      hidden
+                    >
+                      <td colspan="7" class="forensic-drawer-cell">
+                        <div class="forensic-drawer-inner">
+                          <div class="forensic-stages-col">
+                            <div class="forensic-col-head">
+                              <span class="mono forensic-col-title">
+                                S1–S7 SLICE BURN · {displayHarness} / {data.model}
+                              </span>
+                              <span class="mono forensic-col-meta">
+                                {hasPerSlice
+                                  ? `Peak: ${telemetry.peakStageId ?? '—'} · ${telemetry.llmCalls} turns (${formatCost(billedCost)})`
+                                  : `Full run: ${telemetry.llmCalls} turns (${formatCost(billedCost)})`}
+                              </span>
+                            </div>
+                            <div class="forensic-stage-grid">
+                              {BENCHMARK_STAGES.map((st) => {
+                                const sCell = telemetry.stages[st.id as keyof typeof telemetry.stages];
+                                const barW = Math.min(100, ((sCell?.costUsd ?? 0) / maxRowStageCost) * 100).toFixed(0);
+                                return (
+                                  <div
+                                    class:list={[
+                                      'forensic-stage-card',
+                                      {
+                                        'is-peak': sCell?.isPeakCost,
+                                        'is-miss': !sCell?.completed,
+                                      },
+                                    ]}
+                                  >
+                                    <div class="forensic-stage-top">
+                                      <span class="mono forensic-stage-id">{st.id}</span>
+                                      {!sCell?.completed && (
+                                        <span class="mono forensic-stage-status is-miss">MISS</span>
+                                      )}
+                                    </div>
+                                    <div class="mono forensic-stage-cost">
+                                      {sCell && sCell.llmCalls > 0 ? formatCost(sCell.costUsd) : '—'}
+                                    </div>
+                                    <div class="mono forensic-stage-turns">
+                                      {sCell && sCell.llmCalls > 0 ? `${sCell.llmCalls}t` : st.title}
+                                    </div>
+                                    {hasPerSlice && (
+                                      <div class="forensic-stage-bar-track" aria-hidden="true">
+                                        <span
+                                          class="forensic-stage-bar-fill"
+                                          style={`inline-size: ${barW}%`}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div class="forensic-notes-col">
+                            <div class="forensic-col-head">
+                              <span class="mono forensic-col-title">FIELD NOTES</span>
+                              <div class="forensic-quick-links">
+                                <button
+                                  type="button"
+                                  class="btn btn-sm btn-secondary pin-diff-btn"
+                                  data-pin-run={run.id}
+                                  aria-pressed="false"
+                                  title="Pin run to head-to-head comparison dock"
+                                >
+                                  + Pin to Diff
+                                </button>
+                                <a
+                                  href={`/compare?a=${run.id}&b=${rank === 1 && enrichedRuns[1] ? enrichedRuns[1].id : enrichedRuns[0].id}`}
+                                  class="mono forensic-action-link"
+                                >
+                                  Compare →
+                                </a>
+                                <a href={`/runs/${run.id}`} class="mono forensic-action-link is-primary">
+                                  Full Dossier →
+                                </a>
+                              </div>
+                            </div>
+                            {run.leadNotes.length > 0 ? (
+                              <ul class="forensic-notes-list">
+                                {run.leadNotes.map((note) => (
+                                  <li>{note}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p class="forensic-notes-empty">
+                                Verified holdout evaluation record ({plan.completed}/{plan.total} stages, {formatDuration(data.durationMinutes)}, {formatCost(billedCost)}).
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </>
+                );
+              })
+            }
+            <tr id="empty-state-row" hidden>
+              <td colspan="7" class="empty-state-cell">
+                <div class="empty-state-wrap">
+                  <p id="empty-state-msg" class="empty-state-copy">
+                    No benchmark runs match the current filters.
+                  </p>
+                  <button
+                    id="empty-reset-btn"
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                  >
+                    Reset all filters
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sticky Live Head-to-Head Compare Dock -->
+    <aside
+      id="quick-compare-dock"
+      class="quick-compare-dock"
+      aria-label="Pinned head-to-head run comparison"
+      hidden
+    >
+      <div class="qc-dock-inner">
+        <div class="qc-contenders">
+          <span class="hl hl-acid qc-badge">HEAD-TO-HEAD DIFF</span>
+          <span class="mono qc-pair-text" id="qc-pair-text">Select a second run to compare</span>
+        </div>
+        <div class="mono qc-deltas" id="qc-deltas"></div>
+        <div class="qc-actions">
+          <a href="/compare" id="qc-open-link" class="btn btn-sm btn-acid">
+            Open S1–S7 Diff →
+          </a>
+          <button type="button" id="qc-clear-btn" class="btn btn-sm btn-secondary">
+            Clear
           </button>
         </div>
       </div>
-    </div>
+    </aside>
 
-    <div class="v1-deck-bottom">
-      <div class="controls-toggles-wrap">
-        <label class="check-label controls-check-label" for="full-pass-toggle">
-          <input
-            id="full-pass-toggle"
-            name="fullPass"
-            type="checkbox"
-            class="check-input"
-          />
-          <span>7/7 Holdout Full Pass ({fullPassCount})</span>
-        </label>
-
-        <label class="check-label controls-check-label" for="pareto-only-toggle">
-          <input
-            id="pareto-only-toggle"
-            name="paretoOnly"
-            type="checkbox"
-            class="check-input"
-          />
-          <span>Pareto Frontier Only ({paretoFrontierRuns.length})</span>
-        </label>
-      </div>
-
-      <div class="controls-meta-actions">
-        <span id="visible-count-badge" class="controls-result-count">
-          Showing {enrichedRuns.length} of {enrichedRuns.length} runs
-        </span>
-        <a href="/compare" class="btn btn-sm btn-secondary">
-          Compare &amp; Ablations →
-        </a>
+    <!-- 04. TABBED ANALYTICS WORKBENCH (One Focused View at a Time) -->
+    <section class="analytics-workbench" aria-label="Cross-run econometrics and stage analysis">
+      <div class="analytics-tabs-bar" role="tablist" aria-label="Benchmark analysis views">
         <button
-          id="reset-filters-btn"
           type="button"
-          class="btn btn-sm btn-secondary"
-          hidden
+          role="tab"
+          id="tab-btn-pareto"
+          aria-controls="pareto-section"
+          aria-selected="true"
+          class="analytics-tab-btn is-active"
+          data-analytics-tab="pareto-section"
         >
-          Reset filters
+          Speed × Cost Pareto Frontier ({paretoFrontierRuns.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-btn-bottleneck"
+          aria-controls="bottleneck-section"
+          aria-selected="false"
+          class="analytics-tab-btn"
+          data-analytics-tab="bottleneck-section"
+        >
+          S1–S7 Stage Bottleneck Matrix
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-btn-ablations"
+          aria-controls="ablations-teaser"
+          aria-selected="false"
+          class="analytics-tab-btn"
+          data-analytics-tab="ablations-teaser"
+        >
+          Controlled Ablations ({ablationPresets.length})
         </button>
       </div>
-    </div>
 
-    <div
-      id="leaderboard-status"
-      class="visually-hidden"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    ></div>
-  </search>
-
-  <!-- 04. LEADERBOARD DATA TABLE + INTEGRATED STAGE COLOPHON -->
-  <div class="v1-table-ledger">
-  <!-- 04. LEADERBOARD DATA TABLE -->
-  <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
-    <table class="app-table leaderboard-table" id="leaderboard-table">
-      <caption id="leaderboard-caption" class="visually-hidden">
-        Capy Bench evaluation runs ranked by holdout spec completion, agent test suite, duration,
-        exact token usage, and API cost
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col" class="col-rank">Rank</th>
-          <th scope="col">Coding Harness &amp; Model</th>
-          <th scope="col" class="sortable active-sort" data-sort-col="plan" aria-sort="descending">
-            <button
-              type="button"
-              class="sort-header-btn"
-              title="Sort by S1–S7 external holdout spec completion ratio"
-            >
-              <span>Spec Verification</span>
-              <span class="sort-indicator" aria-hidden="true">↓</span>
-            </button>
-          </th>
-          <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
-            <button
-              type="button"
-              class="sort-header-btn"
-              title="Sort by agent-authored ExUnit test suite pass ratio, then total passing tests"
-            >
-              <span>Agent Suite &amp; Git</span>
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" class="sortable" data-sort-col="duration" aria-sort="none">
-            <button
-              type="button"
-              class="sort-header-btn"
-              title="Sort by active wall-clock run duration"
-            >
-              <span>Duration</span>
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" class="sortable" data-sort-col="tokens" aria-sort="none">
-            <button
-              type="button"
-              class="sort-header-btn"
-              title="Sort by exact total token volume (uncached input + cached input + output)"
-            >
-              <span>Token Usage</span>
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" class="sortable" data-sort-col="cost" aria-sort="none">
-            <button
-              type="button"
-              class="sort-header-btn"
-              title="Sort by cost in USD under the active pricing lens"
-            >
-              <span id="cost-col-header-label">Cost (Billed)</span>
-              <span class="sort-indicator" aria-hidden="true"></span>
-            </button>
-          </th>
-          <th scope="col" class="col-details">Action</th>
-        </tr>
-      </thead>
-      <tbody id="leaderboard-tbody">
-        {
-          enrichedRuns.map((run, index) => {
-            const { data, plan, telemetry } = run;
-            const rank = index + 1;
-            const hasTokens =
-              data.tokens && (data.tokens.input || data.tokens.output || data.tokens.cacheHitRate);
-            const vtName = `run-${run.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
-            const incompleteStages = plan.entries
-              .filter(([, done]) => !done)
-              .map(([stageId]) => stageId);
-
-            const displayHarness = telemetry.displayHarness;
-            const displayProvider = telemetry.displayProvider;
-            const showInOutSub = Boolean(
-              data.tokens?.total && data.tokens?.input && data.tokens?.output
-            );
-            const billedCost = data.costUsd;
-            const standardCost = telemetry.costMetrics.standardApiCostUsd;
-            const uncachedCost = telemetry.costMetrics.uncachedCounterfactualCostUsd;
-            const cacheSavings = telemetry.costMetrics.cacheSavingsUsd;
-
-            return (
-              <tr
-                class="run-row"
-                style={`--vt-name: ${vtName};`}
-                data-href={`/runs/${run.id}`}
-                data-harness={data.codingHarness}
-                data-provider={data.provider}
-                data-search={`${data.codingHarness} ${displayHarness} ${data.model} ${data.provider} ${displayProvider} ${data.effort ?? ''} ${telemetry.isParetoFrontier ? 'pareto frontier' : ''}`.toLowerCase()}
-                data-plan={plan.ratio}
-                data-pareto={telemetry.isParetoFrontier ? '1' : '0'}
-                data-duration={data.durationMinutes}
-                data-cost={billedCost}
-                data-cost-billed={billedCost}
-                data-cost-standard={standardCost}
-                data-cost-uncached={uncachedCost}
-                data-cache-savings={cacheSavings}
-                data-tokens={run.totalTokens}
-                data-tests={run.testsRatio}
-                data-tests-passed={run.testsPassed}
-                data-timestamp={run.timeMs}
-              >
-                <td data-cell="Rank">
-                  <span
-                    class:list={[
-                      'rank-badge',
-                      { 'rank-1': rank === 1, 'rank-2': rank === 2, 'rank-3': rank === 3 },
-                    ]}
-                  >
-                    #{rank}
-                  </span>
-                </td>
-
-                <th scope="row" data-cell="Harness & Model">
-                  <div class="cell-stack">
-                    <div class="entry-title-row">
-                      <a href={`/runs/${run.id}`} class="entry-title-link">
-                        <span>{displayHarness}</span>
-                        <span class="text-muted-sep" aria-hidden="true">/</span>
-                        <span class="entry-model">{data.model}</span>
-                      </a>
-                      {telemetry.isParetoFrontier && (
-                        <span
-                          class="hl hl-acid pareto-inline-badge"
-                          title={`Pareto Frontier #${telemetry.paretoOrder}: non-dominated on 7/7 speed (${formatDuration(data.durationMinutes)}) and cost (${formatCost(billedCost)})`}
-                        >
-                          PARETO
-                        </span>
-                      )}
-                    </div>
-                    <div class="entry-meta">
-                      <span>{displayProvider}</span>
-                      {data.effort && (
-                        <>
-                          <span class="entry-meta-sep" aria-hidden="true">·</span>
-                          <span>effort:{data.effort}</span>
-                        </>
-                      )}
-                      {data.interface?.type && (
-                        <>
-                          <span class="entry-meta-sep" aria-hidden="true">·</span>
-                          <span class="entry-meta-tag">{data.interface.type}</span>
-                        </>
-                      )}
-                      <span class="entry-meta-sep" aria-hidden="true">·</span>
-                      <time datetime={data.timestamp} class="metric-sub metric-inline entry-timestamp">
-                        {formatTimestamp(data.timestamp)}
-                      </time>
-                    </div>
-                  </div>
-                </th>
-
-                <td data-cell="Spec Verification">
-                  <div class="plan-cell cell-stack">
-                    <div class="plan-primary-row">
-                      <span class="metric-primary">
-                        {plan.completed}/{plan.total} stages
-                      </span>
-                      <span
-                        class:list={[
-                          'plan-pct-badge',
-                          plan.ratio === 1
-                            ? 'hl hl-mint'
-                            : plan.ratio >= 0.7
-                              ? 'plan-pct-partial'
-                              : 'hl hl-magenta',
-                        ]}
-                      >
-                        {Math.round(plan.ratio * 100)}%
-                      </span>
-                      {incompleteStages.length > 0 && (
-                        <span class="visually-hidden">
-                          (Incomplete stages: {incompleteStages.join(', ')})
-                        </span>
-                      )}
-                    </div>
-                    <div class="stage-strip" aria-hidden="true">
-                      {plan.entries.map(([stageId, done]) => {
-                        const stageTitle = stageTitleMap.get(stageId) ?? stageId;
-                        const isPeak = telemetry.peakStageId === stageId;
-                        return (
-                          <span
-                            class:list={[
-                              'stage-pill',
-                              done ? 'done' : 'pending',
-                              { 'is-peak-stage': isPeak },
-                            ]}
-                            title={`${stageId}: ${stageTitle} (${done ? 'Holdout PASS' : 'Holdout MISS'}${isPeak ? ` · Peak cost stage: ${formatCost(telemetry.stages[stageId as keyof typeof telemetry.stages].costUsd)}` : ''})`}
-                          >
-                            {stageId}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </td>
-
-                <td data-cell="Agent Suite & Git">
-                  <div class="cell-stack">
-                    {data.tests ? (
-                      <div
-                        class="metric-primary"
-                        title="Agent-authored ExUnit test suite results (separate from holdout S1–S7 spec verification)"
-                      >
-                        {data.tests.passed}/{data.tests.total} ExUnit
-                      </div>
-                    ) : (
-                      <div class="metric-empty">—</div>
-                    )}
-                    <div class="metric-sub">
-                      {data.commits !== undefined ? `${data.commits} commits` : ''}
-                      {telemetry.toolSuccessRatePct !== null && (
-                        <>
-                          {data.commits !== undefined && <span aria-hidden="true"> · </span>}
-                          <span title={`${telemetry.toolErrorCalls} tool errors out of ${telemetry.toolTotalCalls} tool calls`}>
-                            {telemetry.toolSuccessRatePct}% tool ok
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </td>
-
-                <td data-cell="Duration">
-                  <div class="cell-stack">
-                    <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
-                    {run.totalCalls !== undefined && (
-                      <div class="metric-sub">
-                        {telemetry.llmCalls} LLM / {telemetry.toolTotalCalls} tool
-                      </div>
-                    )}
-                  </div>
-                </td>
-
-                <td data-cell="Token Usage">
-                  {hasTokens ? (
-                    <div class="cell-stack">
-                      <div
-                        class="metric-primary"
-                        title={`Exact tokens: ${telemetry.tokens.total.toLocaleString('en-US')} total (${telemetry.tokens.uncachedInput.toLocaleString('en-US')} uncached in · ${telemetry.tokens.cachedInput.toLocaleString('en-US')} cached in · ${telemetry.tokens.output.toLocaleString('en-US')} out · ${telemetry.tokens.thinking.toLocaleString('en-US')} thinking)`}
-                      >
-                        {data.tokens?.total
-                          ? `${data.tokens.total} total`
-                          : `${data.tokens?.input ?? '—'} in / ${data.tokens?.output ?? '—'} out`}
-                      </div>
-                      <div class="metric-sub">
-                        {showInOutSub && (
-                          <span>
-                            {data.tokens?.input} in / {data.tokens?.output} out
-                          </span>
-                        )}
-                        {data.tokens?.cacheHitRate && (
-                          <>
-                            {showInOutSub && <span aria-hidden="true"> · </span>}
-                            <span>{data.tokens.cacheHitRate} cache</span>
-                          </>
-                        )}
-                        {run.compactContext && (
-                          <>
-                            {(showInOutSub || Boolean(data.tokens?.cacheHitRate)) && (
-                              <span aria-hidden="true"> · </span>
-                            )}
-                            <span title={data.contextWindow}>Ctx: {run.compactContext}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <span class="metric-empty">—</span>
-                  )}
-                </td>
-
-                <td data-cell="Cost">
-                  <div class="cell-stack">
-                    <div>
-                      {lowestCostLeader && run.id === lowestCostLeader.id ? (
-                        <span
-                          class="hl hl-mint cost-pill cost-primary-display"
-                          title="Lowest 7/7 full-pass cost leader"
-                        >
-                          {formatCost(billedCost)}
-                        </span>
-                      ) : (
-                        <span class="metric-primary cost-mono cost-primary-display">
-                          {formatCost(billedCost)}
-                        </span>
-                      )}
-                    </div>
-                    <div class="metric-sub cost-sub-display">
-                      {cacheSavings > 0
-                        ? `-${formatCost(cacheSavings)} cache saved`
-                        : standardCost > billedCost
-                          ? `${formatCost(standardCost)} API equiv.`
-                          : 'free tier'}
-                    </div>
-                  </div>
-                </td>
-
-                <td data-cell="Action">
-                  <div class="row-action-stack">
-                    <a
-                      href={`/runs/${run.id}`}
-                      class="btn btn-sm btn-secondary view-btn"
-                      tabindex="-1"
-                      aria-hidden="true"
-                    >
-                      <span>Inspect</span>
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            );
-          })
-        }
-        <tr id="empty-state-row" hidden>
-          <td colspan="8" class="empty-state-cell">
-            <div class="empty-state-wrap">
-              <p id="empty-state-msg" class="empty-state-copy">
-                No benchmark runs match the current filters.
-              </p>
-              <button
-                id="empty-reset-btn"
-                type="button"
-                class="btn btn-sm btn-secondary"
-              >
-                Reset all filters
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-    <div class="stage-legend-bar v1-table-colophon" aria-label="Benchmark stage key (S1 through S7)">
-      <span class="stage-legend-kicker">Stages:</span>
-      <ul class="stage-legend-list">
-        {
-          BENCHMARK_STAGES.map((stage) => (
-            <li class="stage-legend-item">
-              <span class="stage-legend-id">{stage.id}</span>
-              <span class="stage-legend-title">{stage.title}</span>
-            </li>
-          ))
-        }
-      </ul>
-      <a href="#bottleneck-section" class="stage-legend-link">Bottleneck matrix ↓</a>
-    </div>
-  </div>
-
-  <!-- 05. 2-COLUMN ECONOMETRICS BENTO -->
-  <div class="analytics-grid v1-analytics-bento">
-    <!-- Panel A: 7/7 Speed x Cost Pareto Frontier -->
-    <section
-      class="card analytics-card"
-      id="pareto-section"
-      aria-labelledby="pareto-heading"
-    >
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="pareto-heading" class="card-heading headline-two-tone">
-            Speed × Cost Pareto Frontier{' '}
-            <span class="muted">/ {paretoFrontierRuns.length} Optimal 7/7 Runs</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
+      <!-- Tab Panel 1: 7/7 Speed x Cost Pareto Frontier -->
+      <div
+        role="tabpanel"
+        id="pareto-section"
+        aria-labelledby="tab-btn-pareto"
+        class="analytics-panel"
+      >
+        <div class="panel-top-row">
+          <p class="mono section-subnote">
+            Non-dominated 7/7 full-pass runs where no other evaluation is simultaneously faster and cheaper. Hover any point to inspect.
+          </p>
           <a href="/compare?preset=pareto-cost-vs-speed" class="action-link">
             Diff Frontier Extremes <span aria-hidden="true">→</span>
           </a>
         </div>
-      </div>
 
-      <p class="mono section-subnote">
-        Non-dominated 7/7 full-pass runs where no other evaluation is simultaneously faster and cheaper.
-      </p>
+        <div class="pareto-layout">
+          <div class="pareto-svg-frame">
+            <svg
+              viewBox={`0 0 ${chartW} ${chartH}`}
+              class="pareto-svg"
+              role="img"
+              aria-labelledby="pareto-svg-title pareto-svg-desc"
+            >
+              <title id="pareto-svg-title">7/7 Full-Pass Speed vs Cost Pareto Frontier</title>
+              <desc id="pareto-svg-desc">
+                Scatter plot of duration in minutes versus cost in USD for all 7/7 passing runs, with a stepped line connecting the {paretoFrontierRuns.length} Pareto-optimal runs.
+              </desc>
 
-      <div class="pareto-layout">
-        <div class="pareto-svg-frame">
-          <svg
-            viewBox={`0 0 ${chartW} ${chartH}`}
-            class="pareto-svg"
-            role="img"
-            aria-labelledby="pareto-svg-title pareto-svg-desc"
-          >
-            <title id="pareto-svg-title">7/7 Full-Pass Speed vs Cost Pareto Frontier</title>
-            <desc id="pareto-svg-desc">
-              Scatter plot of duration in minutes versus cost in USD for all 7/7 passing runs, with a stepped line connecting the {paretoFrontierRuns.length} Pareto-optimal runs from {fastestLeader?.data.durationMinutes}m (${fastestLeader?.data.costUsd}) down to {lowestCostLeader?.data.durationMinutes}m (${lowestCostLeader?.data.costUsd}).
-            </desc>
+              {[0, 3, 6, 9, 12].map((cVal) => {
+                const y = Number(toSvgY(cVal).toFixed(1));
+                return (
+                  <g>
+                    <line x1={padL} y1={y} x2={chartW - padR} y2={y} class="pareto-grid-line" />
+                    <text x={padL - 8} y={y + 4} text-anchor="end" class="pareto-axis-label">
+                      ${cVal}
+                    </text>
+                  </g>
+                );
+              })}
 
-            <!-- Horizontal Cost Grid Lines -->
-            {[0, 3, 6, 9, 12].map((cVal) => {
-              const y = Number(toSvgY(cVal).toFixed(1));
-              return (
-                <g>
-                  <line
-                    x1={padL}
-                    y1={y}
-                    x2={chartW - padR}
-                    y2={y}
-                    class="pareto-grid-line"
-                  />
-                  <text x={padL - 8} y={y + 4} text-anchor="end" class="pareto-axis-label">
-                    ${cVal}
-                  </text>
-                </g>
-              );
-            })}
+              {[20, 40, 60, 80, 100].map((dVal) => {
+                const x = Number(toSvgX(dVal).toFixed(1));
+                return (
+                  <g>
+                    <line x1={x} y1={padT} x2={x} y2={chartH - padB} class="pareto-grid-line" />
+                    <text x={x} y={chartH - padB + 16} text-anchor="middle" class="pareto-axis-label">
+                      {dVal}m
+                    </text>
+                  </g>
+                );
+              })}
 
-            <!-- Vertical Duration Grid Lines -->
-            {[20, 40, 60, 80, 100].map((dVal) => {
-              const x = Number(toSvgX(dVal).toFixed(1));
-              return (
-                <g>
-                  <line
-                    x1={x}
-                    y1={padT}
-                    x2={x}
-                    y2={chartH - padB}
-                    class="pareto-grid-line"
-                  />
-                  <text x={x} y={chartH - padB + 18} text-anchor="middle" class="pareto-axis-label">
-                    {dVal}m
-                  </text>
-                </g>
-              );
-            })}
+              <line x1={padL} y1={padT} x2={padL} y2={chartH - padB} class="pareto-axis-line" />
+              <line x1={padL} y1={chartH - padB} x2={chartW - padR} y2={chartH - padB} class="pareto-axis-line" />
 
-            <!-- Axes -->
-            <line
-              x1={padL}
-              y1={padT}
-              x2={padL}
-              y2={chartH - padB}
-              class="pareto-axis-line"
-            />
-            <line
-              x1={padL}
-              y1={chartH - padB}
-              x2={chartW - padR}
-              y2={chartH - padB}
-              class="pareto-axis-line"
-            />
+              {paretoStepPath && (
+                <path d={paretoStepPath} class="pareto-step-path" fill="none" />
+              )}
 
-            <!-- Stepped Pareto Frontier Path -->
-            {paretoStepPath && (
-              <path d={paretoStepPath} class="pareto-step-path" fill="none" />
-            )}
-
-            <!-- Plot All 7/7 Full Pass Runs -->
-            {fullPassRuns.map((r) => {
-              const cx = Number(toSvgX(r.data.durationMinutes).toFixed(1));
-              const cy = Number(toSvgY(r.data.costUsd).toFixed(1));
-              const isFront = r.telemetry.isParetoFrontier;
-              const shortLabel = `${r.telemetry.displayHarness} / ${r.data.model.replace('-contributor', '')}`;
-              const labelOffsetY =
-                r.data.model === 'gpt-6-sol' && r.telemetry.displayHarness === 'Pi'
-                  ? 15
-                  : -10;
-              return (
-                <a href={`/runs/${r.id}`} class="pareto-point-link">
-                  <title>
-                    {r.telemetry.displayHarness} / {r.data.model} ({r.data.effort ?? 'std'}): {formatDuration(r.data.durationMinutes)} · {formatCost(r.data.costUsd)}{isFront ? ' (PARETO OPTIMAL)' : ''}
-                  </title>
-                  {isFront ? (
-                    <rect
-                      x={cx - 6}
-                      y={cy - 6}
-                      width="12"
-                      height="12"
-                      class="pareto-node-optimal"
-                    />
-                  ) : (
-                    <circle cx={cx} cy={cy} r="5" class="pareto-node-dominated" />
-                  )}
-                  <text
-                    x={cx + 9}
-                    y={cy + labelOffsetY}
-                    class:list={[
-                      'pareto-node-label',
-                      isFront ? 'is-optimal' : 'is-dominated',
-                    ]}
+              {fullPassRuns.map((r) => {
+                const cx = Number(toSvgX(r.data.durationMinutes).toFixed(1));
+                const cy = Number(toSvgY(r.data.costUsd).toFixed(1));
+                const isFront = r.telemetry.isParetoFrontier;
+                const pOrder = r.telemetry.paretoOrder;
+                const shortLabel = isFront
+                  ? `F${pOrder} · ${r.telemetry.displayHarness} / ${r.data.model.replace('-contributor', '')} (${formatCost(r.data.costUsd)})`
+                  : `${r.telemetry.displayHarness} / ${r.data.model.replace('-contributor', '')} (${formatCost(r.data.costUsd)})`;
+                const anchorEnd = pOrder === 2 || (!isFront && cx > 400);
+                const labelOffsetY =
+                  pOrder === 1
+                    ? -10
+                    : pOrder === 2
+                      ? 4
+                      : pOrder === 3
+                        ? -10
+                        : pOrder === 4
+                          ? 13
+                          : -8;
+                const labelOffsetX = anchorEnd ? -10 : 9;
+                return (
+                  <a
+                    href={`/runs/${r.id}`}
+                    class="pareto-point-link"
+                    data-pareto-run={r.id}
+                    data-pareto-title={`${r.telemetry.displayHarness} / ${r.data.model}`}
+                    data-pareto-dur={formatDuration(r.data.durationMinutes)}
+                    data-pareto-cost={formatCost(r.data.costUsd)}
+                    data-pareto-tokens={r.data.tokens?.total ?? '—'}
+                    data-pareto-cache={`${r.telemetry.tokens.cacheHitRatePct}%`}
+                    data-pareto-status={isFront ? `Frontier #${r.telemetry.paretoOrder}` : '7/7 Full Pass'}
                   >
-                    {shortLabel} ({r.data.durationMinutes}m, {formatCost(r.data.costUsd)})
-                  </text>
-                </a>
-              );
-            })}
-          </svg>
-        </div>
+                    <title>
+                      {r.telemetry.displayHarness} / {r.data.model} ({r.data.effort ?? 'std'}): {formatDuration(r.data.durationMinutes)} · {formatCost(r.data.costUsd)}{isFront ? ' (PARETO OPTIMAL)' : ''}
+                    </title>
+                    {isFront ? (
+                      <rect x={cx - 6} y={cy - 6} width="12" height="12" class="pareto-node-optimal" />
+                    ) : (
+                      <circle cx={cx} cy={cy} r="5" class="pareto-node-dominated" />
+                    )}
+                    {(isFront || r.data.costUsd > 5) && (
+                      <text
+                        x={cx + labelOffsetX}
+                        y={cy + labelOffsetY}
+                        text-anchor={anchorEnd ? 'end' : 'start'}
+                        class:list={[
+                          'pareto-node-label',
+                          isFront ? 'is-optimal' : 'is-dominated',
+                        ]}
+                      >
+                        {shortLabel}
+                      </text>
+                    )}
+                  </a>
+                );
+              })}
+            </svg>
+          </div>
 
-        <ol class="command-list pareto-step-list" role="list">
-          {paretoFrontierRuns.map((r) => (
-            <li class="command-row pareto-step-row">
-              <div class="pareto-step-left">
-                <span class="hl hl-acid pareto-order-pill">
-                  F{r.telemetry.paretoOrder}
-                </span>
-                <a href={`/runs/${r.id}`} class="pareto-step-link">
-                  <strong>{r.telemetry.displayHarness} / {r.data.model}</strong>
-                </a>
+          <div class="pareto-sidebar">
+            <ol class="command-list pareto-step-list" role="list">
+              {paretoFrontierRuns.map((r, idx) => (
+                <li
+                  class:list={['command-row pareto-step-row', { 'is-active': idx === 0 }]}
+                  data-pareto-item={r.id}
+                >
+                  <div class="pareto-step-left">
+                    <span class="pareto-order-pill">F{r.telemetry.paretoOrder}</span>
+                    <a href={`/runs/${r.id}`} class="pareto-step-link">
+                      <strong>{r.telemetry.displayHarness} / {r.data.model}</strong>
+                    </a>
+                  </div>
+                  <div class="mono pareto-step-metrics">
+                    <span>{formatDuration(r.data.durationMinutes)}</span>
+                    <span aria-hidden="true">·</span>
+                    <strong class="cost-mono">{formatCost(r.data.costUsd)}</strong>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {paretoFrontierRuns[0] && (
+              <div class="pareto-inspector" id="pareto-inspector" aria-live="polite">
+                <div class="pareto-inspector-head">
+                  <span class="mono pareto-inspector-tag" id="pi-status">
+                    Frontier #{paretoFrontierRuns[0].telemetry.paretoOrder}
+                  </span>
+                  <a href={`/runs/${paretoFrontierRuns[0].id}`} class="mono pareto-inspector-link" id="pi-link">
+                    Inspect Dossier →
+                  </a>
+                </div>
+                <strong class="pareto-inspector-title" id="pi-title">
+                  {paretoFrontierRuns[0].telemetry.displayHarness} / {paretoFrontierRuns[0].data.model}
+                </strong>
+                <div class="mono pareto-inspector-stats" id="pi-stats">
+                  {formatDuration(paretoFrontierRuns[0].data.durationMinutes)} · {formatCost(paretoFrontierRuns[0].data.costUsd)} · {paretoFrontierRuns[0].data.tokens?.total ?? '—'} tok ({paretoFrontierRuns[0].telemetry.tokens.cacheHitRatePct}% cache)
+                </div>
               </div>
-              <div class="mono pareto-step-metrics">
-                <span>{formatDuration(r.data.durationMinutes)}</span>
-                <span aria-hidden="true">·</span>
-                <strong class="cost-mono">{formatCost(r.data.costUsd)}</strong>
-              </div>
-            </li>
-          ))}
-        </ol>
+            )}
+          </div>
+        </div>
       </div>
-    </section>
 
-    <!-- Panel B: Cross-Run Stage Bottleneck Matrix (S1-S7) -->
-    <section
-      class="card analytics-card"
-      id="bottleneck-section"
-      aria-labelledby="bottleneck-heading"
-    >
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="bottleneck-heading" class="card-heading headline-two-tone">
-            Stage Bottleneck Matrix{' '}
-            <span class="muted">/ S1–S7 Cross-Run Telemetry</span>
-          </h2>
-        </div>
-        <div class="card-title-group">
+      <!-- Tab Panel 2: Cross-Run Stage Bottleneck Matrix (S1-S7) -->
+      <div
+        role="tabpanel"
+        id="bottleneck-section"
+        aria-labelledby="tab-btn-bottleneck"
+        class="analytics-panel"
+        hidden
+      >
+        <div class="panel-top-row">
+          <p class="mono section-subnote">
+            Aggregated across all {enrichedRuns.length} runs: S3 (streaming HTTP/TLS + 2s timeouts) and S7 (foreground PTY Ctrl-C) dominate token burn, while S5 has the highest spec miss rate.
+          </p>
           <a href="/about#stages" class="action-link">
             Stage Specifications <span aria-hidden="true">→</span>
           </a>
         </div>
-      </div>
 
-      <p class="mono section-subnote">
-        Aggregated across all {enrichedRuns.length} runs: S3 (streaming HTTP/TLS + 2s timeouts) and S7 (foreground PTY Ctrl-C) dominate token burn, while S5 has the highest spec miss rate.
-      </p>
-
-      <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="bottleneck-heading">
-        <table class="app-table leaderboard-table static-table bottleneck-table">
-          <caption class="visually-hidden">
-            Stage-by-stage pass rate, average LLM call share, average cost share, average thinking tokens, and peak bottleneck frequency across S1 through S7
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Stage</th>
-              <th scope="col">Holdout Pass Rate</th>
-              <th scope="col">Avg Call Share</th>
-              <th scope="col">Avg Cost Share</th>
-              <th scope="col">Avg Thinking</th>
-              <th scope="col">Peak Cost Stage</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stageMatrix.map((st) => {
-              const title = stageTitleMap.get(st.stageId) ?? st.stageId;
-              const isTopBottleneck = st.peakCostCount >= 2;
-              const isHighMiss = st.passRatePct < 70;
-              return (
-                <tr>
-                  <th scope="row" data-cell="Stage">
-                    <div class="bottleneck-stage-cell">
-                      <span class:list={['stage-legend-id', { 'hl hl-violet': isTopBottleneck }]}>
-                        {st.stageId}
-                      </span>
-                      <strong>{title}</strong>
-                    </div>
-                  </th>
-                  <td class="mono" data-cell="Holdout Pass Rate">
-                    <span class:list={[isHighMiss ? 'hl hl-magenta' : '']}>
-                      {st.passCount}/{st.totalRuns} ({st.passRatePct}%)
-                    </span>
-                  </td>
-                  <td class="mono" data-cell="Avg Call Share">
-                    {st.avgCallSharePct}% ({st.avgLlmCalls} calls)
-                  </td>
-                  <td class="mono" data-cell="Avg Cost Share">
-                    <div class="bottleneck-bar-wrap">
-                      <span>{st.avgCostSharePct}%</span>
-                      <div class="bottleneck-bar-track" aria-hidden="true">
-                        <span
-                          class:list={[
-                            'bottleneck-bar-fill',
-                            isTopBottleneck ? 'is-peak' : 'is-normal',
-                          ]}
-                          style={`inline-size: ${Math.min(100, st.avgCostSharePct * 3).toFixed(1)}%`}
-                        />
+        <div class="table-wrapper bottleneck-table-wrap" tabindex="0" role="region" aria-label="Stage bottleneck matrix">
+          <table class="app-table leaderboard-table static-table bottleneck-table">
+            <thead>
+              <tr>
+                <th scope="col">Stage</th>
+                <th scope="col">Holdout Pass Rate</th>
+                <th scope="col">Avg Call Share</th>
+                <th scope="col">Avg Cost Share</th>
+                <th scope="col">Avg Thinking</th>
+                <th scope="col">Peak Bottleneck</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stageMatrix.map((st) => {
+                const title = stageTitleMap.get(st.stageId) ?? st.stageId;
+                const isTopBottleneck = st.peakCostCount >= 2;
+                const isHighMiss = st.passRatePct < 70;
+                return (
+                  <tr>
+                    <th scope="row">
+                      <div class="bottleneck-stage-cell">
+                        <span class:list={['stage-legend-id', { 'is-peak-id': isTopBottleneck }]}>
+                          {st.stageId}
+                        </span>
+                        <strong>{title}</strong>
                       </div>
-                    </div>
-                  </td>
-                  <td class="mono" data-cell="Avg Thinking">
-                    {st.avgThinkingTokens.toLocaleString('en-US')} tok
-                  </td>
-                  <td class="mono" data-cell="Peak Cost Stage">
-                    {st.peakCostCount > 0 ? (
-                      <span class:list={[isTopBottleneck ? 'hl hl-violet' : 'badge-static']}>
-                        {st.peakCostCount} {st.peakCostCount === 1 ? 'run' : 'runs'} #1 peak
+                    </th>
+                    <td class="mono" data-cell="Holdout Pass Rate">
+                      <span class:list={[isHighMiss ? 'hl hl-magenta' : '']}>
+                        {st.passCount}/{st.totalRuns} ({st.passRatePct}%)
                       </span>
-                    ) : (
-                      <span class="text-muted">0 runs</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Panel C: Featured Controlled Ablations Teaser -->
-    <section
-      class="card analytics-card"
-      id="ablations-teaser"
-      aria-labelledby="ablations-teaser-heading"
-    >
-      <div class="card-title">
-        <div class="card-title-group">
-          <h2 id="ablations-teaser-heading" class="card-heading headline-two-tone">
-            Controlled Ablation Experiments{' '}
-            <span class="muted">/ Isolating Harness, Effort &amp; Model Tier</span>
-          </h2>
+                    </td>
+                    <td class="mono" data-cell="Avg Call Share">
+                      {st.avgCallSharePct}% <span class="text-muted">({st.avgLlmCalls} turns)</span>
+                    </td>
+                    <td class="mono" data-cell="Avg Cost Share">
+                      <div class="bottleneck-bar-wrap">
+                        <span class:list={[{ 'is-peak-text': isTopBottleneck }]}>{st.avgCostSharePct}%</span>
+                        <div class="bottleneck-bar-track" aria-hidden="true">
+                          <span
+                            class:list={[
+                              'bottleneck-bar-fill',
+                              isTopBottleneck ? 'is-peak' : 'is-normal',
+                            ]}
+                            style={`inline-size: ${Math.min(100, st.avgCostSharePct * 3).toFixed(1)}%`}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td class="mono" data-cell="Avg Thinking">
+                      {st.avgThinkingTokens.toLocaleString('en-US')} tok
+                    </td>
+                    <td class="mono" data-cell="Peak Bottleneck">
+                      {st.peakCostCount > 0 ? (
+                        <span class:list={['peak-count-pill', { 'is-top-peak': isTopBottleneck }]}>
+                          {st.peakCostCount} {st.peakCostCount === 1 ? 'run' : 'runs'} #1 peak
+                        </span>
+                      ) : (
+                        <span class="text-muted">0 runs</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div class="card-title-group">
+      </div>
+
+      <!-- Tab Panel 3: Controlled Ablations -->
+      <div
+        role="tabpanel"
+        id="ablations-teaser"
+        aria-labelledby="tab-btn-ablations"
+        class="analytics-panel"
+        hidden
+      >
+        <div class="panel-top-row">
+          <p class="mono section-subnote">
+            Controlled comparisons isolating coding harness overhead, reasoning effort scaling, and model generation.
+          </p>
           <a href="/compare" class="action-link">
             Open Full Comparison Workbench <span aria-hidden="true">→</span>
           </a>
         </div>
-      </div>
 
-      <div class="ablation-cards-grid">
-        {ablationPresets.map((preset) => (
-          <a
-            href={`/compare?a=${preset.runAId}&b=${preset.runBId}&preset=${preset.id}`}
-            class="card card-interactive ablation-teaser-card"
-          >
-            <div class="ablation-teaser-top">
-              <span class="hl hl-sky ablation-badge">{preset.badge}</span>
-              <span class="mono ablation-cta">Diff runs →</span>
-            </div>
-            <strong class="ablation-teaser-title">{preset.title}</strong>
-            <p class="ablation-teaser-copy">{preset.findingHeadline}</p>
-          </a>
-        ))}
+        <div class="ablation-cards-grid">
+          {ablationPresets.map((preset) => (
+            <a
+              href={`/compare?a=${preset.runAId}&b=${preset.runBId}&preset=${preset.id}`}
+              class="card card-interactive ablation-teaser-card"
+            >
+              <div class="ablation-teaser-top">
+                <span class="mono ablation-badge">{preset.badge}</span>
+                <span class="mono ablation-cta">Diff runs →</span>
+              </div>
+              <strong class="ablation-teaser-title">{preset.title}</strong>
+              <p class="ablation-teaser-copy">{preset.findingHeadline}</p>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
-  </div>
   </div>
 </BaseLayout>
 
 <style>
-  /* ==========================================================================
-     QUIETER LEADERBOARD REFINEMENTS (Neo-Acid Operate Restraint)
-     Preserves brand color (--hl-acid, --hl-mint, --hl-sky, --hl-magenta) for
-     earned semantic anchors while stripping decorative container chrome,
-     redundant cell badges, and heavy full-cell header fills.
-     ========================================================================== */
-  .leaderboard-quiet .hero-box {
-    padding: 1.5rem 100px 1.35rem 0;
-    margin-block-end: 1.25rem;
+  .leaderboard-quiet.lb-v1 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding-block-start: 0.25rem;
+    container-type: inline-size;
+    font-variant-numeric: tabular-nums;
   }
 
-  .leaderboard-quiet .headline-two-tone {
-    font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+  /* 1. COMPACT MASTHEAD & 4-COLUMN KPI STRIP */
+  .v1-masthead-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
-  .leaderboard-quiet .hero-subtitle {
-    font-size: 0.96875rem;
-    line-height: 1.55;
-    margin-block-start: 0.65rem;
-    max-inline-size: 92ch;
+  .v1-masthead-head .headline-two-tone {
+    font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+    margin: 0;
+    text-wrap: balance;
   }
 
-  /* Unified architectural telemetry strip instead of 4 separated heavy boxes */
-  .leaderboard-quiet .hero-stats-grid {
-    gap: 0;
-    margin-block: 0 1.5rem;
+  .leaderboard-quiet.lb-v1 .v1-kpi-strip {
+    margin: 0;
     border: var(--border-frame);
-    background-color: transparent;
+    gap: 0;
+    display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    background-color: transparent;
   }
 
-  .leaderboard-quiet .stat-card {
+  .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card {
+    padding: 0.7rem 0.95rem;
     border: none;
     border-inline-end: var(--border-row);
     background-color: transparent;
-    padding: 1rem 1.2rem;
-    gap: 0.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
   }
 
-  .leaderboard-quiet .stat-card:last-child {
+  .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:last-child {
     border-inline-end: none;
   }
 
+  .kpi-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
   .leaderboard-quiet .stat-value {
-    font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+    font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+    line-height: 1.15;
+    margin: 0;
   }
 
-  @media (max-width: 900px) {
-    .leaderboard-quiet .hero-stats-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .leaderboard-quiet .stat-card:nth-child(2) {
-      border-inline-end: none;
-    }
-
-    .leaderboard-quiet .stat-card:nth-child(-n + 2) {
-      border-block-end: var(--border-row);
-    }
+  .stat-denom {
+    font-size: 0.65em;
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
-  @media (max-width: 520px) {
-    .leaderboard-quiet .hero-stats-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .leaderboard-quiet .stat-card {
-      border-inline-end: none;
-      border-block-end: var(--border-row);
-    }
-
-    .leaderboard-quiet .stat-card:last-child {
-      border-block-end: none;
-    }
+  .leaderboard-quiet .stat-meta {
+    font-size: 0.7rem;
+    padding-block-start: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* Quieter command bar: open structural rules instead of a nested heavy box */
-  .leaderboard-quiet .controls-bar {
-    background-color: transparent;
-    border: none;
-    border-block-end: var(--border-frame);
-    padding: 0 0 1rem;
-    margin-block-end: 1.25rem;
-    gap: 1rem 1.25rem;
-  }
-
-  .leaderboard-quiet .controls-select-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 0.85rem;
-  }
-
-  .leaderboard-quiet .controls-toggles-wrap {
+  /* 2. SINGLE-ROW TOOLBAR */
+  .v1-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem 1.5rem;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 0.85rem;
+    padding: 0.55rem 0.75rem;
+    border: var(--border-frame);
+    background-color: transparent;
+    margin: 0;
   }
 
-  .leaderboard-quiet .command-input-prefix {
+  .toolbar-left,
+  .toolbar-right,
+  .scenario-pills-group,
+  .lens-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.32rem;
+  }
+
+  .scenario-kicker {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-inline-end: 0.15rem;
+  }
+
+  .scenario-pill,
+  .lens-seg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.28rem 0.52rem;
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle-color);
+    border-radius: var(--radius-none);
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+
+  .scenario-pill:hover,
+  .lens-seg-btn:hover {
+    background-color: var(--bg-surface);
+    border-color: var(--border-strong-color);
+    color: var(--text-primary);
+  }
+
+  .scenario-pill.is-active,
+  .lens-seg-btn.is-active {
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong-color);
+    box-shadow: inset 0 -2px 0 var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .scenario-pill.is-active,
+  :global([data-theme="light"]) .lens-seg-btn.is-active {
+    border-color: var(--raw-ebony);
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
+  }
+
+  .scenario-count {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .scenario-pill.is-active .scenario-count {
+    color: var(--hl-acid);
+    font-weight: 700;
+  }
+
+  :global([data-theme="light"]) .scenario-pill.is-active .scenario-count {
+    color: var(--raw-ebony);
+  }
+
+  .toolbar-search {
+    background-color: var(--bg-canvas);
+    border: 1px solid var(--border-subtle-color);
+    inline-size: 10.5rem;
+  }
+
+  .toolbar-search .command-input-prefix {
     background: var(--bg-surface);
     color: var(--hl-acid);
     border-inline-end: var(--border-row);
-    font-size: 0.78rem;
+    font-size: 0.7rem;
+    padding: 0.26rem 0.45rem;
   }
 
-  :global([data-theme="light"]) .leaderboard-quiet .command-input-prefix {
-    color: var(--accent-cobalt);
+  :global([data-theme="light"]) .toolbar-search .command-input-prefix {
+    color: var(--raw-ebony);
+    background: var(--hl-acid);
   }
 
-  .leaderboard-quiet .input,
-  .leaderboard-quiet .select {
-    background-color: var(--bg-canvas);
-    border: 1px solid var(--border-strong-color);
-  }
-
-  .leaderboard-quiet .command-input-wrap {
-    background-color: var(--bg-canvas);
-    border: 1px solid var(--border-strong-color);
-  }
-
-  .leaderboard-quiet .command-input-wrap .input {
+  .toolbar-search .input {
     border: none;
+    background-color: transparent;
+    font-size: 0.75rem;
+    padding: 0.26rem 0.5rem;
   }
 
-  .leaderboard-quiet .sort-dir-btn {
-    border-width: 1px;
-  }
-
-  .leaderboard-quiet .controls-footer-row {
-    padding-block-start: 0.65rem;
-  }
-
-  .leaderboard-quiet .stage-legend-bar {
-    padding-block-start: 0.6rem;
-    color: var(--text-muted);
-  }
-
-  /* Quieter table headers & row density */
-  .leaderboard-quiet .leaderboard-table thead th {
+  .toolbar-select {
     background-color: var(--bg-canvas);
-    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-subtle-color);
+    font-size: 0.72rem;
+    padding: 0.26rem 1.6rem 0.26rem 0.5rem;
+    inline-size: auto;
+  }
+
+  .toolbar-reset-btn {
+    border-width: 1px;
+    padding: 0.26rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .controls-result-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-inline-start: 0.25rem;
+  }
+
+  /* 3. LEADERBOARD TABLE & INLINE FORENSIC DRAWER */
+  .leaderboard-quiet .leaderboard-table .col-rank {
+    inline-size: 2.8rem;
+  }
+
+  .leaderboard-quiet .leaderboard-table .col-details {
+    inline-size: 4.2rem;
+  }
+
+  .leaderboard-quiet .leaderboard-table .metric-primary {
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  .leaderboard-quiet .leaderboard-table .metric-sub {
+    font-size: 0.65rem;
+    white-space: nowrap;
+  }
+
+  .leaderboard-quiet .leaderboard-table thead th {
+    background-color: var(--bg-surface);
+    padding: 0.55rem 0.6rem;
+    font-size: 0.6875rem;
   }
 
   .leaderboard-quiet .leaderboard-table thead th.sortable {
@@ -1152,8 +1324,8 @@ if (paretoFrontierRuns.length > 0) {
   }
 
   .leaderboard-quiet .sort-header-btn {
-    min-block-size: 2.5rem;
-    padding: 0.7rem 0.9rem;
+    min-block-size: 2.25rem;
+    padding: 0.55rem 0.6rem;
   }
 
   .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
@@ -1167,11 +1339,11 @@ if (paretoFrontierRuns.length > 0) {
   }
 
   :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
-    box-shadow: inset 0 -3px 0 var(--accent-cobalt);
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
   }
 
   :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-indicator {
-    color: var(--accent-cobalt);
+    color: var(--raw-ebony);
   }
 
   .leaderboard-quiet .leaderboard-table thead th.sortable:hover .sort-header-btn {
@@ -1179,19 +1351,18 @@ if (paretoFrontierRuns.length > 0) {
     color: var(--text-primary);
   }
 
-  .leaderboard-quiet .leaderboard-table :is(td, tbody th, tfoot th) {
-    padding: 0.8rem 0.9rem;
+  .leaderboard-quiet.lb-v1 .v1-table-ledger .leaderboard-table :is(td, tbody th, tfoot th) {
+    padding: 0.58rem 0.6rem;
   }
 
-  /* Quieter rank badges: #1 keeps full brand acid fill; #2 & #3 use clean semantic accents */
   .leaderboard-quiet .rank-badge {
     border-width: 1px;
     border-color: var(--border-subtle-color);
     background-color: transparent;
     color: var(--text-muted);
-    min-inline-size: 2rem;
-    block-size: 1.75rem;
-    font-size: 0.75rem;
+    min-inline-size: 1.9rem;
+    block-size: 1.6rem;
+    font-size: 0.72rem;
   }
 
   .leaderboard-quiet .rank-badge.rank-1 {
@@ -1201,41 +1372,64 @@ if (paretoFrontierRuns.length > 0) {
     border-color: var(--raw-ebony);
   }
 
-  .leaderboard-quiet .rank-badge.rank-2 {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-color: var(--border-strong-color);
-    border-block-end: 2px solid var(--hl-mint);
-  }
-
+  .leaderboard-quiet .rank-badge.rank-2,
   .leaderboard-quiet .rank-badge.rank-3 {
     background-color: var(--bg-surface);
     color: var(--text-primary);
     border-color: var(--border-strong-color);
-    border-block-end: 2px solid var(--hl-sky);
   }
 
   .leaderboard-quiet .entry-title-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.38rem;
+  }
+
+  @container (width >= 32rem) {
+    .leaderboard-quiet .entry-title-row,
+    .leaderboard-quiet .entry-title-link,
+    .leaderboard-quiet .entry-meta {
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+  }
+
+  .leaderboard-quiet .entry-model {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .entry-meta-harness {
+    color: var(--text-secondary);
+    font-weight: 700;
   }
 
   .leaderboard-quiet .pareto-inline-badge {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
-    padding: 0.06rem 0.32rem;
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.03rem 0.28rem;
     letter-spacing: 0.04em;
+    border: 1px solid var(--hl-acid);
+    color: var(--hl-acid);
+    background-color: transparent;
   }
 
-  /* Quieter row metadata: clean monospace inline line instead of 3 boxed pills per row */
+  :global([data-theme="light"]) .leaderboard-quiet .pareto-inline-badge {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+  }
+
   .leaderboard-quiet .entry-meta {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--text-muted);
-    gap: 0.35rem;
-    margin-block-start: 0.3rem;
+    gap: 0.3rem;
+    margin-block-start: 0.2rem;
   }
 
   .leaderboard-quiet .entry-meta-sep {
@@ -1247,12 +1441,11 @@ if (paretoFrontierRuns.length > 0) {
     letter-spacing: 0.03em;
   }
 
-  /* Plan percentage & stage strip */
   .leaderboard-quiet .plan-pct-badge {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.08rem 0.38rem;
+    padding: 0.03rem 0.3rem;
   }
 
   .leaderboard-quiet .plan-pct-partial {
@@ -1267,74 +1460,388 @@ if (paretoFrontierRuns.length > 0) {
     color: var(--hl-ink);
   }
 
+  .stage-strip-btn {
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .stage-strip-btn:hover {
+    border-color: var(--hl-acid);
+  }
+
   .leaderboard-quiet .stage-pill {
-    font-size: 0.65rem;
-    padding: 0.16rem 0.28rem;
+    font-size: 0.6rem;
+    padding: 0.12rem 0.24rem;
   }
 
   .leaderboard-quiet .stage-pill.done {
     background-color: transparent;
+    color: var(--text-muted);
+    border-block-end: none;
+  }
+
+  .leaderboard-quiet .stage-pill.pending {
+    color: var(--text-primary);
+    border-block-end: 2px solid var(--hl-magenta);
   }
 
   .leaderboard-quiet .stage-pill.is-peak-stage {
-    border-block-end: 2px solid var(--hl-violet);
+    color: var(--text-primary);
+    border-block-end: 2px solid var(--hl-acid);
   }
 
-  /* Quieter row action: subtle text affordance that lights up with brand acid on row hover */
-  .leaderboard-quiet .view-btn {
-    border-width: 1px;
-    border-color: transparent;
-    color: var(--text-muted);
-    padding: 0.32rem 0.6rem;
+  :global([data-theme="light"]) .leaderboard-quiet .stage-pill.is-peak-stage {
+    border-block-end-color: var(--raw-ebony);
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
   }
 
-  .leaderboard-quiet .leaderboard-table:not(.static-table) tbody tr.run-row:hover .view-btn {
+  .cost-cell-head {
+    display: flex;
+    align-items: center;
+    gap: 0.32rem;
+  }
+
+  .cost-leader-tag {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    font-weight: 700;
+    padding: 0.03rem 0.26rem;
+    border: 1px solid var(--hl-acid);
+    color: var(--hl-acid);
+    background-color: transparent;
+  }
+
+  :global([data-theme="light"]) .cost-leader-tag {
     background-color: var(--hl-acid);
     color: var(--hl-ink);
     border-color: var(--raw-ebony);
   }
 
-  /* ==========================================================================
-     CROSS-RUN ANALYTICS SECTIONS (Pareto Frontier, Stage Matrix, Ablations)
-     ========================================================================== */
-  .analytics-grid {
+  .row-action-stack {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    white-space: nowrap;
+  }
+
+  .peek-row-btn,
+  .pin-diff-btn {
+    border-width: 1px;
+    border-color: var(--border-subtle-color);
+    color: var(--text-muted);
+    padding: 0.22rem 0.38rem;
+    font-size: 0.64rem;
+    background-color: transparent;
+    white-space: nowrap;
+  }
+
+  .peek-row-btn:hover,
+  .pin-diff-btn:hover {
+    border-color: var(--border-strong-color);
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+  }
+
+  .peek-row-btn.is-open,
+  .pin-diff-btn[aria-pressed="true"] {
+    border-color: var(--hl-acid);
+    color: var(--hl-acid);
+    background-color: var(--bg-surface);
+  }
+
+  :global([data-theme="light"]) .peek-row-btn.is-open,
+  :global([data-theme="light"]) .pin-diff-btn[aria-pressed="true"] {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+  }
+
+  /* Inline Forensic Drawer Row */
+  .forensic-drawer-row > .forensic-drawer-cell {
+    background-color: var(--bg-surface) !important;
+    padding: 0.8rem 1rem !important;
+    border-block-end: var(--border-frame) !important;
+  }
+
+  .forensic-drawer-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .forensic-col-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-block-end: 0.45rem;
+  }
+
+  .forensic-col-title {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+
+  .forensic-col-meta {
+    font-size: 0.66rem;
+    color: var(--text-muted);
+  }
+
+  .forensic-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.32rem;
+  }
+
+  .forensic-stage-card {
+    border: 1px solid var(--border-subtle-color);
+    background-color: var(--bg-canvas);
+    padding: 0.38rem 0.45rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-block-start: 2rem;
+    gap: 0.14rem;
+    min-inline-size: 0;
   }
 
-  .analytics-card {
+  .forensic-stage-card.is-peak {
+    border-color: var(--border-strong-color);
+    box-shadow: inset 0 -2px 0 var(--hl-acid);
+  }
+
+  .forensic-stage-card.is-miss {
+    border-color: var(--hl-magenta);
+  }
+
+  .forensic-stage-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+  }
+
+  .forensic-stage-id {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .forensic-stage-status.is-miss {
+    font-size: 0.56rem;
+    font-weight: 700;
+    background-color: var(--hl-magenta);
+    color: var(--hl-ink);
+    padding: 0.02rem 0.2rem;
+  }
+
+  .forensic-stage-cost {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .forensic-stage-turns {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .forensic-stage-bar-track {
+    inline-size: 100%;
+    block-size: 0.18rem;
+    background-color: var(--bg-surface);
+    margin-block-start: 0.16rem;
+  }
+
+  .forensic-stage-bar-fill {
+    display: block;
+    block-size: 100%;
+    background-color: var(--text-muted);
+  }
+
+  .forensic-stage-card.is-peak .forensic-stage-bar-fill {
+    background-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .forensic-stage-card.is-peak .forensic-stage-bar-fill {
+    background-color: var(--raw-ebony);
+  }
+
+  .forensic-quick-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .forensic-action-link {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-block-end: 1px solid var(--border-strong-color);
+  }
+
+  .forensic-action-link.is-primary {
+    color: var(--hl-acid);
+    border-block-end-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .forensic-action-link.is-primary {
+    color: var(--raw-ebony);
+    background-color: var(--hl-acid);
+    padding-inline: 0.28rem;
+    border-block-end: none;
+  }
+
+  .forensic-action-link:hover {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+  }
+
+  .forensic-notes-list {
+    margin: 0;
+    padding-inline-start: 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    line-height: 1.42;
+    color: var(--text-secondary);
+  }
+
+  .forensic-notes-empty {
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+  }
+
+  /* Sticky Quick-Compare Dock */
+  .quick-compare-dock {
+    position: sticky;
+    inset-block-end: 0.85rem;
+    z-index: 30;
+    border: var(--border-frame);
+    background-color: var(--bg-elevated);
+    padding: 0.6rem 0.95rem;
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
+  }
+
+  .qc-dock-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+  }
+
+  .qc-contenders {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .qc-badge {
+    font-size: 0.625rem;
+    padding: 0.06rem 0.35rem;
+  }
+
+  .qc-pair-text {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .qc-deltas {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+
+  .qc-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  /* 4. TABBED ANALYTICS WORKBENCH */
+  .analytics-workbench {
+    border: var(--border-frame);
     background-color: transparent;
-    padding: 1.35rem 1.5rem;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 320px;
+    margin-block-start: 0.25rem;
   }
 
-  @supports not (content-visibility: auto) {
-    .analytics-card {
-      contain: layout style paint;
-    }
+  .analytics-tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    border-block-end: var(--border-frame);
+    background-color: var(--bg-surface);
+  }
+
+  .analytics-tab-btn {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.68rem 1.1rem;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-inline-end: var(--border-row);
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+  }
+
+  .analytics-tab-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-canvas);
+  }
+
+  .analytics-tab-btn.is-active {
+    color: var(--text-primary);
+    background-color: var(--bg-canvas);
+    box-shadow: inset 0 -3px 0 var(--hl-acid);
+  }
+
+  .analytics-panel {
+    padding: 1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .panel-top-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
+  .section-subnote {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
   }
 
   .pareto-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
-    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 1fr);
+    gap: 1rem;
     align-items: start;
-    margin-block-start: 0.75rem;
-  }
-
-  @media (max-width: 960px) {
-    .pareto-layout {
-      grid-template-columns: 1fr;
-    }
   }
 
   .pareto-svg-frame {
-    border: 1px solid var(--border-strong-color);
+    border: 1px solid var(--border-subtle-color);
     background-color: var(--bg-surface);
-    padding: 0.75rem;
+    padding: 0.6rem;
   }
 
   .pareto-svg {
@@ -1366,7 +1873,7 @@ if (paretoFrontierRuns.length > 0) {
   }
 
   :global([data-theme="light"]) .pareto-step-path {
-    stroke: var(--accent-cobalt);
+    stroke: var(--raw-ebony);
   }
 
   .pareto-node-optimal {
@@ -1400,6 +1907,12 @@ if (paretoFrontierRuns.length > 0) {
     fill: var(--accent-cobalt);
   }
 
+  .pareto-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
   .pareto-step-list {
     border: 1px solid var(--border-subtle-color);
   }
@@ -1408,27 +1921,42 @@ if (paretoFrontierRuns.length > 0) {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.7rem 0.85rem;
+    gap: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+  }
+
+  .pareto-step-row.is-active {
+    background-color: var(--bg-surface);
+    box-shadow: inset 3px 0 0 var(--hl-acid);
   }
 
   .pareto-step-left {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: 0.45rem;
     min-inline-size: 0;
   }
 
   .pareto-order-pill {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    padding: 0.08rem 0.35rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 0.04rem 0.3rem;
+    border: 1px solid var(--hl-acid);
+    color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .pareto-order-pill {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
   }
 
   .pareto-step-link {
     color: var(--text-primary);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .pareto-step-link:hover {
@@ -1438,58 +1966,138 @@ if (paretoFrontierRuns.length > 0) {
   .pareto-step-metrics {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.8rem;
+    gap: 0.32rem;
+    font-size: 0.76rem;
     white-space: nowrap;
   }
 
+  .pareto-inspector {
+    border: 1px solid var(--border-subtle-color);
+    background-color: var(--bg-surface);
+    padding: 0.65rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .pareto-inspector-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .pareto-inspector-tag {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: var(--hl-acid);
+    text-transform: uppercase;
+  }
+
+  :global([data-theme="light"]) .pareto-inspector-tag {
+    color: var(--raw-ebony);
+    background-color: var(--hl-acid);
+    padding-inline: 0.28rem;
+  }
+
+  .pareto-inspector-link {
+    font-size: 0.66rem;
+    color: var(--text-secondary);
+    text-decoration: underline;
+  }
+
+  .pareto-inspector-title {
+    font-size: 0.84rem;
+    color: var(--text-primary);
+  }
+
+  .pareto-inspector-stats {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
   /* Stage Bottleneck Table */
+  .bottleneck-table-wrap {
+    border: 1px solid var(--border-subtle-color);
+  }
+
   .bottleneck-stage-cell {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
+    gap: 0.5rem;
+  }
+
+  .stage-legend-id.is-peak-id {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+  }
+
+  .is-peak-text {
+    color: var(--text-primary);
+    font-weight: 700;
   }
 
   .bottleneck-bar-wrap {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.55rem;
   }
 
   .bottleneck-bar-track {
     inline-size: 5.5rem;
-    block-size: 0.4rem;
-    border: 1px solid var(--border-subtle-color);
-    background-color: var(--bg-canvas);
+    block-size: 0.28rem;
+    background-color: var(--bg-surface);
   }
 
   .bottleneck-bar-fill {
     display: block;
     block-size: 100%;
-    background-color: var(--hl-sky);
+    background-color: var(--text-muted);
   }
 
   .bottleneck-bar-fill.is-peak {
-    background-color: var(--hl-violet);
+    background-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .bottleneck-bar-fill.is-peak {
+    background-color: var(--raw-ebony);
+  }
+
+  .peak-count-pill {
+    font-size: 0.66rem;
+    padding: 0.06rem 0.34rem;
+    border: 1px solid var(--border-subtle-color);
+    color: var(--text-secondary);
+  }
+
+  .peak-count-pill.is-top-peak {
+    border-color: var(--hl-acid);
+    color: var(--hl-acid);
+    font-weight: 700;
+  }
+
+  :global([data-theme="light"]) .peak-count-pill.is-top-peak {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
   }
 
   /* Ablation Teaser Cards */
   .ablation-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-    gap: 1rem;
-    margin-block-start: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
   }
 
   .ablation-teaser-card {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
-    padding: 1rem 1.15rem;
+    gap: 0.4rem;
+    padding: 0.85rem 1rem;
     text-decoration: none;
     background-color: transparent;
-    border-width: 1px;
-    border-color: var(--border-strong-color);
+    border: 1px solid var(--border-strong-color);
   }
 
   .ablation-teaser-top {
@@ -1500,199 +2108,76 @@ if (paretoFrontierRuns.length > 0) {
   }
 
   .ablation-badge {
-    font-size: 0.65rem;
-    padding: 0.08rem 0.35rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .ablation-badge {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    padding: 0.04rem 0.28rem;
   }
 
   .ablation-cta {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
   }
 
   .ablation-teaser-title {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     color: var(--text-primary);
+    line-height: 1.35;
   }
 
   .ablation-teaser-copy {
-    font-size: 0.825rem;
-    line-height: 1.5;
+    font-size: 0.78rem;
+    line-height: 1.45;
     color: var(--text-secondary);
     margin: 0;
   }
 
-  /* ==========================================================================
-     SPLIT ARCHITECTURAL MASTHEAD + SINGLE-DECK TOOLBAR + 2-COL ECONOMETRICS BENTO
-     ========================================================================== */
-  .leaderboard-quiet.lb-v1 {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    container-type: inline-size;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(22rem, 1fr);
-    border: var(--border-frame);
-    background-color: var(--bg-canvas);
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-copy {
-    position: relative;
-    padding: 1.35rem 1.5rem;
-    border-inline-end: var(--border-frame);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-copy .hero-box {
-    border: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-copy .hero-subtitle {
-    max-inline-size: 68ch;
-    margin-block-start: 0.55rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-stats {
-    margin: 0;
-    border: none;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, 1fr);
-    background-color: var(--bg-surface);
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card {
-    padding: 0.95rem 1.1rem;
-    border: none;
-    border-inline-end: var(--border-row);
-    border-block-end: var(--border-row);
-    background-color: transparent;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card:nth-child(2n) {
-    border-inline-end: none;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-masthead-stats .stat-card:nth-child(n + 3) {
-    border-block-end: none;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-command-deck {
-    border: var(--border-frame);
-    background-color: var(--bg-surface);
-    padding: 0.85rem 1.1rem;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-deck-top {
-    display: grid;
-    grid-template-columns: minmax(15rem, 1.35fr) repeat(4, minmax(9.5rem, 1fr));
-    gap: 0.7rem;
-    align-items: end;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-deck-bottom {
-    display: flex;
-    flex-wrap: wrap;
-    flex-wrap: balance;
-    justify-content: space-between;
-    align-items: safe center;
-    gap: 0.65rem 1.25rem;
-    padding-block-start: 0.65rem;
-    border-block-start: var(--border-row);
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-table-ledger {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-table-ledger .leaderboard-table :is(td, tbody th, tfoot th) {
-    padding: 0.75rem 0.9rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-table-colophon {
-    border: var(--border-frame);
-    border-block-start: none;
-    background-color: var(--bg-surface);
-    padding: 0.55rem 0.95rem;
-    margin: 0;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    gap: 1.25rem;
-    margin-block-start: 0.35rem;
-    align-items: stretch;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento > .analytics-card {
-    padding: 1.2rem 1.3rem;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento > #pareto-section .pareto-layout {
-    grid-template-columns: 1fr;
-    gap: 0.9rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento > #ablations-teaser {
-    grid-column: 1 / -1;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto auto 1fr;
-    gap: 0.95rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-teaser-card {
-    grid-row: span 3;
-    display: grid;
-    grid-template-rows: auto auto 1fr;
-    grid-template-rows: subgrid;
-    gap: 0.5rem;
-  }
-
-  @media (max-width: 1024px) {
-    .leaderboard-quiet.lb-v1 .v1-masthead-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .leaderboard-quiet.lb-v1 .v1-masthead-copy {
-      border-inline-end: none;
-      border-block-end: var(--border-frame);
-    }
-
-    .leaderboard-quiet.lb-v1 .v1-deck-top {
+  @media (max-width: 960px) {
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .leaderboard-quiet.lb-v1 .v1-deck-top > .controls-search-col {
-      grid-column: 1 / -1;
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:nth-child(2) {
+      border-inline-end: none;
     }
 
-    .leaderboard-quiet.lb-v1 .v1-analytics-bento {
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:nth-child(-n + 2) {
+      border-block-end: var(--border-row);
+    }
+
+    .pareto-layout,
+    .forensic-drawer-inner,
+    .ablation-cards-grid {
       grid-template-columns: 1fr;
     }
 
-    .leaderboard-quiet.lb-v1 .v1-analytics-bento .ablation-cards-grid {
+    .forensic-stage-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip {
       grid-template-columns: 1fr;
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card {
+      border-inline-end: none;
+      border-block-end: var(--border-row);
+    }
+
+    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:last-child {
+      border-block-end: none;
+    }
+
+    .forensic-stage-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>
@@ -1716,6 +2201,13 @@ if (paretoFrontierRuns.length > 0) {
   const resetFiltersBtn = document.getElementById('reset-filters-btn') as HTMLButtonElement | null;
   const statusRegion = document.getElementById('leaderboard-status') as HTMLElement | null;
   const sortableHeaders = document.querySelectorAll<HTMLTableCellElement>('th.sortable');
+  const scenarioPills = document.querySelectorAll<HTMLButtonElement>('.scenario-pill');
+  const lensSegBtns = document.querySelectorAll<HTMLButtonElement>('.lens-seg-btn');
+  const analyticsTabBtns = document.querySelectorAll<HTMLButtonElement>('[data-analytics-tab]');
+
+  let activeQuickScenario = 'all';
+  const expandedRunIds = new Set<string>();
+  const pinnedRunIds: string[] = [];
 
   const usdFmt = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -1738,11 +2230,6 @@ if (paretoFrontierRuns.length > 0) {
   function setSortDirButtonState(dir: 'asc' | 'desc') {
     if (!sortDirBtn) return;
     sortDirBtn.dataset.dir = dir;
-    sortDirBtn.innerHTML = `<span aria-hidden="true">${dir === 'asc' ? '↑' : '↓'}</span> ${dir === 'asc' ? 'ASC' : 'DESC'}`;
-    sortDirBtn.setAttribute(
-      'aria-label',
-      `Sort direction: ${dir === 'asc' ? 'ascending' : 'descending'}. Activate to switch to ${dir === 'asc' ? 'descending' : 'ascending'}`
-    );
   }
 
   function applyPricingLensToRows(lens: string) {
@@ -1756,6 +2243,10 @@ if (paretoFrontierRuns.length > 0) {
             : 'Cost (Billed)';
     }
 
+    lensSegBtns.forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.lensBtn === lens);
+    });
+
     const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
     for (const row of rows) {
       const billed = parseFloat(row.dataset.costBilled ?? '0');
@@ -1766,6 +2257,7 @@ if (paretoFrontierRuns.length > 0) {
       const activeCost =
         lens === 'standard' ? standard : lens === 'uncached' ? uncached : billed;
       row.dataset.cost = String(activeCost);
+      row.dataset.costStr = usdFmt.format(activeCost);
 
       const primaryEl = row.querySelector<HTMLElement>('.cost-primary-display');
       const subEl = row.querySelector<HTMLElement>('.cost-sub-display');
@@ -1781,12 +2273,12 @@ if (paretoFrontierRuns.length > 0) {
             standard !== billed
               ? `billed ${usdFmt.format(billed)}`
               : savings > 0
-                ? `-${usdFmt.format(savings)} cache saved`
+                ? `-${usdFmt.format(savings)} saved`
                 : 'standard API';
         } else {
           subEl.textContent =
             savings > 0
-              ? `-${usdFmt.format(savings)} cache saved`
+              ? `-${usdFmt.format(savings)} saved`
               : standard > billed
                 ? `${usdFmt.format(standard)} API equiv.`
                 : 'free tier';
@@ -1878,9 +2370,11 @@ if (paretoFrontierRuns.length > 0) {
       }
       if (pass === '1' && fullPassToggle) {
         fullPassToggle.checked = true;
+        activeQuickScenario = 'full-pass';
       }
       if (pareto === '1' && paretoOnlyToggle) {
         paretoOnlyToggle.checked = true;
+        activeQuickScenario = 'pareto';
       }
       if (
         sort &&
@@ -1914,30 +2408,36 @@ if (paretoFrontierRuns.length > 0) {
     const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
     const totalCount = rows.length;
 
-    // Filter rows
     rows.forEach((row) => {
       const rowSearch = row.dataset.search ?? '';
       const rowHarness = row.dataset.harness ?? '';
       const rowProvider = row.dataset.provider ?? '';
       const rowPlan = parseFloat(row.dataset.plan ?? '0');
       const rowPareto = row.dataset.pareto === '1';
+      const rowCostBilled = parseFloat(row.dataset.costBilled ?? '0');
 
       const matchesSearch = !query || rowSearch.includes(query);
       const matchesHarness = harness === 'all' || rowHarness === harness;
       const matchesProvider = provider === 'all' || rowProvider === provider;
       const matchesFullPass = !fullPassOnly || rowPlan === 1;
       const matchesPareto = !paretoOnly || rowPareto;
+      const matchesScenario =
+        activeQuickScenario === 'under-1'
+          ? rowCostBilled < 1.0
+          : activeQuickScenario === 'spec-miss'
+            ? rowPlan < 1
+            : true;
 
       row.hidden = !(
         matchesSearch &&
         matchesHarness &&
         matchesProvider &&
         matchesFullPass &&
-        matchesPareto
+        matchesPareto &&
+        matchesScenario
       );
     });
 
-    // Sort rows
     rows.sort((a, b) => {
       const valA = parseFloat(a.dataset[sortBy] ?? '0');
       const valB = parseFloat(b.dataset[sortBy] ?? '0');
@@ -1960,7 +2460,6 @@ if (paretoFrontierRuns.length > 0) {
           return sortDir === 'asc' ? passedA - passedB : passedB - passedA;
         }
       }
-      // Canonical tie-breaker chain: plan ratio -> test pass ratio -> lowest cost -> fastest duration
       const planDiff =
         parseFloat(b.dataset.plan ?? '0') - parseFloat(a.dataset.plan ?? '0');
       if (planDiff !== 0) return planDiff;
@@ -1976,18 +2475,34 @@ if (paretoFrontierRuns.length > 0) {
       return parseFloat(a.dataset.duration ?? '0') - parseFloat(b.dataset.duration ?? '0');
     });
 
-    // Re-order and re-rank visible rows using moveBefore when supported to preserve DOM state
     const supportsMoveBefore = 'moveBefore' in Element.prototype;
     let visibleRank = 1;
     rows.forEach((row) => {
       const refNode = emptyStateRow ?? null;
+      const runId = row.dataset.runId ?? '';
+      const drawerRow = tbody.querySelector<HTMLTableRowElement>(
+        `tr.forensic-drawer-row[data-drawer-for="${runId}"]`
+      );
       if (supportsMoveBefore) {
         (tbody as unknown as { moveBefore: (node: Node, child: Node | null) => void }).moveBefore(
           row,
           refNode
         );
+        if (drawerRow) {
+          (tbody as unknown as { moveBefore: (node: Node, child: Node | null) => void }).moveBefore(
+            drawerRow,
+            refNode
+          );
+        }
       } else {
         tbody.insertBefore(row, refNode);
+        if (drawerRow) {
+          tbody.insertBefore(drawerRow, refNode);
+        }
+      }
+
+      if (drawerRow) {
+        drawerRow.hidden = row.hidden || !expandedRunIds.has(runId);
       }
 
       if (!row.hidden) {
@@ -2010,30 +2525,22 @@ if (paretoFrontierRuns.length > 0) {
       provider !== 'all' ||
       lens !== 'billed' ||
       fullPassOnly ||
-      paretoOnly;
+      paretoOnly ||
+      activeQuickScenario !== 'all';
     const isNonDefaultSort =
       sortBy !== 'plan' || sortDir !== (defaultSortDirs.plan ?? 'desc');
 
     if (visibleCountBadge) {
-      visibleCountBadge.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'run' : 'runs'}`;
+      visibleCountBadge.textContent =
+        visibleCount === totalCount
+          ? `${totalCount} runs`
+          : `${visibleCount}/${totalCount} runs`;
       visibleCountBadge.classList.toggle('is-filtered', hasActiveFilters);
     }
 
-    harnessFilter?.classList.toggle('is-active-filter', harness !== 'all');
-    providerFilter?.classList.toggle('is-active-filter', provider !== 'all');
-    pricingLensSelect?.classList.toggle('is-active-filter', lens !== 'billed');
-    sortSelect?.classList.toggle('is-active-filter', isNonDefaultSort);
-    sortDirBtn?.classList.toggle(
-      'is-active-filter',
-      sortDir !== (defaultSortDirs[sortBy] ?? 'desc')
-    );
-    fullPassToggle
-      ?.closest('.controls-check-label')
-      ?.classList.toggle('is-active-filter', fullPassOnly);
-    paretoOnlyToggle
-      ?.closest('.controls-check-label')
-      ?.classList.toggle('is-active-filter', paretoOnly);
-    searchInput?.closest('.command-input-wrap')?.classList.toggle('is-active-filter', Boolean(query));
+    scenarioPills.forEach((pill) => {
+      pill.classList.toggle('is-active', pill.dataset.scenario === activeQuickScenario);
+    });
 
     if (resetFiltersBtn) {
       resetFiltersBtn.hidden = !(hasActiveFilters || isNonDefaultSort);
@@ -2042,25 +2549,12 @@ if (paretoFrontierRuns.length > 0) {
     if (emptyStateRow) {
       emptyStateRow.hidden = visibleCount > 0;
       if (visibleCount === 0 && emptyStateMsg) {
-        const activeParts: string[] = [];
-        const harnessLabel = harnessFilter?.selectedOptions[0]?.textContent ?? harness;
-        const providerLabel = providerFilter?.selectedOptions[0]?.textContent ?? provider;
-        if (query) activeParts.push(`query "${searchInput?.value.trim()}"`);
-        if (harness !== 'all') activeParts.push(`harness "${harnessLabel}"`);
-        if (provider !== 'all') activeParts.push(`provider "${providerLabel}"`);
-        if (fullPassOnly) activeParts.push('7/7 full pass only');
-        if (paretoOnly) activeParts.push('Pareto frontier only');
-        emptyStateMsg.textContent =
-          activeParts.length > 0
-            ? `No benchmark runs match ${activeParts.join(' + ')}.`
-            : 'No benchmark runs match the current filters.';
+        emptyStateMsg.textContent = 'No benchmark runs match the current filters.';
       }
     }
 
-    // Highlight timestamps when sorting by Run Date
     table?.classList.toggle('is-sorted-by-date', sortBy === 'timestamp');
 
-    // Update table header indicators and aria-sort
     sortableHeaders.forEach((th) => {
       const col = th.dataset.sortCol;
       const indicator = th.querySelector('.sort-indicator');
@@ -2077,12 +2571,11 @@ if (paretoFrontierRuns.length > 0) {
 
     syncUrlState(query, harness, provider, lens, fullPassOnly, paretoOnly, sortBy, sortDir);
 
-    // Debounce polite live region announcement
     if (statusRegion) {
       if (announceTimer) clearTimeout(announceTimer);
       const sortLabel = sortSelect.selectedOptions[0]?.textContent ?? sortBy;
       announceTimer = setTimeout(() => {
-        statusRegion.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'run' : 'runs'}, sorted by ${sortLabel} (${sortDir === 'asc' ? 'ascending' : 'descending'}).`;
+        statusRegion.textContent = `Showing ${visibleCount} of ${totalCount} runs, sorted by ${sortLabel} (${sortDir === 'asc' ? 'ascending' : 'descending'}).`;
       }, 250);
     }
   }
@@ -2097,6 +2590,7 @@ if (paretoFrontierRuns.length > 0) {
   }
 
   function resetAllControls() {
+    activeQuickScenario = 'all';
     if (searchInput) searchInput.value = '';
     if (harnessFilter) harnessFilter.value = 'all';
     if (providerFilter) providerFilter.value = 'all';
@@ -2108,7 +2602,158 @@ if (paretoFrontierRuns.length > 0) {
     updateLeaderboard(true);
   }
 
-  // Hydrate initial URL query state if present
+  // Scenario Lens Click Handlers
+  scenarioPills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const sc = pill.dataset.scenario ?? 'all';
+      activeQuickScenario = sc;
+      if (fullPassToggle) fullPassToggle.checked = sc === 'full-pass';
+      if (paretoOnlyToggle) paretoOnlyToggle.checked = sc === 'pareto';
+      updateLeaderboard(true);
+    });
+  });
+
+  // Segmented Pricing Lens Click Handlers
+  lensSegBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lens = btn.dataset.lensBtn ?? 'billed';
+      if (pricingLensSelect) {
+        pricingLensSelect.value = lens;
+        updateLeaderboard(sortSelect?.value === 'cost');
+      }
+    });
+  });
+
+  // Analytics Tab Switcher
+  analyticsTabBtns.forEach((tabBtn) => {
+    tabBtn.addEventListener('click', () => {
+      const targetId = tabBtn.dataset.analyticsTab;
+      if (!targetId) return;
+      analyticsTabBtns.forEach((b) => {
+        const active = b.dataset.analyticsTab === targetId;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll<HTMLElement>('.analytics-panel').forEach((panel) => {
+        panel.hidden = panel.id !== targetId;
+      });
+    });
+  });
+
+  // Toggle Inline Forensic Drawer
+  function toggleForensicDrawer(runId: string) {
+    if (!tbody) return;
+    const drawerRow = tbody.querySelector<HTMLTableRowElement>(
+      `tr.forensic-drawer-row[data-drawer-for="${runId}"]`
+    );
+    if (!drawerRow) return;
+    const isOpen = expandedRunIds.has(runId);
+    if (isOpen) {
+      expandedRunIds.delete(runId);
+      drawerRow.hidden = true;
+    } else {
+      expandedRunIds.add(runId);
+      drawerRow.hidden = false;
+    }
+    document
+      .querySelectorAll<HTMLElement>(`[data-peek-toggle="${runId}"]`)
+      .forEach((btn) => {
+        btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        if (btn.classList.contains('peek-row-btn')) {
+          btn.classList.toggle('is-open', !isOpen);
+        }
+      });
+  }
+
+  // Quick-Compare Dock management
+  const qcDock = document.getElementById('quick-compare-dock');
+  const qcPairText = document.getElementById('qc-pair-text');
+  const qcDeltas = document.getElementById('qc-deltas');
+  const qcOpenLink = document.getElementById('qc-open-link') as HTMLAnchorElement | null;
+  const qcClearBtn = document.getElementById('qc-clear-btn');
+
+  function renderQuickCompareDock() {
+    document.querySelectorAll<HTMLButtonElement>('.pin-diff-btn').forEach((btn) => {
+      const id = btn.dataset.pinRun ?? '';
+      const idx = pinnedRunIds.indexOf(id);
+      const isPinned = idx !== -1;
+      btn.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
+      btn.textContent = isPinned ? (idx === 0 ? 'Pin A' : 'Pin B') : '+ Diff';
+    });
+
+    if (!qcDock || !tbody) return;
+    if (pinnedRunIds.length === 0) {
+      qcDock.hidden = true;
+      return;
+    }
+    qcDock.hidden = false;
+    const allRows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
+    const rowA = allRows.find((r) => r.dataset.runId === pinnedRunIds[0]);
+    const rowB =
+      pinnedRunIds.length > 1
+        ? allRows.find((r) => r.dataset.runId === pinnedRunIds[1])
+        : allRows.find((r) => r.dataset.runId !== pinnedRunIds[0]);
+
+    if (!rowA || !rowB) return;
+    const labelA = rowA.dataset.runLabel ?? rowA.dataset.runId;
+    const labelB = rowB.dataset.runLabel ?? rowB.dataset.runId;
+    if (qcPairText) {
+      qcPairText.textContent =
+        pinnedRunIds.length === 1
+          ? `A: ${labelA} vs. ${labelB}`
+          : `A: ${labelA} vs. B: ${labelB}`;
+    }
+    if (qcDeltas) {
+      qcDeltas.innerHTML = `
+        <span>Spec: <strong>${rowA.dataset.planStr}</strong> vs <strong>${rowB.dataset.planStr}</strong></span>
+        <span>Cost: <strong>${rowA.dataset.costStr}</strong> vs <strong>${rowB.dataset.costStr}</strong></span>
+        <span>Time: <strong>${rowA.dataset.durationStr}</strong> vs <strong>${rowB.dataset.durationStr}</strong></span>
+      `;
+    }
+    if (qcOpenLink) {
+      qcOpenLink.href = `/compare?a=${rowA.dataset.runId}&b=${rowB.dataset.runId}`;
+    }
+  }
+
+  qcClearBtn?.addEventListener('click', () => {
+    pinnedRunIds.length = 0;
+    renderQuickCompareDock();
+  });
+
+  // Pareto Inspector Hover & Click
+  const piStatus = document.getElementById('pi-status');
+  const piTitle = document.getElementById('pi-title');
+  const piStats = document.getElementById('pi-stats');
+  const piLink = document.getElementById('pi-link') as HTMLAnchorElement | null;
+
+  function inspectParetoNode(el: HTMLElement | SVGElement) {
+    const runId = el.getAttribute('data-pareto-run');
+    if (!runId) return;
+    if (piStatus) piStatus.textContent = el.getAttribute('data-pareto-status') ?? '';
+    if (piTitle) piTitle.textContent = el.getAttribute('data-pareto-title') ?? '';
+    if (piStats) {
+      piStats.textContent = `${el.getAttribute('data-pareto-dur')} · ${el.getAttribute('data-pareto-cost')} · ${el.getAttribute('data-pareto-tokens')} tok (${el.getAttribute('data-pareto-cache')} cache)`;
+    }
+    if (piLink) piLink.href = `/runs/${runId}`;
+    document.querySelectorAll<HTMLElement>('[data-pareto-item]').forEach((li) => {
+      li.classList.toggle('is-active', li.dataset.paretoItem === runId);
+    });
+  }
+
+  document.querySelectorAll<SVGElement>('[data-pareto-run]').forEach((node) => {
+    node.addEventListener('mouseenter', () => inspectParetoNode(node));
+    node.addEventListener('focus', () => inspectParetoNode(node));
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-pareto-item]').forEach((li) => {
+    li.addEventListener('mouseenter', () => {
+      const matchingNode = document.querySelector<SVGElement>(
+        `[data-pareto-run="${li.dataset.paretoItem}"]`
+      );
+      if (matchingNode) inspectParetoNode(matchingNode);
+    });
+  });
+
   if (window.location.search) {
     hydrateFromUrlState();
     applyLeaderboardUpdate();
@@ -2128,12 +2773,9 @@ if (paretoFrontierRuns.length > 0) {
   harnessFilter?.addEventListener('change', () => updateLeaderboard(true));
   providerFilter?.addEventListener('change', () => updateLeaderboard(true));
   pricingLensSelect?.addEventListener('change', () => updateLeaderboard(true));
-  fullPassToggle?.addEventListener('change', () => updateLeaderboard(true));
-  paretoOnlyToggle?.addEventListener('change', () => updateLeaderboard(true));
   resetFiltersBtn?.addEventListener('click', resetAllControls);
   emptyResetBtn?.addEventListener('click', resetAllControls);
 
-  // Press '/' to focus the search input when not typing in an input
   window.addEventListener('keydown', (e) => {
     if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
     const active = document.activeElement;
@@ -2149,19 +2791,6 @@ if (paretoFrontierRuns.length > 0) {
     e.preventDefault();
     searchInput?.focus();
     searchInput?.select();
-  });
-
-  sortSelect?.addEventListener('change', () => {
-    const col = sortSelect.value;
-    const defaultDir = defaultSortDirs[col] ?? 'desc';
-    setSortDirButtonState(defaultDir);
-    updateLeaderboard(true);
-  });
-
-  sortDirBtn?.addEventListener('click', () => {
-    const current = sortDirBtn.dataset.dir === 'asc' ? 'desc' : 'asc';
-    setSortDirButtonState(current);
-    updateLeaderboard(true);
   });
 
   sortableHeaders.forEach((th) => {
@@ -2182,7 +2811,35 @@ if (paretoFrontierRuns.length > 0) {
     });
   });
 
-  // Row click navigation (respects text selection and modifier keys)
+  // Delegated click handler for Peek and + Diff buttons inside table
+  tbody?.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    const peekBtn = target.closest<HTMLElement>('[data-peek-toggle]');
+    if (peekBtn) {
+      e.stopPropagation();
+      const runId = peekBtn.dataset.peekToggle;
+      if (runId) toggleForensicDrawer(runId);
+      return;
+    }
+    const pinBtn = target.closest<HTMLButtonElement>('[data-pin-run]');
+    if (pinBtn) {
+      e.stopPropagation();
+      const runId = pinBtn.dataset.pinRun;
+      if (!runId) return;
+      const existingIdx = pinnedRunIds.indexOf(runId);
+      if (existingIdx !== -1) {
+        pinnedRunIds.splice(existingIdx, 1);
+      } else {
+        if (pinnedRunIds.length >= 2) pinnedRunIds.shift();
+        pinnedRunIds.push(runId);
+      }
+      renderQuickCompareDock();
+      return;
+    }
+  });
+
+  // Row click navigation
   document.querySelectorAll<HTMLTableRowElement>('tr.run-row').forEach((row) => {
     row.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;

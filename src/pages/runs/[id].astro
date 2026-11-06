@@ -234,20 +234,18 @@ const maxToolCalls =
     : 1;
 
 const planTone: 'hl-mint' | 'hl-acid' | 'hl-magenta' =
-  plan.ratio === 1 ? 'hl-mint' : plan.ratio >= 0.7 ? 'hl-acid' : 'hl-magenta';
-const planProgressClass =
-  plan.ratio === 1
-    ? 'plan-progress-mint'
-    : plan.ratio >= 0.7
-      ? 'plan-progress-acid'
-      : 'plan-progress-magenta';
-const isCostLeader = plan.ratio === 1 && d.costUsd <= 1.0;
-const hasTestFailures = Boolean(d.tests && d.tests.passed < d.tests.total);
+  plan.ratio === 1 ? 'hl-acid' : plan.ratio >= 0.7 ? 'hl-acid' : 'hl-magenta';
+const isCostLeader = plan.ratio === 1 && 1.0 >= d.costUsd;
+const hasTestFailures = Boolean(d.tests && d.tests.total > d.tests.passed);
 const rawMaxSliceCost =
   hasSliceBreakdown && d.sliceBreakdown!.length > 1
     ? Math.max(...d.sliceBreakdown!.map((r) => r.costUsd))
     : 0;
-const maxSliceCost = rawMaxSliceCost >= 0.25 ? rawMaxSliceCost : 0;
+const maxSliceCost = rawMaxSliceCost > 0 ? rawMaxSliceCost : 0;
+const maxSliceCalls =
+  hasSliceBreakdown && d.sliceBreakdown!.length > 1
+    ? Math.max(...d.sliceBreakdown!.map((r) => r.llmCalls))
+    : 0;
 
 let nonStageLlmCalls = 0;
 let nonStageCostUsd = 0;
@@ -259,10 +257,14 @@ if (hasSliceBreakdown) {
       const prev = sliceByStage.get(stageId);
       const combinedCost = (prev?.costUsd ?? 0) + row.costUsd;
       const combinedCalls = (prev?.llmCalls ?? 0) + row.llmCalls;
+      const isRowPeak =
+        maxSliceCost > 0
+          ? row.costUsd === maxSliceCost
+          : maxSliceCalls > 0 && row.llmCalls === maxSliceCalls;
       sliceByStage.set(stageId, {
         llmCalls: combinedCalls,
         costUsd: Number(combinedCost.toFixed(4)),
-        isPeak: (prev?.isPeak ?? false) || (maxSliceCost > 0 && row.costUsd === maxSliceCost),
+        isPeak: (prev?.isPeak ?? false) || isRowPeak,
       });
     } else {
       nonStageLlmCalls += row.llmCalls;
@@ -359,17 +361,71 @@ const wallClockMatch = d.interface?.details?.match(
 const wallClockMinutes = wallClockMatch ? Number(wallClockMatch[1] ?? wallClockMatch[2]) : null;
 const contextWindowParts = splitContextWindow(d.contextWindow);
 const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.model} by ${displayProvider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
+const peakStageId = telemetry.peakStageId;
+const peakStageStat = peakStageId ? telemetry.stages[peakStageId] : null;
+const peakStageTitle = peakStageId ? stageMap.get(peakStageId) : null;
+
+let forensicSynopsis = '';
+if (1 > plan.ratio) {
+  const missedCount = plan.total - plan.completed;
+  const missedNoun = missedCount === 1 ? 'slice' : 'slices';
+  const peakClause =
+    peakStageStat && peakStageStat.llmCalls > 0 && peakStageId
+      ? ` — while ${peakStageId} (${peakStageTitle}) absorbed ${
+          peakStageStat.costSharePct > 0
+            ? `${peakStageStat.costSharePct}% of total budget (${formatCost(peakStageStat.costUsd)}, ${peakStageStat.llmCalls} calls)`
+            : `${peakStageStat.llmCalls} LLM calls`
+        }`
+      : '';
+  if (!hasTestFailures && d.tests && d.tests.total > 0) {
+    forensicSynopsis = `Passed all ${d.tests.passed}/${d.tests.total} self-authored ExUnit tests yet missed ${missedCount} specification ${missedNoun} in post-run live verification${peakClause}.`;
+  } else {
+    forensicSynopsis = `Completed ${plan.completed} of ${plan.total} TDD slices in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}${peakClause}.`;
+  }
+} else {
+  const clauses: string[] = [];
+  if (telemetry.costMetrics.cacheSavingsUsd > 0 && d.tokens?.cacheHitRate && d.tokens?.total) {
+    clauses.push(
+      `Served ${d.tokens.cacheHitRate} of ${d.tokens.total} tokens from prefix cache — saving ${formatCost(telemetry.costMetrics.cacheSavingsUsd)} (${telemetry.costMetrics.cacheSavingsPct}%) vs. ${formatCost(telemetry.costMetrics.uncachedCounterfactualCostUsd)} uncached`
+    );
+  } else if (d.tokens?.total) {
+    clauses.push(
+      `Processed ${d.tokens.total} tokens across ${d.calls?.llmCalls ?? totalSliceLlmCalls} inference turns in ${formatDuration(d.durationMinutes)}`
+    );
+  }
+  if (peakStageStat && peakStageStat.llmCalls > 0 && peakStageId) {
+    const peakMetric =
+      peakStageStat.costSharePct > 0
+        ? `${peakStageStat.costSharePct}% of run cost (${formatCost(peakStageStat.costUsd)}, ${peakStageStat.llmCalls} calls)`
+        : `${peakStageStat.llmCalls} LLM calls`;
+    clauses.push(`concentrated peak effort in ${peakStageId} (${peakStageTitle}: ${peakMetric})`);
+  }
+  if (telemetry.toolErrorCalls > 0 && telemetry.toolTotalCalls > 0) {
+    clauses.push(
+      `recovered from ${telemetry.toolErrorCalls} tool ${telemetry.toolErrorCalls === 1 ? 'error' : 'errors'} across ${telemetry.toolTotalCalls} executions`
+    );
+  }
+  forensicSynopsis = clauses.length > 0 ? `${clauses.join('; ')}.` : '';
+}
+
+const curiosityHooks = hasNotesDetails
+  ? d.notesDetails!.slice(0, 4).map((n, i) => ({
+      num: String(i + 1).padStart(2, '0'),
+      title: n.title,
+      href: `#note-${i + 1}`,
+      meta: `${n.bullets.length} ${n.bullets.length === 1 ? 'point' : 'points'}`,
+    }))
+  : d.notes && d.notes.length > 0
+    ? d.notes.slice(0, 3).map((n, i) => ({
+        num: String(i + 1).padStart(2, '0'),
+        title: n,
+        href: '#notes-section',
+        meta: 'Note',
+      }))
+    : [];
 
 const pageSections = [
   { id: 'plan-section', label: `Plan (${plan.completed}/${plan.total})` },
-  ...(hasSliceBreakdown
-    ? [{ id: 'slice-section', label: `Slices (${d.sliceBreakdown!.length})` }]
-    : []),
-  ...(hasTokenOrCostSection
-    ? [{ id: 'tokens-cost-section', label: 'Tokens & Cost' }]
-    : hasCallsSection
-      ? [{ id: 'calls-section', label: 'Calls & Tools' }]
-      : []),
   ...(hasNotes
     ? [
         {
@@ -378,6 +434,14 @@ const pageSections = [
         },
       ]
     : []),
+  ...(hasSliceBreakdown
+    ? [{ id: 'slice-section', label: `Slices (${d.sliceBreakdown!.length})` }]
+    : []),
+  ...(hasTokenOrCostSection
+    ? [{ id: 'tokens-cost-section', label: 'Tokens & Cost' }]
+    : hasCallsSection
+      ? [{ id: 'calls-section', label: 'Calls & Tools' }]
+      : []),
   ...(hasCommitLog
     ? [{ id: 'commits-section', label: `Commits (${d.commitLog!.length})` }]
     : hasInterface
@@ -506,7 +570,12 @@ const pageSections = [
             PARETO OPTIMAL #{telemetry.paretoOrder}
           </span>
         )}
-        <span class:list={['hl', planTone]}>
+        <span
+          class:list={[
+            'verdict-pill',
+            plan.ratio === 1 ? 'is-full-pass' : 'is-partial-pass',
+          ]}
+        >
           {plan.ratio === 1
             ? 'ALL 7 SLICES PASSED'
             : `${plan.completed}/${plan.total} SLICES (${plan.total - plan.completed} MISSED)`}
@@ -516,7 +585,7 @@ const pageSections = [
 
     <dl class="kpi-grid detail-kpi-grid">
       <div class="kpi-box">
-        <dt class="section-kicker">TIME ELAPSED</dt>
+        <dt class="kpi-label">Time Elapsed</dt>
         <dd class="kpi-val">{formatDuration(d.durationMinutes)}</dd>
         <dd class="kpi-sub">
           {wallClockMinutes && wallClockMinutes > d.durationMinutes
@@ -526,11 +595,11 @@ const pageSections = [
       </div>
 
       <div class="kpi-box">
-        <dt class="section-kicker">ESTIMATED COST</dt>
+        <dt class="kpi-label">Estimated Cost</dt>
         <dd class="kpi-val">
           {
             isCostLeader ? (
-              <span class="hl hl-mint">{formatCost(d.costUsd)}</span>
+              <span class="kpi-acid-underline">{formatCost(d.costUsd)}</span>
             ) : (
               formatCost(d.costUsd)
             )
@@ -546,10 +615,10 @@ const pageSections = [
       {
         d.tests && (
           <div class="kpi-box">
-            <dt class="section-kicker">TEST SUITE</dt>
+            <dt class="kpi-label">Test Suite</dt>
             <dd class="kpi-val">
               {hasTestFailures ? (
-                <span class="hl hl-magenta">
+                <span class="kpi-miss-underline">
                   {d.tests.passed}/{d.tests.total}
                 </span>
               ) : (
@@ -572,12 +641,12 @@ const pageSections = [
       {
         (d.tokens?.total || d.calls?.llmCalls !== undefined || d.commits !== undefined) && (
           <div class="kpi-box">
-            <dt class="section-kicker">
+            <dt class="kpi-label">
               {d.tokens?.total
-                ? 'TOTAL TOKENS'
+                ? 'Total Tokens'
                 : d.calls?.llmCalls !== undefined
-                  ? 'LLM / TOOL CALLS'
-                  : 'GIT COMMITS'}
+                  ? 'LLM / Tool Calls'
+                  : 'Git Commits'}
             </dt>
             <dd class="kpi-val">
               {d.tokens?.total ??
@@ -602,20 +671,50 @@ const pageSections = [
       }
     </dl>
 
+    {(forensicSynopsis || curiosityHooks.length > 0) && (
+      <div class="forensic-dossier-lead" aria-label="Forensic dossier highlights">
+        <div class="forensic-dossier-head">
+          <span class="hl hl-acid forensic-dossier-tag">INSIDE THIS RUN</span>
+          {forensicSynopsis && <p class="forensic-synopsis-copy">{forensicSynopsis}</p>}
+        </div>
+        {curiosityHooks.length > 0 && (
+          <ol class="forensic-hooks-grid" role="list">
+            {curiosityHooks.map((hook) => (
+              <li class="forensic-hook-item">
+                <a href={hook.href} class="forensic-hook-link dossier-hook-link">
+                  <span class="mono forensic-hook-num">{hook.num}</span>
+                  <span class="forensic-hook-title">
+                    {tokenizeNoteText(hook.title).map((seg) =>
+                      seg.type === 'code' ? (
+                        <code class="note-inline-code">{seg.value}</code>
+                      ) : (
+                        seg.value
+                      )
+                    )}
+                  </span>
+                  <span class="mono forensic-hook-cta">Investigate &darr;</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    )}
+
     {
       d.tests?.details && (
         <div class="detail-test-strip">
           <span
             class:list={[
-              'hl',
-              hasTestFailures ? 'hl-magenta' : plan.ratio < 1 ? 'hl-acid' : 'hl-mint',
+              'mono detail-test-tag',
+              hasTestFailures ? 'is-fail' : plan.ratio < 1 ? 'is-warn' : 'is-pass',
             ]}
           >
             {hasTestFailures
-              ? 'TEST DIAGNOSTIC'
+              ? 'Test Diagnostic:'
               : plan.ratio < 1
-                ? 'AGENT SUITE PASSED · SPEC MISS'
-                : 'TEST & LINT VERDICT'}
+                ? 'Verification Divergence:'
+                : 'Verification Verdict:'}
           </span>
           <p class="mono detail-test-callout-copy">
             {d.tests.details}
@@ -671,13 +770,6 @@ const pageSections = [
         </div>
       </div>
 
-      <progress
-        class:list={['plan-progress', planProgressClass]}
-        value={plan.completed}
-        max={plan.total}
-        aria-labelledby="plan-completion-heading"
-      ></progress>
-
       <ul class="plan-checklist" role="list">
         {
           plan.entries.map(([stageId, completed]) => {
@@ -694,6 +786,7 @@ const pageSections = [
                 class:list={[
                   'plan-item',
                   completed ? 'completed' : wasAttempted ? 'spec-miss' : 'incomplete',
+                  { 'is-peak-stage': Boolean(sliceStat?.isPeak) },
                 ]}
               >
                 <div class="plan-item-head">
@@ -701,19 +794,18 @@ const pageSections = [
                     {stageId}
                     <span class="visually-hidden">
                       : {completed ? 'PASS' : 'MISS'}
-                      {sliceStat?.isPeak ? ' (Peak cost bottleneck)' : ''}
+                      {sliceStat?.isPeak ? ' (Peak effort bottleneck)' : ''}
                     </span>
                   </span>
                   <div class="plan-item-badges" aria-hidden="true">
                     {sliceStat?.isPeak && (
-                      <span class="hl hl-violet plan-peak-badge">
+                      <span class="hl hl-acid plan-peak-badge">
                         PEAK
                       </span>
                     )}
                     <span
                       class:list={[
-                        'hl',
-                        completed ? 'hl-mint' : 'hl-magenta',
+                        'mono',
                         'plan-status-badge',
                         completed ? 'is-pass' : 'is-miss',
                       ]}
@@ -767,6 +859,173 @@ const pageSections = [
       </ul>
     </section>
 
+    <!-- Promoted: Notes & Key Findings (Forensic Investigations) -->
+    {
+      hasNotes && (
+        <section
+          class="card col-12"
+          id="notes-section"
+          aria-labelledby="notes-findings-heading"
+        >
+          <div class="card-title">
+            <div class="card-title-group">
+              <h2 id="notes-findings-heading" class="card-heading headline-two-tone">
+                Field Notes &amp; Key Findings{' '}
+                <span class="muted">
+                  / {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} Forensic Observations
+                </span>
+              </h2>
+            </div>
+            {hasNotesDetails && (
+              <div>
+                {d.notesDetails!.length > 1 && (
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-secondary"
+                    id="toggle-notes-btn"
+                    aria-expanded="false"
+                    aria-keyshortcuts="e"
+                  >
+                    <span id="toggle-notes-label">Expand All Notes</span>
+                    <kbd class="menu-kbd" aria-hidden="true">e</kbd>
+                  </button>
+                )}
+                <span
+                  id="toggle-notes-status"
+                  class="visually-hidden"
+                  role="status"
+                  aria-live="polite"
+                />
+              </div>
+            )}
+          </div>
+
+          {hasNotesDetails ? (
+            <ol class="notes-list" role="list">
+              {d.notesDetails!.map((note, idx) => {
+                const noteLeads = note.bullets
+                  .map((b) => {
+                    const p = parseNoteBullet(b);
+                    return p.lead ? p.lead.map((s) => s.value).join('').replace(/:$/, '') : '';
+                  })
+                  .filter(Boolean);
+                return (
+                  <li class="note-card">
+                    <details
+                      class="note-disclosure"
+                      id={`note-${idx + 1}`}
+                      open={idx === (firstFailureNoteIdx ?? 0)}
+                    >
+                      <summary class="note-summary">
+                        <span class="note-num" aria-hidden="true">
+                          {String(idx + 1).padStart(2, '0')}
+                        </span>
+                        <div class="note-summary-main">
+                          <strong class="note-title">
+                            {tokenizeNoteText(note.title).map((seg) =>
+                              seg.type === 'code' ? (
+                                <code class="note-inline-code">{seg.value}</code>
+                              ) : (
+                                seg.value
+                              )
+                            )}
+                          </strong>
+                          {noteLeads.length > 0 && (
+                            <span class="note-summary-teaser">
+                              {noteLeads.join(' · ')}
+                            </span>
+                          )}
+                        </div>
+                        <span class="note-summary-meta">
+                          <span class="badge-static note-count-badge">
+                            {note.bullets.length} {note.bullets.length === 1 ? 'point' : 'points'}
+                          </span>
+                          <span class="note-chevron" aria-hidden="true">▸</span>
+                        </span>
+                      </summary>
+                      <div class="note-body">
+                        <ul class="note-bullets" role="list">
+                          {note.bullets.map((b) => {
+                            const parsed = parseNoteBullet(b);
+                            return (
+                              <li
+                                class:list={[
+                                  'note-bullet-item',
+                                  {
+                                    'is-intro': parsed.isIntro,
+                                    'has-block-lead': parsed.isBlockLead,
+                                  },
+                                ]}
+                              >
+                                {parsed.lead && (
+                                  <strong
+                                    class:list={[
+                                      'note-bullet-lead',
+                                      { 'note-bullet-lead-block': parsed.isBlockLead },
+                                    ]}
+                                  >
+                                    {parsed.lead.map((seg) =>
+                                      seg.type === 'code' ? (
+                                        <code class="note-inline-code">{seg.value}</code>
+                                      ) : (
+                                        seg.value
+                                      )
+                                    )}
+                                  </strong>
+                                )}{' '}
+                                <span class="note-bullet-copy">
+                                  {parsed.body.map((seg) =>
+                                    seg.type === 'code' ? (
+                                      <code class="note-inline-code">{seg.value}</code>
+                                    ) : (
+                                      seg.value
+                                    )
+                                  )}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        <div class="note-body-footer">
+                          <a
+                            href={`#note-${idx + 1}`}
+                            class="mono action-link note-permalink-btn"
+                            data-note-hash={`#note-${idx + 1}`}
+                            data-note-label={`#note-${String(idx + 1).padStart(2, '0')}`}
+                          >
+                            Copy #note-{String(idx + 1).padStart(2, '0')} link
+                          </a>
+                        </div>
+                      </div>
+                    </details>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <ol class="notes-list" role="list">
+              {d.notes!.map((note, idx) => (
+                <li class="note-item">
+                  <span class="note-num" aria-hidden="true">
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <span>
+                    {tokenizeNoteText(note).map((seg) =>
+                      seg.type === 'code' ? (
+                        <code class="note-inline-code">{seg.value}</code>
+                      ) : (
+                        seg.value
+                      )
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      )
+    }
+
     <!-- Conditional: Slice / Phase Breakdown -->
     {
       hasSliceBreakdown && (
@@ -818,9 +1077,22 @@ const pageSections = [
                   let seenNonStageRow = false;
                   let hasSeenAnyStage = false;
                   return d.sliceBreakdown!.map((row) => {
-                    const isPeakCostSlice = maxSliceCost > 0 && row.costUsd === maxSliceCost;
+                    const isPeakCostSlice =
+                      maxSliceCost > 0
+                        ? row.costUsd === maxSliceCost
+                        : maxSliceCalls > 0 && row.llmCalls === maxSliceCalls;
                     const costSharePct =
-                      totalSliceCostUsd > 0 ? Math.round((row.costUsd / totalSliceCostUsd) * 100) : 0;
+                      totalSliceCostUsd > 0
+                        ? Math.round((row.costUsd / totalSliceCostUsd) * 100)
+                        : totalSliceLlmCalls > 0
+                          ? Math.round((row.llmCalls / totalSliceLlmCalls) * 100)
+                          : 0;
+                    const barRatio =
+                      maxSliceCost > 0
+                        ? row.costUsd / maxSliceCost
+                        : maxSliceCalls > 0
+                          ? row.llmCalls / maxSliceCalls
+                          : 0;
                     const stepCount = getStepRangeCount(row.stepRange);
                     const matchedStage = matchSliceStageId(row.slice);
                     if (matchedStage) {
@@ -844,8 +1116,7 @@ const pageSections = [
                             {stagePassed !== undefined ? (
                               <span
                                 class:list={[
-                                  'hl',
-                                  stagePassed ? 'hl-mint' : 'hl-magenta',
+                                  'mono',
                                   'slice-stage-badge',
                                   stagePassed ? 'is-pass' : 'is-miss',
                                 ]}
@@ -886,30 +1157,29 @@ const pageSections = [
                       )}
                       <td class="mono" data-cell="Estimated Cost">
                         <div class="slice-cost-cell">
-                          {isPeakCostSlice ? (
-                            <span class="hl hl-violet cost-pill">
-                              {formatCost(row.costUsd)} ({costSharePct}%) · PEAK
-                            </span>
-                          ) : (
+                          <div class="slice-cost-head">
                             <span class="cost-mono">
                               {formatCost(row.costUsd)}
-                              {totalSliceCostUsd > 0 && (
+                              {costSharePct > 0 && (
                                 <>
                                   {' '}
                                   <span class="metric-sub metric-inline">({costSharePct}%)</span>
                                 </>
                               )}
                             </span>
-                          )}
-                          {maxSliceCost > 0 && row.costUsd > 0 && (
+                            {isPeakCostSlice && (
+                              <span class="hl hl-acid slice-peak-tag">PEAK</span>
+                            )}
+                          </div>
+                          {barRatio > 0 && (
                             <div class="slice-cost-track" aria-hidden="true">
                               <span
                                 class:list={[
                                   'slice-cost-fill',
                                   isPeakCostSlice ? 'is-peak' : 'is-normal',
-                                  { 'is-track-end': row.costUsd >= maxSliceCost },
+                                  { 'is-track-end': barRatio >= 1 },
                                 ]}
-                                style={`inline-size: ${Math.min(100, (row.costUsd / maxSliceCost) * 100).toFixed(1)}%`}
+                                style={`inline-size: ${Math.min(100, barRatio * 100).toFixed(1)}%`}
                               />
                             </div>
                           )}
@@ -946,11 +1216,9 @@ const pageSections = [
                     </td>
                   )}
                   <td class="mono" data-cell="Estimated Cost">
-                    {isCostLeader ? (
-                      <span class="hl hl-mint cost-pill">{formatCost(displaySliceTotalCostUsd)}</span>
-                    ) : (
-                      <strong class="cost-mono">{formatCost(displaySliceTotalCostUsd)}</strong>
-                    )}
+                    <strong class:list={['cost-mono', { 'kpi-acid-underline': isCostLeader }]}>
+                      {formatCost(displaySliceTotalCostUsd)}
+                    </strong>
                   </td>
                 </tr>
               </tfoot>
@@ -983,7 +1251,7 @@ const pageSections = [
             <dl class="tokens-meta-strip">
               {d.tokens?.total && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">TOTAL TOKENS</dt>
+                  <dt class="tokens-meta-label">Total Tokens</dt>
                   <dd class="mono">
                     <strong>{d.tokens.total}</strong>
                     {d.tokens.input && d.tokens.output ? (
@@ -997,9 +1265,9 @@ const pageSections = [
 
               {d.tokens?.cacheHitRate && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">CACHE HIT RATE</dt>
+                  <dt class="tokens-meta-label">Cache Hit Rate</dt>
                   <dd class="mono">
-                    <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
+                    <strong class="kpi-acid-underline">{d.tokens.cacheHitRate}</strong>
                     {d.tokens.cachedInput && d.tokens.total ? (
                       <span class="tokens-meta-sub">
                         ({d.tokens.cachedInput} / {d.tokens.total})
@@ -1011,7 +1279,7 @@ const pageSections = [
 
               {d.tokens?.thinking && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">THINKING TOKENS</dt>
+                  <dt class="tokens-meta-label">Thinking Tokens</dt>
                   <dd class="mono">
                     <strong>{d.tokens.thinking}</strong>
                     {d.tokens.output ? (
@@ -1023,9 +1291,9 @@ const pageSections = [
 
               {d.contextWindow && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">PEAK CONTEXT</dt>
+                  <dt class="tokens-meta-label">Peak Context</dt>
                   <dd class="mono">
-                    <span class="hl hl-sky">{contextWindowParts.headline}</span>
+                    <strong>{contextWindowParts.headline}</strong>
                     {contextWindowParts.detail ? (
                       <span class="tokens-meta-sub">({contextWindowParts.detail})</span>
                     ) : null}
@@ -1035,11 +1303,11 @@ const pageSections = [
 
               {telemetry.costMetrics.cacheSavingsUsd > 0 && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">CACHE SAVINGS</dt>
+                  <dt class="tokens-meta-label">Cache Savings</dt>
                   <dd class="mono">
-                    <span class="hl hl-mint">
+                    <strong class="kpi-acid-underline">
                       -{formatCost(telemetry.costMetrics.cacheSavingsUsd)} ({telemetry.costMetrics.cacheSavingsPct}%)
-                    </span>
+                    </strong>
                     <span class="tokens-meta-sub">
                       (vs {formatCost(telemetry.costMetrics.uncachedCounterfactualCostUsd)} uncached)
                     </span>
@@ -1049,7 +1317,7 @@ const pageSections = [
 
               {telemetry.costPerCompletedSlice !== null && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">UNIT ECONOMICS</dt>
+                  <dt class="tokens-meta-label">Unit Economics</dt>
                   <dd class="mono">
                     <strong>{formatCost(telemetry.costPerCompletedSlice)} / slice</strong>
                     {telemetry.tokensPerCompletedSlice !== null && (
@@ -1063,7 +1331,7 @@ const pageSections = [
 
               {telemetry.toolSuccessRatePct !== null && (
                 <div class="tokens-meta-item">
-                  <dt class="mono">TOOL PRECISION</dt>
+                  <dt class="tokens-meta-label">Tool Precision</dt>
                   <dd class="mono">
                     <strong>{telemetry.toolSuccessRatePct}% ok</strong>
                     <span class="tokens-meta-sub">
@@ -1082,8 +1350,8 @@ const pageSections = [
             <dl class="kpi-grid kpi-grid-tokens-summary">
               {(d.tokens?.total || d.tokens?.input) && (
                 <div class="kpi-box">
-                  <dt class="section-kicker">
-                    {d.tokens?.total ? 'TOTAL TOKENS' : 'INPUT (UNCACHED)'}
+                  <dt class="kpi-label">
+                    {d.tokens?.total ? 'Total Tokens' : 'Input (Uncached)'}
                   </dt>
                   <dd class="kpi-val">{d.tokens?.total ?? d.tokens?.input}</dd>
                   <dd class="kpi-sub">
@@ -1098,9 +1366,9 @@ const pageSections = [
 
               {d.tokens?.cacheHitRate && (
                 <div class="kpi-box">
-                  <dt class="section-kicker">CACHE HIT RATE</dt>
+                  <dt class="kpi-label">Cache Hit Rate</dt>
                   <dd class="kpi-val">
-                    <span class="hl hl-mint">{d.tokens.cacheHitRate}</span>
+                    <span class="kpi-acid-underline">{d.tokens.cacheHitRate}</span>
                   </dd>
                   <dd class="kpi-sub">
                     {d.tokens.cachedInput && d.tokens.total
@@ -1112,12 +1380,12 @@ const pageSections = [
 
               {(d.tokens?.output || d.tokens?.thinking) && (
                 <div class="kpi-box">
-                  <dt class="section-kicker">
+                  <dt class="kpi-label">
                     {d.tokens?.output && d.tokens?.thinking
-                      ? 'OUTPUT & THINKING'
+                      ? 'Output & Thinking'
                       : d.tokens?.output
-                        ? 'OUTPUT TOKENS'
-                        : 'THINKING TOKENS'}
+                        ? 'Output Tokens'
+                        : 'Thinking Tokens'}
                   </dt>
                   <dd class="kpi-val">{d.tokens?.output ?? d.tokens?.thinking}</dd>
                   <dd class="kpi-sub">
@@ -1132,9 +1400,9 @@ const pageSections = [
 
               {d.contextWindow && (
                 <div class="kpi-box">
-                  <dt class="section-kicker">CONTEXT WINDOW USAGE</dt>
+                  <dt class="kpi-label">Context Window Usage</dt>
                   <dd class="kpi-val">
-                    <span class="hl hl-sky">{contextWindowParts.headline}</span>
+                    <span>{contextWindowParts.headline}</span>
                   </dd>
                   <dd class="kpi-sub">
                     {contextWindowParts.detail ?? 'Peak prompt context window'}
@@ -1234,11 +1502,9 @@ const pageSections = [
                             class="mono"
                             data-cell={costPrimaryCostHeader}
                           >
-                            {isCostLeader ? (
-                              <span class="hl hl-mint cost-pill">{c26.primary}</span>
-                            ) : (
-                              <strong class="cost-mono">{c26.primary}</strong>
-                            )}
+                            <strong class:list={['cost-mono', { 'kpi-acid-underline': isCostLeader }]}>
+                              {c26.primary}
+                            </strong>
                             {c26.detail && (
                               <>
                                 {' '}
@@ -1291,7 +1557,7 @@ const pageSections = [
           <dl class="calls-summary-strip">
             {d.calls?.llmCalls !== undefined && (
               <div class="calls-summary-item">
-                <dt class="section-kicker">LLM API CALLS</dt>
+                <dt class="kpi-label">LLM Inference Turns</dt>
                 <dd class="calls-summary-val">
                   <strong class="mono">{d.calls.llmCalls}</strong>
                   <span class="mono calls-summary-sub">completed agent_response steps</span>
@@ -1301,15 +1567,15 @@ const pageSections = [
 
             {d.calls?.toolCalls?.total !== undefined && (
               <div class="calls-summary-item">
-                <dt class="section-kicker">TOOL CALLS</dt>
+                <dt class="kpi-label">Tool Executions</dt>
                 <dd class="calls-summary-val">
                   <strong class="mono">{d.calls.toolCalls.total}</strong>
                   {d.calls.toolCalls.done !== undefined && (
-                    <span class="mono calls-summary-sub">{d.calls.toolCalls.done} DONE</span>
+                    <span class="mono calls-summary-sub">{d.calls.toolCalls.done} succeeded</span>
                   )}
                   {d.calls.toolCalls.error !== undefined && d.calls.toolCalls.error > 0 && (
-                    <span class="hl hl-magenta tool-err-pill">
-                      {d.calls.toolCalls.error} ERROR
+                    <span class="mono tool-err-pill">
+                      · {d.calls.toolCalls.error} non-zero / error
                     </span>
                   )}
                 </dd>
@@ -1335,11 +1601,7 @@ const pageSections = [
                     <div class="tool-row-header">
                       <span class="tool-name">
                         <span class="prefix">tool/</span>
-                        <span
-                          class:list={[
-                            errCount > 0 ? 'hl hl-magenta' : 'badge-static tool-name-badge',
-                          ]}
-                        >
+                        <span class="mono tool-name-badge">
                           {item.tool}
                         </span>
                       </span>
@@ -1348,7 +1610,7 @@ const pageSections = [
                         <span class="tool-status-note">
                           ({sharePct}%
                           {item.done !== undefined || (item.error && item.error > 0)
-                            ? ` · ${doneCount} DONE${errCount > 0 ? `, ${errCount} ERROR` : ''}`
+                            ? ` · ${doneCount} ok${errCount > 0 ? `, ${errCount} err` : ''}`
                             : ''}
                           )
                         </span>
@@ -1378,158 +1640,6 @@ const pageSections = [
                 );
               })}
             </ul>
-          )}
-        </section>
-      )
-    }
-
-    <!-- Conditional: Notes & Key Findings -->
-    {
-      hasNotes && (
-        <section
-          class="card col-12"
-          id="notes-section"
-          aria-labelledby="notes-findings-heading"
-        >
-          <div class="card-title">
-            <div class="card-title-group">
-              <h2 id="notes-findings-heading" class="card-heading headline-two-tone">
-                Notes &amp; Key Findings{' '}
-                <span class="muted">
-                  / {hasNotesDetails ? d.notesDetails!.length : d.notes!.length} Observations
-                </span>
-              </h2>
-            </div>
-            {hasNotesDetails && (
-              <div>
-                {d.notesDetails!.length > 1 && (
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-secondary"
-                    id="toggle-notes-btn"
-                    aria-expanded="false"
-                    aria-keyshortcuts="e"
-                  >
-                    <span id="toggle-notes-label">Expand All Notes</span>
-                    <kbd class="menu-kbd" aria-hidden="true">e</kbd>
-                  </button>
-                )}
-                <span
-                  id="toggle-notes-status"
-                  class="visually-hidden"
-                  role="status"
-                  aria-live="polite"
-                />
-              </div>
-            )}
-          </div>
-
-          {hasNotesDetails ? (
-            <ol class="notes-list" role="list">
-              {d.notesDetails!.map((note, idx) => (
-                <li class="note-card">
-                  <details
-                    class="note-disclosure"
-                    id={`note-${idx + 1}`}
-                    open={idx === (firstFailureNoteIdx ?? 0)}
-                  >
-                    <summary class="note-summary">
-                      <span class="note-num" aria-hidden="true">
-                        {String(idx + 1).padStart(2, '0')}
-                      </span>
-                      <strong class="note-title">
-                        {tokenizeNoteText(note.title).map((seg) =>
-                          seg.type === 'code' ? (
-                            <code class="note-inline-code">{seg.value}</code>
-                          ) : (
-                            seg.value
-                          )
-                        )}
-                      </strong>
-                      <span class="note-summary-meta">
-                        <span class="badge-static note-count-badge">
-                          {note.bullets.length} {note.bullets.length === 1 ? 'point' : 'points'}
-                        </span>
-                        <span class="note-chevron" aria-hidden="true">▸</span>
-                      </span>
-                    </summary>
-                    <div class="note-body">
-                      <ul class="note-bullets" role="list">
-                        {note.bullets.map((b) => {
-                          const parsed = parseNoteBullet(b);
-                          return (
-                            <li
-                              class:list={[
-                                'note-bullet-item',
-                                {
-                                  'is-intro': parsed.isIntro,
-                                  'has-block-lead': parsed.isBlockLead,
-                                },
-                              ]}
-                            >
-                              {parsed.lead && (
-                                <strong
-                                  class:list={[
-                                    'note-bullet-lead',
-                                    { 'note-bullet-lead-block': parsed.isBlockLead },
-                                  ]}
-                                >
-                                  {parsed.lead.map((seg) =>
-                                    seg.type === 'code' ? (
-                                      <code class="note-inline-code">{seg.value}</code>
-                                    ) : (
-                                      seg.value
-                                    )
-                                  )}
-                                </strong>
-                              )}{' '}
-                              <span class="note-bullet-copy">
-                                {parsed.body.map((seg) =>
-                                  seg.type === 'code' ? (
-                                    <code class="note-inline-code">{seg.value}</code>
-                                  ) : (
-                                    seg.value
-                                  )
-                                )}
-                              </span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      <div class="note-body-footer">
-                        <a
-                          href={`#note-${idx + 1}`}
-                          class="mono action-link note-permalink-btn"
-                          data-note-hash={`#note-${idx + 1}`}
-                          data-note-label={`#note-${String(idx + 1).padStart(2, '0')}`}
-                        >
-                          Copy #note-{String(idx + 1).padStart(2, '0')} link
-                        </a>
-                      </div>
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <ol class="notes-list" role="list">
-              {d.notes!.map((note, idx) => (
-                <li class="note-item">
-                  <span class="note-num" aria-hidden="true">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <span>
-                    {tokenizeNoteText(note).map((seg) =>
-                      seg.type === 'code' ? (
-                        <code class="note-inline-code">{seg.value}</code>
-                      ) : (
-                        seg.value
-                      )
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ol>
           )}
         </section>
       )
@@ -1665,9 +1775,9 @@ const pageSections = [
                         href={`#plan-${commitStage.toLowerCase()}`}
                         aria-label={`Jump to stage ${commitStage} (${commitStagePassed === false ? 'MISS' : 'PASS'}) in Plan Completion`}
                         class:list={[
-                          'hl',
-                          commitStagePassed === false ? 'hl-magenta is-miss' : 'hl-mint is-pass',
+                          'mono',
                           'commit-stage-badge',
+                          commitStagePassed === false ? 'is-miss' : 'is-pass',
                         ]}
                       >
                         {commitStage}
@@ -1828,29 +1938,37 @@ const pageSections = [
 
 <style>
   /* ==========================================================================
-     QUIETER RUN DETAIL REFINEMENTS (Neo-Acid Operate Restraint)
-     Matches index.astro's quieter rhythm: preserves semantic brand colors
-     (--hl-acid, --hl-mint, --hl-sky, --hl-violet, --hl-magenta) for earned
-     verdicts and bottlenecks while eliminating box-in-box nesting.
+     QUIETER & CURIOSITY-RAISING RUN DETAIL (Neo-Acid Operate/Read Restraint)
+     Anchors visual identity on --hl-acid while retiring competing highlighter
+     fills, outer 2px card cages, and ALL-CAPS kickers. Surfaces a Forensic
+     Dossier lead and collapsed field-note teasers to spark investigation.
      ========================================================================== */
   .run-detail-quiet .detail-nav-row {
-    padding-block: 1.15rem 1rem;
+    padding-block: 0.9rem 0.75rem;
   }
 
   .run-detail-quiet .detail-nav-row .btn-secondary {
     border-width: 1px;
-    border-color: var(--border-strong-color);
+    border-color: var(--border-subtle-color);
+    color: var(--text-secondary);
   }
 
-  /* Header Card & Inline Metadata */
+  .run-detail-quiet .detail-nav-row .btn-secondary:hover {
+    border-color: var(--raw-ebony);
+    color: var(--hl-ink);
+  }
+
+  /* Open Masthead (No Outer 2px Box) */
   .run-detail-quiet .detail-header-card {
     background-color: transparent;
-    padding: 1.35rem 1.5rem;
-    gap: 1rem;
+    border: none;
+    border-block-end: 1px solid var(--border-strong-color);
+    padding: 0.5rem 0 1.65rem;
+    gap: 1.15rem;
   }
 
   .run-detail-quiet .detail-top-row {
-    padding-block-end: 1.1rem;
+    padding-block-end: 1rem;
     border-block-end: var(--border-row);
   }
 
@@ -1859,6 +1977,24 @@ const pageSections = [
     flex-wrap: wrap;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  .verdict-pill {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--border-strong-color);
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+  }
+
+  .verdict-pill.is-full-pass {
+    border-block-end: 2px solid var(--hl-acid);
+  }
+
+  .verdict-pill.is-partial-pass {
+    border-block-end: 2px solid var(--hl-magenta);
   }
 
   .run-detail-quiet .detail-nav-left {
@@ -1873,7 +2009,7 @@ const pageSections = [
     font-size: 0.75rem;
     color: var(--text-muted);
     gap: 0.45rem;
-    margin-block-end: 0.6rem;
+    margin-block-end: 0.55rem;
   }
 
   .run-detail-quiet .rank-badge {
@@ -1881,29 +2017,23 @@ const pageSections = [
     border-color: var(--border-subtle-color);
     background-color: transparent;
     color: var(--text-muted);
-    block-size: 1.65rem;
+    block-size: 1.55rem;
     font-size: 0.75rem;
   }
 
   .run-detail-quiet .rank-badge.rank-1 {
     background-color: var(--hl-acid);
     color: var(--hl-ink);
-    border-width: 2px;
+    border-width: 1px;
     border-color: var(--raw-ebony);
   }
 
-  .run-detail-quiet .rank-badge.rank-2 {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-color: var(--border-strong-color);
-    border-block-end: 2px solid var(--hl-mint);
-  }
-
+  .run-detail-quiet .rank-badge.rank-2,
   .run-detail-quiet .rank-badge.rank-3 {
     background-color: var(--bg-surface);
     color: var(--text-primary);
     border-color: var(--border-strong-color);
-    border-block-end: 2px solid var(--hl-sky);
+    border-block-end: 2px solid var(--hl-acid);
   }
 
   .run-detail-quiet .detail-meta-text {
@@ -1928,7 +2058,7 @@ const pageSections = [
     text-decoration: none;
   }
 
-  /* Unified KPI Telemetry Strip inside Header Card */
+  /* Natural Title-Case KPI Strip (No ALL-CAPS Kickers or Rainbow Pills) */
   .run-detail-quiet .detail-kpi-grid {
     gap: 0;
     border: 1px solid var(--border-subtle-color);
@@ -1939,11 +2069,45 @@ const pageSections = [
     border: none;
     border-inline-end: var(--border-row);
     background-color: transparent;
-    padding: 0.95rem 1.15rem;
+    padding: 0.9rem 1.15rem;
   }
 
   .run-detail-quiet .detail-kpi-grid .kpi-box:last-child {
     border-inline-end: none;
+  }
+
+  .kpi-label {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 0.25rem;
+    display: block;
+  }
+
+  .tokens-meta-label {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .kpi-acid-underline {
+    border-block-end: 2px solid var(--hl-acid);
+    padding-block-end: 0.06rem;
+  }
+
+  :global([data-theme="light"]) .kpi-acid-underline {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-block-end: none;
+    padding-inline: 0.25rem;
+  }
+
+  .kpi-miss-underline {
+    border-block-end: 2px solid var(--hl-magenta);
+    padding-block-end: 0.06rem;
   }
 
   @media (width < 54em) and (width >= 30em) {
@@ -1967,27 +2131,154 @@ const pageSections = [
     }
   }
 
+  /* Forensic Dossier Lead (Above-the-Fold Curiosity Strip) */
+  .forensic-dossier-lead {
+    border: 1px solid var(--border-subtle-color);
+    background-color: var(--bg-surface);
+    padding: 0.95rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .forensic-dossier-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem 0.85rem;
+  }
+
+  .forensic-dossier-tag {
+    font-size: 0.6875rem;
+    padding: 0.1rem 0.42rem;
+    flex-shrink: 0;
+  }
+
+  .forensic-synopsis-copy {
+    margin: 0;
+    font-size: 0.96875rem;
+    line-height: 1.55;
+    color: var(--text-primary);
+    flex: 1;
+    min-inline-size: 18rem;
+  }
+
+  .forensic-hooks-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0.65rem 0 0;
+    border-block-start: var(--border-row);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 1.25rem;
+  }
+
+  @media (width < 52em) {
+    .forensic-hooks-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .forensic-hook-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.32rem 0.45rem;
+    margin-inline: -0.45rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    transition: background-color 0.12s ease, color 0.12s ease;
+  }
+
+  .forensic-hook-link:hover,
+  .forensic-hook-link:focus-visible {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+  }
+
+  .forensic-hook-link:hover :is(.forensic-hook-num, .forensic-hook-cta, .note-inline-code),
+  .forensic-hook-link:focus-visible :is(.forensic-hook-num, .forensic-hook-cta, .note-inline-code) {
+    color: var(--hl-ink);
+    background-color: transparent;
+    border-color: var(--raw-ebony);
+  }
+
+  .forensic-hook-num {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--hl-acid);
+    flex-shrink: 0;
+  }
+
+  :global([data-theme="light"]) .forensic-hook-num {
+    color: var(--raw-ebony);
+    background-color: var(--hl-acid);
+    padding-inline: 0.2rem;
+  }
+
+  .forensic-hook-title {
+    flex: 1;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .forensic-hook-link:hover .forensic-hook-title,
+  .forensic-hook-link:focus-visible .forensic-hook-title {
+    color: var(--hl-ink);
+  }
+
+  .forensic-hook-cta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
   /* Quieter Test & Lint Verdict Strip */
   .run-detail-quiet .detail-test-strip {
     border: none;
-    border-block-start: var(--border-row);
-    background-color: transparent;
-    padding: 0.85rem 0 0;
+    padding: 0.15rem 0 0;
+    gap: 0.5rem;
   }
 
-  /* Sticky Jump Bar: open underline tabs instead of heavy boxed buttons */
+  .detail-test-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+
+  .detail-test-tag.is-warn {
+    border-block-end: 2px solid var(--hl-acid);
+  }
+
+  .detail-test-tag.is-fail {
+    border-block-end: 2px solid var(--hl-magenta);
+  }
+
+  /* Sticky Jump Bar */
   .run-detail-quiet .detail-jump-bar {
     background-color: var(--bg-canvas);
     border: none;
-    border-block-end: var(--border-frame);
-    padding: 0.55rem 0;
-    margin-block-end: 1.5rem;
+    border-block-end: 1px solid var(--border-strong-color);
+    padding: 0.5rem 0;
+    margin-block-end: 0.5rem;
+  }
+
+  .run-detail-quiet .detail-jump-links {
+    scroll-target-group: none;
   }
 
   .run-detail-quiet .detail-jump-link {
     background-color: transparent;
     border: none;
-    border-block-end: 3px solid transparent;
+    border-block-end: 2px solid transparent;
     padding: 0.35rem 0.65rem;
     color: var(--text-muted);
   }
@@ -1997,34 +2288,57 @@ const pageSections = [
     color: var(--text-primary);
   }
 
-  .run-detail-quiet .detail-jump-link:target-current,
-  .run-detail-quiet .detail-jump-link.\:target-current {
-    background-color: var(--bg-surface);
+  .run-detail-quiet .detail-jump-link[aria-current="true"] {
+    background-color: transparent;
     color: var(--text-primary);
+    font-weight: 700;
     border-block-end-color: var(--hl-acid);
   }
 
-  :global([data-theme="light"]) .run-detail-quiet .detail-jump-link:target-current,
-  :global([data-theme="light"]) .run-detail-quiet .detail-jump-link.\:target-current {
-    border-block-end-color: var(--accent-cobalt);
+  :global([data-theme="light"]) .run-detail-quiet .detail-jump-link[aria-current="true"] {
+    background-color: var(--hl-acid);
+    color: var(--hl-ink);
+    border-block-end-color: var(--raw-ebony);
   }
 
-  /* Section Cards: quiet canvas background & lighter inner dividers */
+  /* Open Document Sections (No Outer 2px Card Boxes) */
+  .run-detail-quiet .section-grid {
+    gap: 0;
+  }
+
   .run-detail-quiet .section-grid > .card {
     background-color: transparent;
-    padding: 1.35rem 1.5rem;
+    border: none;
+    border-block-end: 1px solid var(--border-strong-color);
+    padding: 1.85rem 0;
   }
 
-  /* Plan Completion: unified 7-slice pipeline strip instead of 7 separate 2px boxes */
-  .run-detail-quiet .plan-progress {
-    block-size: 0.45rem;
-    border-width: 1px;
-    border-color: var(--border-strong-color);
+  .run-detail-quiet .section-grid > .card.col-6 {
+    padding-inline-end: 1.25rem;
   }
 
+  .run-detail-quiet .section-grid > .card.col-6 + .card.col-6 {
+    padding-inline-end: 0;
+    padding-inline-start: 1.25rem;
+    border-inline-start: var(--border-row);
+  }
+
+  @media (width <= 54em) {
+    .run-detail-quiet .section-grid > .card.col-6,
+    .run-detail-quiet .section-grid > .card.col-6 + .card.col-6 {
+      padding-inline: 0;
+      border-inline-start: none;
+    }
+  }
+
+  .run-detail-quiet .card-heading {
+    font-size: 1.15rem;
+  }
+
+  /* Plan Completion: Quiet 7-Slice Ledger */
   .run-detail-quiet .plan-checklist {
     gap: 0;
-    border: 1px solid var(--border-strong-color);
+    border: 1px solid var(--border-subtle-color);
     background-color: transparent;
   }
 
@@ -2039,8 +2353,13 @@ const pageSections = [
     border-inline-end: none;
   }
 
+  .run-detail-quiet .plan-item.is-peak-stage {
+    background-color: var(--bg-surface);
+    border-block-start: 2px solid var(--hl-acid);
+  }
+
   .run-detail-quiet .plan-item.spec-miss {
-    border-block-start: 3px solid var(--hl-magenta);
+    border-block-start: 2px solid var(--hl-magenta);
     background-color: var(--bg-surface);
   }
 
@@ -2049,13 +2368,23 @@ const pageSections = [
     opacity: 0.75;
   }
 
-  .run-detail-quiet .plan-item-badges .is-pass {
-    border: none;
-    border-block-end: 2px solid var(--hl-mint);
-    background-color: transparent;
-    color: var(--text-secondary);
-    padding: 0.05rem 0.2rem;
+  .run-detail-quiet .plan-peak-badge {
+    font-size: 0.625rem;
+    padding: 0.05rem 0.3rem;
+  }
+
+  .run-detail-quiet .plan-status-badge {
     font-size: 0.6875rem;
+    padding: 0.05rem 0.2rem;
+  }
+
+  .run-detail-quiet .plan-status-badge.is-pass {
+    color: var(--text-muted);
+  }
+
+  .run-detail-quiet .plan-status-badge.is-miss {
+    color: var(--text-primary);
+    border-block-end: 2px solid var(--hl-magenta);
   }
 
   @media (width < 68em) {
@@ -2069,7 +2398,7 @@ const pageSections = [
     }
   }
 
-  /* Tables & Inline Strips inside Section Cards */
+  /* Tables & Inline Strips */
   .run-detail-quiet .table-wrapper {
     border-width: 1px;
     border-color: var(--border-subtle-color);
@@ -2085,10 +2414,37 @@ const pageSections = [
     padding: 0.75rem 0.9rem;
   }
 
-  .run-detail-quiet .slice-stage-badge.is-pass {
-    border-color: var(--border-subtle-color);
+  .run-detail-quiet .slice-stage-badge {
+    border: 1px solid var(--border-subtle-color);
     background-color: transparent;
-    color: var(--text-secondary);
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    padding: 0.06rem 0.35rem;
+  }
+
+  .run-detail-quiet .slice-stage-badge.is-miss {
+    border-color: var(--hl-magenta);
+    color: var(--text-primary);
+  }
+
+  .slice-cost-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+  }
+
+  .slice-peak-tag {
+    font-size: 0.625rem;
+    padding: 0.04rem 0.32rem;
+  }
+
+  .run-detail-quiet .slice-cost-fill.is-peak {
+    background-color: var(--hl-acid);
+  }
+
+  .run-detail-quiet .slice-cost-fill.is-normal {
+    background-color: var(--border-strong-color);
   }
 
   .run-detail-quiet .tokens-meta-strip,
@@ -2096,7 +2452,7 @@ const pageSections = [
     border: none;
     border-block-end: var(--border-row);
     background-color: transparent;
-    padding: 0.25rem 0 0.95rem;
+    padding: 0.15rem 0 0.95rem;
     margin-block-end: 0.75rem;
   }
 
@@ -2115,22 +2471,37 @@ const pageSections = [
     border-inline-end: none;
   }
 
-  /* Tool Call Breakdown: cleaner inline tool names & slimmer tracks */
+  /* Tool Call Breakdown: Quiet Monospace Labels & Brand-Anchored Bars */
   .run-detail-quiet .tool-name-badge {
     border: none;
     background-color: transparent;
     padding: 0;
     font-size: 0.85rem;
+    font-weight: 700;
     color: var(--text-primary);
   }
 
+  .run-detail-quiet .tool-err-pill {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-inline-start: 0.25rem;
+  }
+
   .run-detail-quiet .tool-bar-track {
-    block-size: 0.35rem;
+    block-size: 0.3rem;
     border-width: 1px;
     border-color: var(--border-subtle-color);
   }
 
-  /* Notes & Key Findings: unified disclosure stack instead of 5 separate 2px cards */
+  .run-detail-quiet .tool-bar-done {
+    background-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) .run-detail-quiet .tool-bar-done {
+    background-color: var(--raw-ebony);
+  }
+
+  /* Notes & Key Findings: Disclosure Stack with Collapsed Curiosity Teasers */
   .run-detail-quiet .notes-list {
     gap: 0;
     border: 1px solid var(--border-subtle-color);
@@ -2148,7 +2519,32 @@ const pageSections = [
 
   .run-detail-quiet .note-summary {
     background-color: transparent;
-    padding: 0.85rem 1rem;
+    padding: 0.9rem 1.05rem;
+    align-items: flex-start;
+  }
+
+  .note-summary-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .note-summary-teaser {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .note-disclosure[open] .note-summary-teaser {
+    display: none;
   }
 
   .run-detail-quiet .note-disclosure[open] > .note-summary {
@@ -2162,9 +2558,15 @@ const pageSections = [
     color: var(--hl-ink);
   }
 
+  .run-detail-quiet .note-summary:hover .note-summary-teaser,
+  .run-detail-quiet .note-summary:focus-visible .note-summary-teaser {
+    color: var(--hl-ink);
+  }
+
   .run-detail-quiet .note-num {
     border-width: 1px;
     border-color: var(--border-strong-color);
+    margin-block-start: 0.1rem;
   }
 
   .run-detail-quiet .note-count-badge {
@@ -2176,14 +2578,14 @@ const pageSections = [
 
   .run-detail-quiet .note-bullet-item,
   .run-detail-quiet .note-item > span:not(.note-num) {
-    max-inline-size: 88ch;
+    max-inline-size: 70ch;
   }
 
   @media (width >= 54em) {
     .run-detail-quiet .note-bullet-item.has-block-lead {
       max-inline-size: none;
       display: grid;
-      grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
+      grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
       column-gap: 2rem;
       row-gap: 0.35rem;
       align-items: baseline;
@@ -2195,14 +2597,15 @@ const pageSections = [
     }
 
     .run-detail-quiet .note-bullet-item.has-block-lead .note-bullet-copy {
-      max-inline-size: 74ch;
+      max-inline-size: 68ch;
     }
   }
 
   /* Terminal & Commit Log */
   .run-detail-quiet .terminal-box {
     border-width: 1px;
-    border-color: var(--border-strong-color);
+    border-color: var(--border-subtle-color);
+    background-color: var(--bg-surface);
   }
 
   .run-detail-quiet .commit-hash {
@@ -2211,11 +2614,23 @@ const pageSections = [
     color: var(--text-secondary);
   }
 
+  .run-detail-quiet .commit-stage-badge {
+    border: 1px solid var(--border-subtle-color);
+    background-color: transparent;
+    color: var(--text-muted);
+  }
+
+  .run-detail-quiet .commit-stage-badge.is-miss {
+    border-color: var(--hl-magenta);
+    color: var(--text-primary);
+  }
+
   /* Sibling Runs & Bottom Pager */
   .run-detail-quiet .detail-siblings-bar {
     background-color: transparent;
     border-width: 1px;
-    border-color: var(--border-strong-color);
+    border-color: var(--border-subtle-color);
+    margin-block-start: 1.5rem;
   }
 
   .run-detail-quiet .detail-pager-card {
@@ -2225,7 +2640,6 @@ const pageSections = [
     padding: 1.15rem 1.35rem;
   }
 </style>
-
 <script>
   function bindCopyButton(btnId: string, statusId: string, label: string) {
     const btn = document.getElementById(btnId) as HTMLButtonElement | null;
@@ -2300,7 +2714,7 @@ const pageSections = [
 
   const diagNoteLinks = Array.from(
     document.querySelectorAll<HTMLAnchorElement>(
-      '.plan-stage-diag-link[href^="#note-"], .plan-failure-diag-trigger[href^="#note-"]'
+      '.plan-stage-diag-link[href^="#note-"], .plan-failure-diag-trigger[href^="#note-"], .dossier-hook-link[href^="#note-"]'
     )
   );
   for (const link of diagNoteLinks) {
@@ -2382,43 +2796,28 @@ const pageSections = [
   const jumpLinks = Array.from(
     document.querySelectorAll<HTMLAnchorElement>('#detail-jump-bar .detail-jump-link')
   );
-  const supportsScrollTargetGroup =
-    typeof CSS !== 'undefined' && CSS.supports('scroll-target-group: auto');
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>('.section-grid > section[id], #siblings-section')
+  );
 
-  if (supportsScrollTargetGroup) {
-    const syncAriaCurrent = () => {
-      const currentLink = document.querySelector<HTMLAnchorElement>(
-        '#detail-jump-bar .detail-jump-link:target-current'
-      );
-      if (!currentLink) return;
+  if (jumpLinks.length > 0 && sections.length > 0) {
+    const updateActiveSection = () => {
+      const triggerY = window.innerHeight * 0.25;
+      let activeId = sections[0].id;
+      for (const sec of sections) {
+        const rect = sec.getBoundingClientRect();
+        if (rect.top <= triggerY) {
+          activeId = sec.id;
+        }
+      }
       for (const link of jumpLinks) {
-        link.setAttribute('aria-current', link === currentLink ? 'true' : 'false');
+        const isActive = link.getAttribute('href') === `#${activeId}`;
+        link.setAttribute('aria-current', isActive ? 'true' : 'false');
       }
     };
-    syncAriaCurrent();
-    document.addEventListener('scrollend', syncAriaCurrent);
-  } else if (jumpLinks.length > 0 && 'IntersectionObserver' in window) {
-    const sections = document.querySelectorAll<HTMLElement>(
-      '.section-grid > section[id], #siblings-section'
-    );
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute('id');
-            for (const link of jumpLinks) {
-              const isActive = link.getAttribute('href') === `#${id}`;
-              link.classList.toggle(':target-current', isActive);
-              link.setAttribute('aria-current', isActive ? 'true' : 'false');
-            }
-          }
-        }
-      },
-      { rootMargin: '-50% 0px -50% 0px', threshold: 0 }
-    );
-    for (const section of sections) {
-      observer.observe(section);
-    }
+    updateActiveSection();
+    document.addEventListener('scroll', updateActiveSection, { passive: true });
+    window.addEventListener('resize', updateActiveSection, { passive: true });
   }
 
   document.addEventListener('keydown', (e) => {
