@@ -119,6 +119,7 @@ export function formatHarnessName(name: string): string {
 
 const PROVIDER_DISPLAY_MAP: Record<string, string> = {
   cursor: 'Cursor',
+  deepseek: 'DeepSeek',
   gemini: 'Gemini',
   meta: 'Meta',
   'openai-codex': 'OpenAI Codex',
@@ -157,18 +158,22 @@ export function matchCommitStageId(message: string): string | null {
     return explicit[1].toUpperCase();
   }
   const text = message.toLowerCase();
-  if (/release verification|record release|^init\b|document v1 benchmark contract/.test(text)) {
+  if (
+    /release verification|record release|^init\b|document v1 benchmark contract|document reuse policy/.test(
+      text
+    )
+  ) {
     return null;
   }
+  if (/launch.*(?:cli|capy bench)|add cb executable with help/.test(text)) return 'S1';
   if (/ctrl-c|sigint|interrupted runs|partial summar/.test(text)) return 'S7';
   if (/percentile|latenc|elapsed time/.test(text)) return 'S6';
   if (/outcome|status accounting|status counts|transport failure|exit codes/.test(text)) {
     return 'S5';
   }
   if (/pace[d]?|five-second|5-second|deadline boundar/.test(text)) return 'S4';
-  if (/stream(?:ed|ing)?.*(?:http|get)|tls|bounded get/.test(text)) return 'S3';
+  if (/stream(?:ed|ing)?.*(?:http|get)|tls|bounded (?:http.*)?get/.test(text)) return 'S3';
   if (/argument|malformed url|invalid cli/.test(text)) return 'S2';
-  if (/launch.*(?:cli|capy bench)/.test(text)) return 'S1';
   return null;
 }
 

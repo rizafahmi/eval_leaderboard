@@ -200,6 +200,23 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 4.4,
     },
   },
+  'deepseek-flash': {
+    modelKey: 'deepseek-flash',
+    displayName: 'deepseek-flash',
+    provider: 'DeepSeek',
+    billedTier: {
+      label: '2026 DeepSeek Flash API (98% cache off)',
+      inputPerMillionUsd: 0.3,
+      cachedInputPerMillionUsd: 0.006,
+      outputPerMillionUsd: 1.2,
+    },
+    standardApiTier: {
+      label: '2026 DeepSeek Flash API',
+      inputPerMillionUsd: 0.3,
+      cachedInputPerMillionUsd: 0.006,
+      outputPerMillionUsd: 1.2,
+    },
+  },
 };
 
 export interface NumericTokenBag {
