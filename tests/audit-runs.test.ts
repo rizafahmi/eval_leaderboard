@@ -34,6 +34,11 @@ function loadAllRunRecords(): Array<{ id: string; file: string; data: RunRecordD
 test('All benchmark run JSONs satisfy token, slice, step-range, and cost conservation laws', async (t) => {
   const runs = loadAllRunRecords();
   assert.ok(runs.length >= 12, `Expected at least 12 runs, found ${runs.length}`);
+  const publishedRuns = runs.filter((r) => r.data.published !== false);
+  assert.ok(
+    publishedRuns.length <= 10,
+    `Expected at most 10 published runs (hard limit), found ${publishedRuns.length}`
+  );
 
   for (const run of runs) {
     await t.test(`Run conservation audit: ${run.id}`, () => {
