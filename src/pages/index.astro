@@ -227,7 +227,7 @@ if (paretoFrontierRuns.length > 0) {
             </label>
             <label class="option-check">
               <input id="show-telemetry" name="telemetry" type="checkbox" />
-              Show tests, tokens &amp; extra detail
+              Show extra row notes (cache, calls, commits)
             </label>
             <div class="option-scenarios" role="group" aria-label="Explore a subset of runs">
               <span>Look for</span>
@@ -261,7 +261,7 @@ if (paretoFrontierRuns.length > 0) {
                   <span class="sort-indicator" aria-hidden="true">↓</span>
                 </button>
               </th>
-              <th scope="col" class="sortable telemetry-column" data-sort-col="tests" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -281,7 +281,7 @@ if (paretoFrontierRuns.length > 0) {
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
-              <th scope="col" class="sortable telemetry-column" data-sort-col="tokens" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="tokens" aria-sort="none">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -424,19 +424,19 @@ if (paretoFrontierRuns.length > 0) {
                         </button>
                       </td>
 
-                      <td data-cell="Agent tests" class="telemetry-column">
+                      <td data-cell="Agent tests">
                         <div class="cell-stack">
                           {data.tests ? (
                             <div
                               class="metric-primary"
                               title="Agent-authored ExUnit test suite results"
                             >
-                              {data.tests.passed}/{data.tests.total} ExUnit
+                              {data.tests.passed}/{data.tests.total}
                             </div>
                           ) : (
                             <div class="metric-empty">—</div>
                           )}
-                          <div class="metric-sub">
+                          <div class="metric-sub extra-detail">
                             {data.commits !== undefined ? `${data.commits} commits` : ''}
                             {telemetry.toolSuccessRatePct !== null && (
                               <>
@@ -461,7 +461,7 @@ if (paretoFrontierRuns.length > 0) {
                         </div>
                       </td>
 
-                      <td data-cell="Tokens" class="telemetry-column">
+                      <td data-cell="Tokens">
                         {hasTokens ? (
                           <div class="cell-stack">
                             <div
@@ -470,7 +470,7 @@ if (paretoFrontierRuns.length > 0) {
                             >
                               {data.tokens?.total ?? '—'}
                             </div>
-                            <div class="metric-sub">
+                            <div class="metric-sub extra-detail">
                               {data.tokens?.cacheHitRate && <span>{data.tokens.cacheHitRate} hit</span>}
                               {run.peakCtxCompact && (
                                 <>
@@ -1277,8 +1277,6 @@ if (paretoFrontierRuns.length > 0) {
     text-underline-offset: 0.25em;
   }
 
-  .readable-run-table:not(.show-telemetry) thead .telemetry-column,
-  .readable-run-table:not(.show-telemetry) .run-row > .telemetry-column,
   .readable-run-table:not(.show-telemetry) .extra-detail {
     display: none;
   }
@@ -1699,7 +1697,7 @@ if (paretoFrontierRuns.length > 0) {
     }
   }
 
-  @container (width < 42rem) {
+  @container (width < 50rem) {
     .readable-run-table,
     .readable-run-table tbody {
       display: block;
@@ -1712,7 +1710,7 @@ if (paretoFrontierRuns.length > 0) {
     .readable-run-table tr.run-row:not([hidden]) {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.5rem 0.75rem;
+      gap: 0.85rem 0.75rem;
       padding: 1.5rem 0;
       border-block-end: var(--border-row);
     }
@@ -2346,9 +2344,6 @@ if (paretoFrontierRuns.length > 0) {
   function updateDetailVisibility() {
     const expanded = Boolean(showTelemetry?.checked);
     table?.classList.toggle('show-telemetry', expanded);
-    tbody?.querySelectorAll<HTMLTableCellElement>('[colspan]').forEach((cell) => {
-      cell.colSpan = expanded ? 7 : 5;
-    });
   }
 
   showTelemetry?.addEventListener('change', updateDetailVisibility);

@@ -49,7 +49,7 @@
 
 ## ✨ What This Repository Tracks
 
-- **Interactive Leaderboard (`/`)** — A comfortable default view of model/harness, stage outcome, time, and billed cost. Search is immediately available; “Filter & sort” contains harness/provider filters, pricing lenses, all sort options, and an optional tests/tokens/detail toggle. Outcome buttons open stage data and field notes. Question-led disclosures reveal speed/cost tradeoffs, stage bottlenecks, and controlled comparisons.
+- **Interactive Leaderboard (`/`)** — A comfortable default view of model/harness, stage outcome, agent tests, time, tokens, and billed cost. Search is immediately available; “Filter & sort” contains harness/provider filters, pricing lenses, all sort options, and an optional extra-row-notes toggle. Outcome buttons open stage data and field notes. Question-led disclosures reveal speed/cost tradeoffs, stage bottlenecks, and controlled comparisons.
 - **Head-to-Head Comparison (`/compare`)** — Outcome, time, and cost first; guided presets, execution metrics, stage-by-stage breakdown, and cache accounting open independently. URL-selected pairs and swapping update every table and run link.
 - **Detailed Run Inspection (`/runs/[id]`)** — Readable field notes and a seven-stage ledger, with test/spec discrepancies always visible. Technical sections open on demand or automatically through deep links:
   - `S1`–`S7` progress bar and stage completion checklist

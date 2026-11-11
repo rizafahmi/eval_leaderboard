@@ -25,7 +25,7 @@ Unlike synthetic single-function coding puzzles or frontend boilerplate benchmar
 - Agents are prompted once to work through `PLAN.md` sequentially: write one failing behavior test at a time, implement only what passes it, run formatting and linting, verify against local HTTP/HTTPS test servers, mark the slice complete, and commit.
 - Run records are stored as static JSON entries in `src/content/runs/<harness>-<model>-<effort>-<timestamp>.json` and validated at build time via Astro Content Collections (`src/content.config.ts`).
 - Visitors explore four reading surfaces:
-  - **Main Leaderboard (`/`)**: Model/harness, stage outcome, duration, and billed cost. Search stays visible; additional filters, sorting, pricing lenses, and optional tests/tokens live behind “Filter & sort.” Analysis opens through question-led disclosures.
+  - **Main Leaderboard (`/`)**: Model/harness, stage outcome, agent tests, duration, tokens, and billed cost. Search stays visible; additional filters, sorting, pricing lenses, and optional extra row notes live behind “Filter & sort.” Analysis opens through question-led disclosures.
   - **Comparison (`/compare`)**: Two selected runs and three core results, with guided pairs, execution metrics, stages, and cache accounting disclosed independently.
   - **Run Detail (`/runs/<id>`)**: An existing field-note lead, visible verification discrepancies, outcome/time/cost, and readable plan/notes. Deep telemetry, interfaces, and commits open on demand or from deep links.
   - **About & Benchmark Plan (`/about`)**: Seven-stage overview, judging rubric, and independently expandable/copyable plan, CLI contract, prompt, and sample output.
