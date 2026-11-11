@@ -22,7 +22,7 @@
 
 ---
 
-> 📌 **Scope Note:** Runs represent independent, single-task evaluations on an opinionated backend/CLI engineering workflow in Elixir/OTP—meant as practical engineering field notes rather than a formal academic or industry-wide study.
+> **Scope:** This is Riza Fahmi’s personal coding-agent evaluation on an Elixir/OTP CLI task using outside-in TDD. Runs are practical engineering field notes, not a universal agent ranking. Different languages, frameworks, projects, or workflows may produce different results and rankings.
 
 ## 🧭 Table of Contents
 
@@ -49,8 +49,9 @@
 
 ## ✨ What This Repository Tracks
 
-- 🏆 **Interactive Leaderboard (`/`)** — Client-side search across harness, model, provider, and effort level; dropdown filters for **Coding Harness** and **Model Provider**; and multi-column sorting (**Plan Completion**, **Tests & Commits**, **Duration**, **Token Usage**, **Cost**, and **Run Date**) powered by the View Transitions API and DOM state preservation (`moveBefore`).
-- 🔍 **Detailed Run Inspection (`/runs/[id]`)** — Deep-dive telemetry for each run:
+- **Interactive Leaderboard (`/`)** — A comfortable default view of model/harness, stage outcome, time, and billed cost. Search is immediately available; “Filter & sort” contains harness/provider filters, pricing lenses, all sort options, and an optional tests/tokens/detail toggle. Outcome buttons open stage data and field notes. Question-led disclosures reveal speed/cost tradeoffs, stage bottlenecks, and controlled comparisons.
+- **Head-to-Head Comparison (`/compare`)** — Outcome, time, and cost first; guided presets, execution metrics, stage-by-stage breakdown, and cache accounting open independently. URL-selected pairs and swapping update every table and run link.
+- **Detailed Run Inspection (`/runs/[id]`)** — Readable field notes and a seven-stage ledger, with test/spec discrepancies always visible. Technical sections open on demand or automatically through deep links:
   - `S1`–`S7` progress bar and stage completion checklist
   - Copyable CLI invocation command and harness environment details (highlighted with Shiki `ayu-dark`)
   - Uncached input, cached input, output, thinking tokens, cache hit rate, and peak context window usage
@@ -58,7 +59,7 @@
   - Token volume and estimated cost tables comparing **2026** and **2027** pricing rates
   - Per-slice (`S1`–`S7`) breakdown of step ranges, LLM calls, `manage_task` polls, thinking tokens, and cost
   - Git commit log and expandable engineering notes with automatic inline code tokenization
-- 📋 **Benchmark Specification (`/about`)** — Full methodology, `S1`–`S7` deliverable specs, judging criteria, and one-click copyable `PLAN.md`, `README.md` (V1 CLI contract), and `PROMPT.md`.
+- **Benchmark Specification (`/about`)** — Seven-stage overview and judging criteria, with stage checks, sample CLI output, and copyable `PLAN.md`, `README.md` contract, and `PROMPT.md` available in native disclosures.
 - 🗂️ **Current Dataset (`src/content/runs/`)** — Contains **12 recorded run entries** (**10 published runs** across `Antigravity`, `Codex CLI`, `Pi`, and `ZCode`, plus **2 unpublished runs** with `"published": false`).
 
 ---
@@ -150,7 +151,7 @@ Complete all @PLAN.md work in this conversation.
 | 🗃️ **Content Layer** | Astro Content Collections + [Zod](https://zod.dev/) | Build-time `glob` loading & schema validation of `src/content/runs/*.json` |
 | 🎨 **Syntax Highlighting** | [Shiki 4.5](https://shiki.style/) | Server-rendered command & markdown highlighting (`ayu-dark`) |
 | 💅 **Design System** | [Neo-Acid](./DESIGN.md) (`src/styles/tokens.css` + `src/styles/global.css`) | Dark-first Obsidian Clay (`#121519`) / Raw Plaster (`#f7f7f5`), `Unbounded 800` two-tone headlines, 5 semantic highlighter swatches (`--hl-*`), `0px` radius |
-| 🚀 **Navigation & Perf** | Speculation Rules API + View Transitions | Eager prefetching, moderate prerendering, and smooth table sorting/page transitions |
+| Navigation & Perf | Speculation Rules API + native disclosures | Eager prefetching, moderate prerendering, immediate filter/sort updates, and deep-link disclosure reveal |
 | 📦 **Package Manager** | [pnpm 12](https://pnpm.io/) | Fast, deterministic dependency management (`--frozen-lockfile` in CI) |
 | 🌐 **Deployment** | GitHub Actions → GitHub Pages | Automated build, schema validation, and deployment to [`eval.rizafahmi.com`](https://eval.rizafahmi.com) |
 

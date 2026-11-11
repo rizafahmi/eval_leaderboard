@@ -11,8 +11,6 @@ interface Props {
   title: string;
   description?: string;
   activeNav?: 'leaderboard' | 'compare' | 'about';
-  breadcrumbLabel?: string;
-  breadcrumbTone?: 'hl-mint' | 'hl-acid' | 'hl-magenta';
   ogType?: 'website' | 'article';
   ogImage?: string;
   ogImageAlt?: string;
@@ -25,8 +23,6 @@ const {
   title,
   description = DEFAULT_DESCRIPTION,
   activeNav,
-  breadcrumbLabel,
-  breadcrumbTone = 'hl-mint',
   ogType = 'website',
   ogImage = '/og-image.png',
   ogImageAlt = 'Capy Bench Leaderboard — Personal coding agent and LLM benchmark for Elixir/OTP CLI engineering (S1–S7)',
@@ -158,13 +154,7 @@ const jsonLd = {
                   'app-nav-item',
                   { 'is-active': activeNav === 'leaderboard' },
                 ]}
-                aria-current={
-                  activeNav === 'leaderboard' && !breadcrumbLabel
-                    ? 'page'
-                    : activeNav === 'leaderboard'
-                      ? 'true'
-                      : undefined
-                }
+                aria-current={activeNav === 'leaderboard' ? (pathname ? 'true' : 'page') : undefined}
               >
                 Leaderboard
               </a>
@@ -175,7 +165,7 @@ const jsonLd = {
                 class:list={['app-nav-item', { 'is-active': activeNav === 'compare' }]}
                 aria-current={activeNav === 'compare' ? 'page' : undefined}
               >
-                Compare &amp; Ablations
+                Compare
               </a>
             </li>
             <li>
@@ -184,84 +174,37 @@ const jsonLd = {
                 class:list={['app-nav-item', { 'is-active': activeNav === 'about' }]}
                 aria-current={activeNav === 'about' ? 'page' : undefined}
               >
-                About &amp; Specs
+                About
               </a>
             </li>
           </ul>
         </nav>
 
-        <div class="row-wrap">
-          <button
-            type="button"
-            class="btn btn-sm btn-secondary"
-            id="toggle-theme"
-            aria-label="Toggle color theme"
-          >
-            Theme: <span id="theme-label">Dark</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary theme-toggle"
+          id="toggle-theme"
+          aria-label="Toggle color theme"
+        >
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M16.5 12A7 7 0 0 1 8 3.5 7 7 0 1 0 16.5 12Z" />
+          </svg>
+          <span id="theme-label">Dark</span>
+        </button>
       </header>
 
-      {
-        breadcrumbLabel && (
-          <div class="subnav-bar">
-            <ol class="app-breadcrumbs" aria-label="Breadcrumb">
-              <li><a href="/">eval.rizafahmi.com</a></li>
-              <li aria-hidden="true">/</li>
-              <li aria-current="page">
-                <span class="badge-static">{breadcrumbLabel}</span>
-              </li>
-            </ol>
-          </div>
-        )
-      }
 
       <main id="main-content" tabindex="-1">
         <slot />
       </main>
 
       <footer class="app-footer">
-        <div class="app-footer-grid">
-          <div>
-            <a href="/" class="app-brand footer-brand">
-              <span class="app-brand-mark" aria-hidden="true">
-                <span class="mark-cell mark-acid"></span>
-                <span class="mark-cell mark-ebony"></span>
-                <span class="mark-cell mark-mint"></span>
-                <span class="mark-cell mark-violet"></span>
-              </span>
-              <span>CAPY.BENCH</span>
-            </a>
-            <p class="footer-blurb">
-              Personal coding agent &amp; LLM evaluation harness tracking end-to-end Elixir/OTP CLI
-              engineering across stages S1–S7.
-            </p>
-            <div class="footer-status">
-              <span class="status-dot" aria-hidden="true"></span>
-              <span>ALL BENCHMARK TELEMETRY VERIFIED</span>
-            </div>
-          </div>
-
-          <div class="app-footer-col">
-            <span class="section-kicker">NAVIGATION</span>
-            <ul>
-              <li><a href="/">Leaderboard Table</a></li>
-              <li><a href="/compare">Compare &amp; Ablations</a></li>
-              <li><a href="/about">Methodology &amp; Judging</a></li>
-              <li><a href="/about#stages">Slices</a></li>
-              <li><a href="/about#contract-spec-heading">V1 CLI Contract</a></li>
-            </ul>
-          </div>
-
-          <div class="app-footer-col">
-            <span class="section-kicker">COLOPHON</span>
-            <ul>
-              <li><a href="https://rizafahmi.com">rizafahmi.com</a></li>
-              <li><a href="/about#prompt-spec-heading">Agent Prompt (PROMPT.md)</a></li>
-              <li><a href="/about#plan-spec-heading">TDD Plan (PLAN.md)</a></li>
-              <li><a href="#main-content">Back to top ↑</a></li>
-            </ul>
-          </div>
+        <div class="reading-footer">
+          <p>Capy Bench <span aria-hidden="true">·</span> Field notes by <a href="https://rizafahmi.com">Riza Fahmi</a></p>
+          <nav aria-label="Footer">
+            <a href="/about">Methodology &amp; specifications</a>
+            <a href="#main-content">Back to top ↑</a>
+          </nav>
         </div>
       </footer>
     </div>
@@ -298,6 +241,31 @@ const jsonLd = {
           html.setAttribute('data-theme', e.newValue);
           syncThemeUI(e.newValue);
         }
+      });
+
+      function revealHashTarget() {
+        if (!window.location.hash) return;
+        let id: string;
+        try {
+          id = decodeURIComponent(window.location.hash.slice(1));
+        } catch {
+          return;
+        }
+        const target = document.getElementById(id);
+        if (!target) return;
+        let element: HTMLElement | null = target;
+        while (element) {
+          if (element instanceof HTMLDetailsElement) element.open = true;
+          element = element.parentElement;
+        }
+        requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+      }
+
+      revealHashTarget();
+      window.addEventListener('hashchange', revealHashTarget);
+      document.addEventListener('click', (event) => {
+        const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href^="#"]');
+        if (link?.hash && link.hash === window.location.hash) revealHashTarget();
       });
     </script>
   </body>

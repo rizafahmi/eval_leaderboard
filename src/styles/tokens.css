@@ -2,7 +2,7 @@
    NEO-ACID × LEVER — PERSONAL APP DESIGN SYSTEM (tokens.css)
    Foundation: rizafahmi.com "Neo-Acid Gallery"
    Palette & Density: github/lever "Utilitarian Highlighter"
-   Fonts: Unbounded 800, Schibsted Grotesk 400/700, Martian Mono 400/700
+   Fonts: Unbounded 800 display, Schibsted Grotesk 400/700 reading, Martian Mono 400/700 measurement
    ========================================================================== */
 
 :root {
@@ -97,7 +97,7 @@
 
   --text-primary: var(--raw-ebony);
   --text-secondary: #3f454d;
-  --text-muted: var(--raw-slate-light);
+  --text-muted: #59636d;
 
   --border-strong-color: var(--raw-ebony);
   --border-subtle-color: #d8dad3;
@@ -273,9 +273,10 @@ mark[data-hl] {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 700;
+  min-block-size: 2.75rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 400;
   line-height: 1.2;
   padding: 0.75rem 1.25rem;
   border: var(--border-frame);
@@ -344,8 +345,8 @@ mark[data-hl] {
 }
 
 .btn-sm {
-  font-size: 0.75rem;
-  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.8rem;
 }
 
 .btn-lg {
@@ -385,8 +386,8 @@ mark[data-hl] {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1.25rem 0;
-  border-bottom: var(--border-split);
+  padding: 1rem 0;
+  border-bottom: var(--border-row);
 }
 
 .app-brand {
@@ -395,7 +396,7 @@ mark[data-hl] {
   gap: 0.75rem;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -418,21 +419,23 @@ mark[data-hl] {
 }
 
 .app-nav-item {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  padding: 0.45rem 0.8rem;
-  border: 2px solid transparent;
-  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
   text-decoration: none;
-  transition: all 0.1s ease;
+  transition: color 0.12s ease, border-color 0.12s ease;
 }
 
 .app-nav-item:hover,
 .app-nav-item.is-active {
-  background-color: var(--hl-acid);
-  color: var(--hl-ink);
-  border-color: var(--raw-ebony);
+  color: var(--text-primary);
+  border-bottom-color: var(--border-strong-color);
 }
 
 /* Tabs */
@@ -628,9 +631,10 @@ mark[data-hl] {
 .select,
 .textarea {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--text-primary);
   background-color: var(--bg-elevated);
+  min-block-size: 2.75rem;
   border: var(--border-frame);
   border-radius: var(--radius-none);
   padding: 0.65rem 0.85rem;
@@ -646,16 +650,15 @@ mark[data-hl] {
 .input:focus,
 .select:focus,
 .textarea:focus {
-  outline: none;
-  border-color: var(--hl-acid);
-  box-shadow: inset 0 0 0 2px var(--hl-acid);
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-color: var(--border-strong-color);
 }
 
 [data-theme="light"] .input:focus,
 [data-theme="light"] .select:focus,
 [data-theme="light"] .textarea:focus {
-  border-color: var(--accent-cobalt);
-  box-shadow: inset 0 0 0 2px var(--accent-cobalt);
+  border-color: var(--border-strong-color);
 }
 
 /* Command Prompt Input Bar */
@@ -847,8 +850,8 @@ mark[data-hl] {
    ========================================================================== */
 .app-footer {
   margin-top: 4rem;
-  padding-top: 2.5rem;
-  border-top: var(--border-split);
+  padding-top: 1.5rem;
+  border-top: var(--border-row);
 }
 
 .app-footer-grid {

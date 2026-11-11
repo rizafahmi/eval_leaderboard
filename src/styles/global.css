@@ -1,9 +1,5 @@
-/* ==========================================================================
-   CAPY BENCH × NEO-ACID APPLICATION STYLES (global.css)
-   Extends src/styles/tokens.css with application layout, leaderboard table,
-   run telemetry cards, and responsive container query adaptations.
-   Guardrails: 0px radius, zero elevation shadows, zero gradients, WCAG AAA ink.
-   ========================================================================== */
+/* Capy Bench: Neo-Acid primitives with calm field-note reading surfaces.
+   Open layout, subtle separators, native disclosures, square corners. */
 
 /* Top-level View Transitions (Cross-Document & Group Row Transitions) */
 @media (prefers-reduced-motion: no-preference) {
@@ -16,10 +12,6 @@
   pointer-events: none;
 }
 
-::view-transition-group(.run-row) {
-  animation-duration: 0.22s;
-  animation-timing-function: ease-out;
-}
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
@@ -147,7 +139,7 @@ progress::-moz-progress-bar {
   inline-size: 100%;
   max-inline-size: var(--container-wide);
   margin-inline: auto;
-  padding-inline: 1.5rem;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
   display: flex;
   flex-direction: column;
   min-block-size: 100dvh;
@@ -198,14 +190,126 @@ progress::-moz-progress-bar {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding-block: 0.85rem;
-  border-block-end: var(--border-row);
+  padding-block: 1rem 0;
+  border-block-end: none;
 }
 
 .subnav-meta {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.theme-toggle {
+  border: 1px solid var(--border-subtle-color);
+  color: var(--text-muted);
+}
+
+.theme-toggle svg {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+
+.theme-toggle:hover:not(:disabled) {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-strong-color);
+}
+
+.reading-disclosure {
+  border: none;
+  border-block-start: var(--border-row);
+  background: transparent;
+}
+
+.reading-disclosure:last-child {
+  border-block-end: var(--border-row);
+}
+
+.reading-disclosure > summary {
+  display: list-item;
+  min-block-size: 3.5rem;
+  padding-block: 1.1rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.reading-disclosure > summary::marker {
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+.reading-disclosure > summary:hover,
+.reading-disclosure[open] > summary {
+  color: var(--text-primary);
+}
+
+.disclosure-body {
+  padding-block-end: 1.5rem;
+}
+
+:target {
+  scroll-margin-block-start: 1.5rem;
+}
+
+.reading-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem 2rem;
+  padding-block-end: 2rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.reading-footer p {
+  margin: 0;
+}
+
+.reading-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.reading-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.75rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.reading-footer a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+@media (max-width: 620px) {
+  .app-navbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .app-navbar > nav {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .app-navbar .app-nav-links {
+    gap: 0.5rem;
+  }
+
+  .app-navbar .app-nav-item {
+    padding-inline: 0.5rem;
+  }
 }
 
 /* ==========================================================================
@@ -578,8 +682,6 @@ progress::-moz-progress-bar {
 
 .leaderboard-table:not(.static-table) tbody tr.run-row {
   cursor: pointer;
-  view-transition-name: var(--vt-name);
-  view-transition-class: run-row;
 }
 
 .leaderboard-table :is(td, tbody th, tfoot th) {
@@ -2302,23 +2404,6 @@ a.commit-stage-badge:focus-visible {
   margin: 0;
 }
 
-/* Footer Helpers */
-.footer-brand {
-  margin-block-end: 0.75rem;
-}
-
-.footer-blurb {
-  margin: 0 0 1rem;
-  font-size: 0.9375rem;
-  color: var(--text-muted);
-  max-inline-size: 36ch;
-}
-
-.footer-status {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-primary);
-}
 
 /* Visually Hidden Utility */
 .visually-hidden:where(:not(:focus-within, :active)) {

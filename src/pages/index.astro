@@ -69,8 +69,6 @@ const enrichedRuns = analyzedRuns.map((run) => {
   };
 });
 
-const underOneDollarCount = enrichedRuns.filter((r) => r.data.costUsd < 1.0).length;
-const specMissCount = enrichedRuns.filter((r) => r.plan.ratio < 1).length;
 
 const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort((a, b) =>
   formatHarnessName(a).localeCompare(formatHarnessName(b), undefined, { sensitivity: 'base' })
@@ -79,34 +77,12 @@ const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort((a
   formatProviderName(a).localeCompare(formatProviderName(b), undefined, { sensitivity: 'base' })
 );
 
-const durations = enrichedRuns.map((r) => r.data.durationMinutes);
-const costs = enrichedRuns.map((r) => r.data.costUsd);
-const fastestMin = durations.length > 0 ? Math.min(...durations) : 0;
-const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
 const fullPassRuns = enrichedRuns.filter((r) => r.plan.ratio === 1);
 const fullPassCount = fullPassRuns.length;
 const paretoFrontierRuns = fullPassRuns
   .filter((r) => r.telemetry.isParetoFrontier)
   .sort((a, b) => (a.telemetry.paretoOrder ?? 99) - (b.telemetry.paretoOrder ?? 99));
 
-const leaderPool = fullPassRuns.length > 0 ? fullPassRuns : enrichedRuns;
-const lowestCostLeader =
-  leaderPool.length > 0
-    ? [...leaderPool].sort(
-        (a, b) => a.data.costUsd - b.data.costUsd || a.data.durationMinutes - b.data.durationMinutes
-      )[0]
-    : undefined;
-const fastestLeader =
-  leaderPool.length > 0
-    ? [...leaderPool].sort(
-        (a, b) => a.data.durationMinutes - b.data.durationMinutes || a.data.costUsd - b.data.costUsd
-      )[0]
-    : undefined;
-
-const totalCacheSavingsUsd = enrichedRuns.reduce(
-  (sum, r) => sum + r.telemetry.costMetrics.cacheSavingsUsd,
-  0
-);
 
 // SVG coordinates for the 7/7 Speed x Cost Pareto Frontier Plot
 const chartW = 680;
@@ -140,186 +116,133 @@ if (paretoFrontierRuns.length > 0) {
 ---
 
 <BaseLayout title="Leaderboard" activeNav="leaderboard">
-  <div class="leaderboard-quiet lb-v1">
-    <!-- 01. COMPACT MASTHEAD & 4-METRIC STRIP -->
-    <header class="v1-masthead-bar">
-      <div class="v1-masthead-head">
+  <div class="leaderboard-quiet">
+    <header class="reading-intro">
+      <div class="reading-intro-copy">
         <h1 id="hero-heading" class="headline-two-tone">
-          Capy Bench Leaderboard.{' '}
-          <span class="muted">
-            Coding harnesses &amp; models ranked on Outside-In TDD CLI engineering.
-          </span>
+          Same task.<br />
+          <span class="muted">Different journeys.</span>
         </h1>
+        <p class="reading-intro-description">
+          My personal evaluation of how coding agents build an Elixir/OTP CLI.
+          Start with the results. Follow the details that interest you.
+        </p>
+        <p class="reading-intro-context">
+          {enrichedRuns.length} published runs <span aria-hidden="true">·</span> Seven stages
+          <a href="/about#evaluation-scope">Why the stack matters</a>
+        </p>
       </div>
-
-      <dl class="hero-stats-grid v1-kpi-strip" aria-label="Benchmark summary statistics">
-        <div class="stat-card">
-          <dt class="mono kpi-label">7/7 SPEC PASS RATE</dt>
-          <dd class="stat-value">
-            {fullPassCount}<span class="stat-denom">/{enrichedRuns.length}</span>
-          </dd>
-          <dd class="stat-meta">
-            {Math.round((fullPassCount / Math.max(enrichedRuns.length, 1)) * 100)}% full pass · {paretoFrontierRuns.length} Pareto optimal
-          </dd>
-        </div>
-
-        <div class="stat-card">
-          <dt class="mono kpi-label">LOWEST 7/7 COST</dt>
-          <dd class="stat-value">
-            {lowestCostLeader ? formatCost(lowestCostLeader.data.costUsd) : formatCost(lowestCost)}
-          </dd>
-          <dd class="stat-meta">
-            {lowestCostLeader ? (
-              <a href={`/runs/${lowestCostLeader.id}`} class="stat-leader-link">
-                {formatHarnessName(lowestCostLeader.data.codingHarness)} / {lowestCostLeader.data.model}
-              </a>
-            ) : (
-              `n=${enrichedRuns.length} runs`
-            )}
-          </dd>
-        </div>
-
-        <div class="stat-card">
-          <dt class="mono kpi-label">FASTEST 7/7 RUN</dt>
-          <dd class="stat-value">
-            {fastestLeader ? formatDuration(fastestLeader.data.durationMinutes) : formatDuration(fastestMin)}
-          </dd>
-          <dd class="stat-meta">
-            {fastestLeader ? (
-              <a href={`/runs/${fastestLeader.id}`} class="stat-leader-link">
-                {formatHarnessName(fastestLeader.data.codingHarness)} / {fastestLeader.data.model}
-              </a>
-            ) : (
-              `n=${enrichedRuns.length} runs`
-            )}
-          </dd>
-        </div>
-
-        <div class="stat-card">
-          <dt class="mono kpi-label">PROMPT CACHE SAVED</dt>
-          <dd class="stat-value">
-            {formatCost(totalCacheSavingsUsd)}
-          </dd>
-          <dd class="stat-meta">
-            90–98% prefix cache discount
-          </dd>
-        </div>
-      </dl>
+      {fullPassCount > 1 && (
+        <aside class="reading-invitation" aria-label="A question to explore">
+          <a href="/compare?preset=pareto-cost-vs-speed">
+            Does faster always cost more?
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M4 10h12m-5-5 5 5-5 5" />
+            </svg>
+          </a>
+          <p>Compare two complete runs. See what happens along the way.</p>
+        </aside>
+      )}
     </header>
 
-    <!-- 02. SINGLE-ROW WORKBENCH TOOLBAR -->
-    <search class="controls-bar v1-toolbar" aria-label="Leaderboard filters and cost lens">
-      <div class="toolbar-left">
-        <div class="scenario-pills-group" role="group" aria-label="Quick filters">
-          <button type="button" class="scenario-pill is-active" data-scenario="all">
-            All <span class="scenario-count">{enrichedRuns.length}</span>
-          </button>
-          <button type="button" class="scenario-pill" data-scenario="pareto">
-            Pareto <span class="scenario-count">{paretoFrontierRuns.length}</span>
-          </button>
-          <button type="button" class="scenario-pill" data-scenario="full-pass">
-            7/7 <span class="scenario-count">{fullPassCount}</span>
-          </button>
-          <button type="button" class="scenario-pill" data-scenario="under-1">
-            &lt; $1 <span class="scenario-count">{underOneDollarCount}</span>
-          </button>
-          <button type="button" class="scenario-pill" data-scenario="spec-miss">
-            Misses <span class="scenario-count">{specMissCount}</span>
+    <section class="run-ledger" aria-labelledby="runs-heading">
+      <div class="ledger-heading-row">
+        <h2 id="runs-heading">The runs</h2>
+        <span id="visible-count-badge" class="controls-result-count">{enrichedRuns.length} runs</span>
+      </div>
+      <search class="reading-controls" aria-label="Filter and sort benchmark runs">
+        <div class="reading-toolbar">
+          <div class="scenario-pills-group" role="group" aria-label="Run outcomes">
+            <button type="button" class="scenario-pill is-active" data-scenario="all" aria-pressed="true">
+              All runs
+            </button>
+            <button type="button" class="scenario-pill" data-scenario="full-pass" aria-pressed="false">
+              Completed all stages
+            </button>
+          </div>
+          <div class="toolbar-search">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.5" />
+              <path d="m13 13 4 4" />
+            </svg>
+            <input
+              id="search-input"
+              name="q"
+              type="search"
+              class="input"
+              placeholder="Find a model or harness"
+              aria-label="Filter runs by harness, model, provider, or effort"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+          </div>
+          <button id="reset-filters-btn" type="button" class="btn btn-sm btn-secondary" hidden>
+            Reset
           </button>
         </div>
 
-        <div class="command-input-wrap toolbar-search">
-          <span class="command-input-prefix">/</span>
-          <input
-            id="search-input"
-            name="q"
-            type="search"
-            class="input"
-            placeholder="Filter harness or model..."
-            aria-label="Filter runs by harness, model, provider, or effort"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-          />
-        </div>
+        <details class="reading-disclosure run-options" id="run-options">
+          <summary>Filter &amp; sort</summary>
+          <div class="disclosure-body options-grid">
+            <label class="option-field">
+              Harness
+              <select id="harness-filter" name="harness" class="select">
+                <option value="all">All harnesses</option>
+                {harnesses.map((h) => <option value={h}>{formatHarnessName(h)}</option>)}
+              </select>
+            </label>
+            <label class="option-field">
+              Provider
+              <select id="provider-filter" name="provider" class="select">
+                <option value="all">All providers</option>
+                {providers.map((p) => <option value={p}>{formatProviderName(p)}</option>)}
+              </select>
+            </label>
+            <label class="option-field">
+              Sort by
+              <select id="sort-select" name="sort" class="select">
+                <option value="plan" selected>Stage completion</option>
+                <option value="duration">Time elapsed</option>
+                <option value="cost">Cost in selected lens</option>
+                <option value="tokens">Total tokens</option>
+                <option value="tests">Agent tests passed</option>
+                <option value="timestamp">Run date</option>
+              </select>
+            </label>
+            <div class="option-field">
+              <span>Sort direction</span>
+              <button id="sort-dir-btn" type="button" class="btn btn-secondary" data-dir="desc" aria-label="Sort descending; activate to sort ascending">
+                Descending
+              </button>
+            </div>
+            <label class="option-field">
+              Cost lens
+              <select id="pricing-lens-select" name="lens" class="select">
+                <option value="billed" selected>Actually billed</option>
+                <option value="standard">Standard API rate</option>
+                <option value="uncached">Without prompt caching</option>
+              </select>
+            </label>
+            <label class="option-check">
+              <input id="show-telemetry" name="telemetry" type="checkbox" />
+              Show tests, tokens &amp; extra detail
+            </label>
+            <div class="option-scenarios" role="group" aria-label="Explore a subset of runs">
+              <span>Look for</span>
+              <button type="button" class="scenario-pill" data-scenario="pareto" aria-pressed="false">Speed &amp; cost tradeoffs</button>
+              <button type="button" class="scenario-pill" data-scenario="under-1" aria-pressed="false">Runs under $1</button>
+              <button type="button" class="scenario-pill" data-scenario="spec-miss" aria-pressed="false">Incomplete runs</button>
+            </div>
+          </div>
+        </details>
+        <div id="leaderboard-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+      </search>
 
-        <select
-          id="harness-filter"
-          name="harness"
-          class="select toolbar-select"
-          aria-label="Filter by coding harness"
-        >
-          <option value="all">All Harnesses</option>
-          {harnesses.map((h) => <option value={h}>{formatHarnessName(h)}</option>)}
-        </select>
-
-        <button
-          id="reset-filters-btn"
-          type="button"
-          class="btn btn-sm btn-secondary toolbar-reset-btn"
-          hidden
-        >
-          Reset
-        </button>
-      </div>
-
-      <div class="toolbar-right">
-        <div class="lens-segmented" role="group" aria-label="Cost pricing lens">
-          <span class="mono scenario-kicker">Cost:</span>
-          <button type="button" class="lens-seg-btn is-active" data-lens-btn="billed">
-            Billed
-          </button>
-          <button type="button" class="lens-seg-btn" data-lens-btn="standard">
-            API Rate
-          </button>
-          <button type="button" class="lens-seg-btn" data-lens-btn="uncached">
-            0% Cache
-          </button>
-        </div>
-
-        <span id="visible-count-badge" class="mono controls-result-count">
-          {enrichedRuns.length} runs
-        </span>
-      </div>
-
-      <!-- Hidden state controls preserved for URL query sync & keyboard/header sorting -->
-      <div hidden>
-        <select id="provider-filter" name="provider">
-          <option value="all">All Providers</option>
-          {providers.map((p) => <option value={p}>{formatProviderName(p)}</option>)}
-        </select>
-        <select id="pricing-lens-select" name="lens">
-          <option value="billed" selected>Billed Cost (Actual USD)</option>
-          <option value="standard">Standard API Rate USD</option>
-          <option value="uncached">Uncached Counterfactual (0% Cache)</option>
-        </select>
-        <select id="sort-select" name="sort">
-          <option value="plan" selected>Holdout Spec Completion (S1–S7)</option>
-          <option value="duration">Duration (Time Elapsed)</option>
-          <option value="cost">Cost (Selected Lens $)</option>
-          <option value="tokens">Total Tokens (Exact Int)</option>
-          <option value="tests">Agent Self-Tests Passed</option>
-          <option value="timestamp">Run Date</option>
-        </select>
-        <button id="sort-dir-btn" type="button" data-dir="desc">DESC</button>
-        <input id="full-pass-toggle" type="checkbox" />
-        <input id="pareto-only-toggle" type="checkbox" />
-      </div>
-
-      <div
-        id="leaderboard-status"
-        class="visually-hidden"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      ></div>
-    </search>
-
-    <!-- 03. CALM LEADERBOARD DATA TABLE -->
-    <div class="v1-table-ledger">
+      <div class="reading-table-ledger">
       <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
-        <table class="app-table leaderboard-table" id="leaderboard-table">
+        <table class="app-table leaderboard-table readable-run-table" id="leaderboard-table">
           <caption id="leaderboard-caption" class="visually-hidden">
             Capy Bench evaluation runs ranked by holdout spec completion, agent test suite, duration,
             exact token usage, and API cost
@@ -327,24 +250,24 @@ if (paretoFrontierRuns.length > 0) {
           <thead>
             <tr>
               <th scope="col" class="col-rank">#</th>
-              <th scope="col">Model &amp; Coding Harness</th>
+              <th scope="col">Model &amp; harness</th>
               <th scope="col" class="sortable active-sort" data-sort-col="plan" aria-sort="descending">
                 <button
                   type="button"
                   class="sort-header-btn"
                   title="Sort by S1–S7 external holdout spec completion ratio"
                 >
-                  <span>Spec (S1–S7)</span>
+                  <span>Outcome</span>
                   <span class="sort-indicator" aria-hidden="true">↓</span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
+              <th scope="col" class="sortable telemetry-column" data-sort-col="tests" aria-sort="none">
                 <button
                   type="button"
                   class="sort-header-btn"
                   title="Sort by agent-authored ExUnit test suite pass ratio"
                 >
-                  <span>Agent Tests</span>
+                  <span>Agent tests</span>
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
@@ -354,11 +277,11 @@ if (paretoFrontierRuns.length > 0) {
                   class="sort-header-btn"
                   title="Sort by active wall-clock run duration"
                 >
-                  <span>Duration</span>
+                  <span>Time</span>
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="tokens" aria-sort="none">
+              <th scope="col" class="sortable telemetry-column" data-sort-col="tokens" aria-sort="none">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -374,7 +297,7 @@ if (paretoFrontierRuns.length > 0) {
                   class="sort-header-btn"
                   title="Sort by cost in USD under the active pricing lens"
                 >
-                  <span id="cost-col-header-label">Cost (Billed)</span>
+                  <span id="cost-col-header-label">Cost</span>
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
@@ -387,7 +310,6 @@ if (paretoFrontierRuns.length > 0) {
                 const rank = index + 1;
                 const hasTokens =
                   data.tokens && (data.tokens.input || data.tokens.output || data.tokens.cacheHitRate);
-                const vtName = `run-${run.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
                 const incompleteStages = plan.entries
                   .filter(([, done]) => !done)
                   .map(([stageId]) => stageId);
@@ -413,7 +335,6 @@ if (paretoFrontierRuns.length > 0) {
                   <>
                     <tr
                       class="run-row"
-                      style={`--vt-name: ${vtName};`}
                       data-run-id={run.id}
                       data-run-label={`${displayHarness} / ${data.model}`}
                       data-href={`/runs/${run.id}`}
@@ -431,6 +352,7 @@ if (paretoFrontierRuns.length > 0) {
                       data-cost-standard={standardCost}
                       data-cost-uncached={uncachedCost}
                       data-cache-savings={cacheSavings}
+                      data-pricing-badge={telemetry.costMetrics.profile?.pricingBadge ?? 'free tier'}
                       data-tokens={run.totalTokens}
                       data-tokens-str={data.tokens?.total ?? '—'}
                       data-tests={run.testsRatio}
@@ -448,7 +370,7 @@ if (paretoFrontierRuns.length > 0) {
                         </span>
                       </td>
 
-                      <th scope="row" data-cell="Model & Harness">
+                      <th scope="row" data-cell="Model & harness">
                         <div class="cell-stack">
                           <div class="entry-title-row">
                             <a href={`/runs/${run.id}`} class="entry-title-link">
@@ -456,28 +378,28 @@ if (paretoFrontierRuns.length > 0) {
                             </a>
                             {telemetry.isParetoFrontier && (
                               <span
-                                class="pareto-inline-badge"
+                                class="pareto-inline-badge extra-detail"
                                 title={`Pareto Frontier #${telemetry.paretoOrder}: non-dominated on 7/7 speed (${formatDuration(data.durationMinutes)}) and cost (${formatCost(billedCost)})`}
                               >
-                                PARETO
+                                Speed &amp; cost frontier
                               </span>
                             )}
                           </div>
                           <div class="entry-meta">
                             <span class="entry-meta-harness">{displayHarness}</span>
-                            <span class="entry-meta-sep" aria-hidden="true">·</span>
-                            <span>{displayProvider}</span>
+                            <span class="entry-meta-sep extra-detail" aria-hidden="true">·</span>
+                            <span class="extra-detail">{displayProvider}</span>
                             {data.effort && (
                               <>
                                 <span class="entry-meta-sep" aria-hidden="true">·</span>
                                 <span>{data.effort}</span>
                               </>
                             )}
-                            <span class="entry-meta-sep" aria-hidden="true">·</span>
+                            <span class="entry-meta-sep extra-detail" aria-hidden="true">·</span>
                             <time
                               datetime={data.timestamp}
                               title={formatTimestamp(data.timestamp)}
-                              class="metric-sub metric-inline entry-timestamp"
+                              class="metric-sub metric-inline entry-timestamp extra-detail"
                             >
                               {run.shortDate}
                             </time>
@@ -485,56 +407,24 @@ if (paretoFrontierRuns.length > 0) {
                         </div>
                       </th>
 
-                      <td data-cell="Spec (S1–S7)">
-                        <div class="plan-cell cell-stack">
-                          <div class="plan-primary-row">
-                            <span class="metric-primary">
-                              {plan.completed}/{plan.total}
-                            </span>
-                            {plan.ratio < 1 && (
-                              <span
-                                class:list={[
-                                  'plan-pct-badge',
-                                  plan.ratio >= 0.7 ? 'plan-pct-partial' : 'hl hl-magenta',
-                                ]}
-                              >
-                                {Math.round(plan.ratio * 100)}%
-                              </span>
-                            )}
-                            {incompleteStages.length > 0 && (
-                              <span class="visually-hidden">
-                                (Incomplete stages: {incompleteStages.join(', ')})
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            class="stage-strip stage-strip-btn"
-                            data-peek-toggle={run.id}
-                            title="Click to toggle inline S1–S7 stage burn & field notes"
-                            aria-expanded="false"
-                          >
-                            {plan.entries.map(([stageId, done]) => {
-                              const stageTitle = stageTitleMap.get(stageId) ?? stageId;
-                              const isPeak = telemetry.peakStageId === stageId;
-                              return (
-                                <span
-                                  class:list={[
-                                    'stage-pill',
-                                    done ? 'done' : 'pending',
-                                    { 'is-peak-stage': isPeak },
-                                  ]}
-                                  title={`${stageId}: ${stageTitle} (${done ? 'Holdout PASS' : 'Holdout MISS'}${isPeak ? ` · Peak cost stage: ${formatCost(telemetry.stages[stageId as keyof typeof telemetry.stages].costUsd)}` : ''})`}
-                                >
-                                  {stageId.replace(/^S/, '')}
-                                </span>
-                              );
-                            })}
-                          </button>
-                        </div>
+                      <td data-cell="Outcome">
+                        <button
+                          type="button"
+                          class="outcome-button"
+                          data-peek-toggle={run.id}
+                          aria-expanded="false"
+                          aria-controls={`drawer-${run.id}`}
+                          aria-label={`Explore ${displayHarness} / ${data.model}: ${plan.completed} of ${plan.total} stages passed${incompleteStages.length ? `; missed ${incompleteStages.join(', ')}` : ''}`}
+                        >
+                          <span class="metric-primary">{plan.completed}/{plan.total}</span>
+                          <span>stages</span>
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="m5 6 3 3 3-3" />
+                          </svg>
+                        </button>
                       </td>
 
-                      <td data-cell="Agent Tests">
+                      <td data-cell="Agent tests" class="telemetry-column">
                         <div class="cell-stack">
                           {data.tests ? (
                             <div
@@ -560,18 +450,18 @@ if (paretoFrontierRuns.length > 0) {
                         </div>
                       </td>
 
-                      <td data-cell="Duration">
+                      <td data-cell="Time">
                         <div class="cell-stack">
                           <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
                           {run.totalCalls !== undefined && (
-                            <div class="metric-sub">
+                            <div class="metric-sub extra-detail">
                               {telemetry.llmCalls} LLM · {telemetry.toolTotalCalls} tool
                             </div>
                           )}
                         </div>
                       </td>
 
-                      <td data-cell="Tokens">
+                      <td data-cell="Tokens" class="telemetry-column">
                         {hasTokens ? (
                           <div class="cell-stack">
                             <div
@@ -601,18 +491,16 @@ if (paretoFrontierRuns.length > 0) {
                             <span class="metric-primary cost-mono cost-primary-display">
                               {formatCost(billedCost)}
                             </span>
-                            {lowestCostLeader && run.id === lowestCostLeader.id && (
-                              <span class="cost-leader-tag" title="Lowest 7/7 full-pass cost leader">
-                                LOWEST
-                              </span>
-                            )}
                           </div>
-                          <div class="metric-sub cost-sub-display">
+                          <div
+                            class="metric-sub cost-sub-display extra-detail"
+                            title={telemetry.costMetrics.profile?.pricingStatusNote}
+                          >
                             {cacheSavings > 0
                               ? `-${formatCost(cacheSavings)} saved`
                               : standardCost > billedCost
                                 ? `${formatCost(standardCost)} API equiv.`
-                                : 'free tier'}
+                                : (telemetry.costMetrics.profile?.pricingBadge ?? 'free tier')}
                           </div>
                         </div>
                       </td>
@@ -621,6 +509,7 @@ if (paretoFrontierRuns.length > 0) {
 
                     <tr
                       class="forensic-drawer-row"
+                      id={`drawer-${run.id}`}
                       data-drawer-for={run.id}
                       hidden
                     >
@@ -628,8 +517,8 @@ if (paretoFrontierRuns.length > 0) {
                         <div class="forensic-drawer-inner">
                           <div class="forensic-stages-col">
                             <div class="forensic-col-head">
-                              <span class="mono forensic-col-title">
-                                S1–S7 SLICE BURN · {displayHarness} / {data.model}
+                              <span class="forensic-col-title">
+                                The seven stages
                               </span>
                               <span class="mono forensic-col-meta">
                                 {hasPerSlice
@@ -654,7 +543,7 @@ if (paretoFrontierRuns.length > 0) {
                                     <div class="forensic-stage-top">
                                       <span class="mono forensic-stage-id">{st.id}</span>
                                       {!sCell?.completed && (
-                                        <span class="mono forensic-stage-status is-miss">MISS</span>
+                                        <span class="forensic-stage-status is-miss">Missed</span>
                                       )}
                                     </div>
                                     <div class="mono forensic-stage-cost">
@@ -679,7 +568,7 @@ if (paretoFrontierRuns.length > 0) {
 
                           <div class="forensic-notes-col">
                             <div class="forensic-col-head">
-                              <span class="mono forensic-col-title">FIELD NOTES</span>
+                              <span class="forensic-col-title">Field notes</span>
                               <div class="forensic-quick-links">
                                 <button
                                   type="button"
@@ -688,16 +577,16 @@ if (paretoFrontierRuns.length > 0) {
                                   aria-pressed="false"
                                   title="Pin run to head-to-head comparison dock"
                                 >
-                                  + Pin to Diff
+                                  Add to comparison
                                 </button>
                                 <a
                                   href={`/compare?a=${run.id}&b=${rank === 1 && enrichedRuns[1] ? enrichedRuns[1].id : enrichedRuns[0].id}`}
-                                  class="mono forensic-action-link"
+                                  class="forensic-action-link"
                                 >
                                   Compare →
                                 </a>
-                                <a href={`/runs/${run.id}`} class="mono forensic-action-link is-primary">
-                                  Full Dossier →
+                                <a href={`/runs/${run.id}`} class="forensic-action-link is-primary">
+                                  Read the run →
                                 </a>
                               </div>
                             </div>
@@ -709,7 +598,7 @@ if (paretoFrontierRuns.length > 0) {
                               </ul>
                             ) : (
                               <p class="forensic-notes-empty">
-                                Verified holdout evaluation record ({plan.completed}/{plan.total} stages, {formatDuration(data.durationMinutes)}, {formatCost(billedCost)}).
+                                This run passed {plan.completed} of {plan.total} stages in {formatDuration(data.durationMinutes)}, at a billed cost of {formatCost(billedCost)}.
                               </p>
                             )}
                           </div>
@@ -740,8 +629,9 @@ if (paretoFrontierRuns.length > 0) {
         </table>
       </div>
     </div>
+    </section>
 
-    <!-- Sticky Live Head-to-Head Compare Dock -->
+    <!-- Comparison appears only after a run is selected. -->
     <aside
       id="quick-compare-dock"
       class="quick-compare-dock"
@@ -750,13 +640,12 @@ if (paretoFrontierRuns.length > 0) {
     >
       <div class="qc-dock-inner">
         <div class="qc-contenders">
-          <span class="hl hl-acid qc-badge">HEAD-TO-HEAD DIFF</span>
-          <span class="mono qc-pair-text" id="qc-pair-text">Select a second run to compare</span>
+          <span class="qc-pair-text" id="qc-pair-text">Select a second run to compare</span>
         </div>
         <div class="mono qc-deltas" id="qc-deltas"></div>
         <div class="qc-actions">
-          <a href="/compare" id="qc-open-link" class="btn btn-sm btn-acid">
-            Open S1–S7 Diff →
+          <a href="/compare" id="qc-open-link" class="btn btn-sm">
+            Compare runs →
           </a>
           <button type="button" id="qc-clear-btn" class="btn btn-sm btn-secondary">
             Clear
@@ -765,57 +654,19 @@ if (paretoFrontierRuns.length > 0) {
       </div>
     </aside>
 
-    <!-- 04. TABBED ANALYTICS WORKBENCH (One Focused View at a Time) -->
-    <section class="analytics-workbench" aria-label="Cross-run econometrics and stage analysis">
-      <div class="analytics-tabs-bar" role="tablist" aria-label="Benchmark analysis views">
-        <button
-          type="button"
-          role="tab"
-          id="tab-btn-pareto"
-          aria-controls="pareto-section"
-          aria-selected="true"
-          class="analytics-tab-btn is-active"
-          data-analytics-tab="pareto-section"
-        >
-          Speed × Cost Pareto Frontier ({paretoFrontierRuns.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-btn-bottleneck"
-          aria-controls="bottleneck-section"
-          aria-selected="false"
-          class="analytics-tab-btn"
-          data-analytics-tab="bottleneck-section"
-        >
-          S1–S7 Stage Bottleneck Matrix
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-btn-ablations"
-          aria-controls="ablations-teaser"
-          aria-selected="false"
-          class="analytics-tab-btn"
-          data-analytics-tab="ablations-teaser"
-        >
-          Controlled Ablations ({ablationPresets.length})
-        </button>
-      </div>
-
-      <!-- Tab Panel 1: 7/7 Speed x Cost Pareto Frontier -->
-      <div
-        role="tabpanel"
-        id="pareto-section"
-        aria-labelledby="tab-btn-pareto"
-        class="analytics-panel"
-      >
+    <section class="reading-exploration" aria-labelledby="exploration-heading">
+      <h2 id="exploration-heading">Follow a question</h2>
+      <p class="exploration-description">There’s more here when you want to look a little closer.</p>
+      <details class="reading-disclosure" id="pareto-section">
+        <summary>Where do speed and cost meet?</summary>
+        <div class="disclosure-body analytics-panel">
         <div class="panel-top-row">
-          <p class="mono section-subnote">
-            Non-dominated 7/7 full-pass runs where no other evaluation is simultaneously faster and cheaper. Hover any point to inspect.
+          <p class="section-subnote">
+            Each point passed all seven stages. The frontier joins runs with no alternative
+            that is both faster and cheaper. Hover or focus a point to explore it.
           </p>
           <a href="/compare?preset=pareto-cost-vs-speed" class="action-link">
-            Diff Frontier Extremes <span aria-hidden="true">→</span>
+            Compare the tradeoffs <span aria-hidden="true">→</span>
           </a>
         </div>
 
@@ -964,22 +815,19 @@ if (paretoFrontierRuns.length > 0) {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <!-- Tab Panel 2: Cross-Run Stage Bottleneck Matrix (S1-S7) -->
-      <div
-        role="tabpanel"
-        id="bottleneck-section"
-        aria-labelledby="tab-btn-bottleneck"
-        class="analytics-panel"
-        hidden
-      >
+      <details class="reading-disclosure" id="bottleneck-section">
+        <summary>Which stages ask the most of an agent?</summary>
+        <div class="disclosure-body analytics-panel">
         <div class="panel-top-row">
-          <p class="mono section-subnote">
-            Aggregated across all {enrichedRuns.length} runs: S3 (streaming HTTP/TLS + 2s timeouts) and S7 (foreground PTY Ctrl-C) dominate token burn, while S5 has the highest spec miss rate.
+          <p class="section-subnote">
+            Compare completion, call share, cost share, and thinking tokens for each stage
+            across all {enrichedRuns.length} published runs.
           </p>
           <a href="/about#stages" class="action-link">
-            Stage Specifications <span aria-hidden="true">→</span>
+            Read the stage specifications <span aria-hidden="true">→</span>
           </a>
         </div>
 
@@ -1050,22 +898,19 @@ if (paretoFrontierRuns.length > 0) {
             </tbody>
           </table>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <!-- Tab Panel 3: Controlled Ablations -->
-      <div
-        role="tabpanel"
-        id="ablations-teaser"
-        aria-labelledby="tab-btn-ablations"
-        class="analytics-panel"
-        hidden
-      >
+      <details class="reading-disclosure" id="ablations-teaser">
+        <summary>What changes with a different harness or effort?</summary>
+        <div class="disclosure-body analytics-panel">
         <div class="panel-top-row">
-          <p class="mono section-subnote">
-            Controlled comparisons isolating coding harness overhead, reasoning effort scaling, and model generation.
+          <p class="section-subnote">
+            Paired runs let you look at one difference at a time: harness, reasoning effort,
+            or model generation.
           </p>
           <a href="/compare" class="action-link">
-            Open Full Comparison Workbench <span aria-hidden="true">→</span>
+            Choose a comparison <span aria-hidden="true">→</span>
           </a>
         </div>
 
@@ -1073,775 +918,585 @@ if (paretoFrontierRuns.length > 0) {
           {ablationPresets.map((preset) => (
             <a
               href={`/compare?a=${preset.runAId}&b=${preset.runBId}&preset=${preset.id}`}
-              class="card card-interactive ablation-teaser-card"
+              class="ablation-teaser-card"
             >
               <div class="ablation-teaser-top">
-                <span class="mono ablation-badge">{preset.badge}</span>
-                <span class="mono ablation-cta">Diff runs →</span>
+                <span class="ablation-badge">{preset.badge}</span>
+                <span class="ablation-cta">Compare runs →</span>
               </div>
               <strong class="ablation-teaser-title">{preset.title}</strong>
               <p class="ablation-teaser-copy">{preset.findingHeadline}</p>
             </a>
           ))}
         </div>
-      </div>
+        </div>
+      </details>
     </section>
   </div>
 </BaseLayout>
 
 <style>
-  .leaderboard-quiet.lb-v1 {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    padding-block-start: 0.25rem;
-    container-type: inline-size;
+  .leaderboard-quiet {
+    padding-block-start: 3.5rem;
     font-variant-numeric: tabular-nums;
   }
 
-  /* 1. COMPACT MASTHEAD & 4-COLUMN KPI STRIP */
-  .v1-masthead-bar {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .v1-masthead-head .headline-two-tone {
-    font-size: clamp(1.3rem, 2.2vw, 1.75rem);
-    margin: 0;
-    text-wrap: balance;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-kpi-strip {
-    margin: 0;
-    border: var(--border-frame);
-    gap: 0;
+  .reading-intro {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    background-color: transparent;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card {
-    padding: 0.7rem 0.95rem;
-    border: none;
-    border-inline-end: var(--border-row);
-    background-color: transparent;
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:last-child {
-    border-inline-end: none;
-  }
-
-  .kpi-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin: 0;
-  }
-
-  .leaderboard-quiet .stat-value {
-    font-size: clamp(1.2rem, 1.8vw, 1.5rem);
-    line-height: 1.15;
-    margin: 0;
-  }
-
-  .stat-denom {
-    font-size: 0.65em;
-    color: var(--text-muted);
-    font-weight: 400;
-  }
-
-  .leaderboard-quiet .stat-meta {
-    font-size: 0.7rem;
-    padding-block-start: 0.1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* 2. SINGLE-ROW TOOLBAR */
-  .v1-toolbar {
-    display: flex;
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.85fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 0.85rem;
-    padding: 0.55rem 0.75rem;
-    border: var(--border-frame);
-    background-color: transparent;
-    margin: 0;
+    gap: 3rem;
+    margin-block-end: 3.5rem;
   }
 
-  .toolbar-left,
-  .toolbar-right,
-  .scenario-pills-group,
-  .lens-segmented {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.32rem;
+  .reading-intro .headline-two-tone {
+    font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+    line-height: 1.3;
+    letter-spacing: -0.025em;
   }
 
-  .scenario-kicker {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    margin-inline-end: 0.15rem;
-  }
-
-  .scenario-pill,
-  .lens-seg-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.28rem 0.52rem;
-    background-color: transparent;
+  .reading-intro-description {
+    max-inline-size: 52ch;
+    margin-block: 1.25rem 1rem;
     color: var(--text-secondary);
-    border: 1px solid var(--border-subtle-color);
-    border-radius: var(--radius-none);
-    cursor: pointer;
-    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    font-size: 1.0625rem;
+    line-height: 1.8;
   }
 
-  .scenario-pill:hover,
-  .lens-seg-btn:hover {
-    background-color: var(--bg-surface);
-    border-color: var(--border-strong-color);
-    color: var(--text-primary);
-  }
-
-  .scenario-pill.is-active,
-  .lens-seg-btn.is-active {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-color: var(--border-strong-color);
-    box-shadow: inset 0 -2px 0 var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .scenario-pill.is-active,
-  :global([data-theme="light"]) .lens-seg-btn.is-active {
-    border-color: var(--raw-ebony);
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
-  }
-
-  .scenario-count {
-    font-size: 0.625rem;
+  .reading-intro-context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.6rem;
+    margin: 0;
     color: var(--text-muted);
-    font-weight: 400;
+    font-size: 0.875rem;
   }
 
-  .scenario-pill.is-active .scenario-count {
-    color: var(--hl-acid);
-    font-weight: 700;
+  .reading-intro-context a {
+    color: var(--text-secondary);
+    margin-inline-start: 0.4rem;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
   }
 
-  :global([data-theme="light"]) .scenario-pill.is-active .scenario-count {
-    color: var(--raw-ebony);
-  }
-
-  .toolbar-search {
-    background-color: var(--bg-canvas);
-    border: 1px solid var(--border-subtle-color);
-    inline-size: 10.5rem;
-  }
-
-  .toolbar-search .command-input-prefix {
+  .reading-invitation {
+    padding: 1.75rem;
     background: var(--bg-surface);
-    color: var(--hl-acid);
-    border-inline-end: var(--border-row);
-    font-size: 0.7rem;
-    padding: 0.26rem 0.45rem;
   }
 
-  :global([data-theme="light"]) .toolbar-search .command-input-prefix {
-    color: var(--raw-ebony);
-    background: var(--hl-acid);
-  }
-
-  .toolbar-search .input {
-    border: none;
-    background-color: transparent;
-    font-size: 0.75rem;
-    padding: 0.26rem 0.5rem;
-  }
-
-  .toolbar-select {
-    background-color: var(--bg-canvas);
-    border: 1px solid var(--border-subtle-color);
-    font-size: 0.72rem;
-    padding: 0.26rem 1.6rem 0.26rem 0.5rem;
-    inline-size: auto;
-  }
-
-  .toolbar-reset-btn {
-    border-width: 1px;
-    padding: 0.26rem 0.5rem;
-    font-size: 0.7rem;
-  }
-
-  .controls-result-count {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-inline-start: 0.25rem;
-  }
-
-  /* 3. LEADERBOARD TABLE & INLINE FORENSIC DRAWER */
-  .leaderboard-quiet .leaderboard-table .col-rank {
-    inline-size: 2.8rem;
-  }
-
-  .leaderboard-quiet .leaderboard-table .col-details {
-    inline-size: 4.2rem;
-  }
-
-  .leaderboard-quiet .leaderboard-table .metric-primary {
-    font-size: 0.8125rem;
-    white-space: nowrap;
-  }
-
-  .leaderboard-quiet .leaderboard-table .metric-sub {
-    font-size: 0.65rem;
-    white-space: nowrap;
-  }
-
-  .leaderboard-quiet .leaderboard-table thead th {
-    background-color: var(--bg-surface);
-    padding: 0.55rem 0.6rem;
-    font-size: 0.6875rem;
-  }
-
-  .leaderboard-quiet .leaderboard-table thead th.sortable {
-    padding: 0;
-  }
-
-  .leaderboard-quiet .sort-header-btn {
-    min-block-size: 2.25rem;
-    padding: 0.55rem 0.6rem;
-  }
-
-  .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
-  }
-
-  .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-indicator {
-    color: var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-header-btn {
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .leaderboard-quiet .leaderboard-table thead th.active-sort .sort-indicator {
-    color: var(--raw-ebony);
-  }
-
-  .leaderboard-quiet .leaderboard-table thead th.sortable:hover .sort-header-btn {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-  }
-
-  .leaderboard-quiet.lb-v1 .v1-table-ledger .leaderboard-table :is(td, tbody th, tfoot th) {
-    padding: 0.58rem 0.6rem;
-  }
-
-  .leaderboard-quiet .rank-badge {
-    border-width: 1px;
-    border-color: var(--border-subtle-color);
-    background-color: transparent;
-    color: var(--text-muted);
-    min-inline-size: 1.9rem;
-    block-size: 1.6rem;
-    font-size: 0.72rem;
-  }
-
-  .leaderboard-quiet .rank-badge.rank-1 {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-width: 2px;
-    border-color: var(--raw-ebony);
-  }
-
-  .leaderboard-quiet .rank-badge.rank-2,
-  .leaderboard-quiet .rank-badge.rank-3 {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border-color: var(--border-strong-color);
-  }
-
-  .leaderboard-quiet .entry-title-row {
+  .reading-invitation a {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.38rem;
-  }
-
-  @container (width >= 32rem) {
-    .leaderboard-quiet .entry-title-row,
-    .leaderboard-quiet .entry-title-link,
-    .leaderboard-quiet .entry-meta {
-      flex-wrap: nowrap;
-      white-space: nowrap;
-    }
-  }
-
-  .leaderboard-quiet .entry-model {
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 700;
+    align-items: baseline;
+    gap: 0.75rem;
     color: var(--text-primary);
+    font-size: 1.0625rem;
+    text-decoration: none;
   }
 
-  .entry-meta-harness {
-    color: var(--text-secondary);
-    font-weight: 700;
+  .reading-invitation a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
   }
 
-  .leaderboard-quiet .pareto-inline-badge {
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 700;
-    padding: 0.03rem 0.28rem;
-    letter-spacing: 0.04em;
-    border: 1px solid var(--hl-acid);
-    color: var(--hl-acid);
-    background-color: transparent;
+  .reading-invitation svg {
+    flex-shrink: 0;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    align-self: center;
   }
 
-  :global([data-theme="light"]) .leaderboard-quiet .pareto-inline-badge {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
-  }
-
-  .leaderboard-quiet .entry-meta {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
+  .reading-invitation p {
+    margin-block: 0.75rem 0;
+    font-size: 0.9375rem;
+    line-height: 1.75;
     color: var(--text-muted);
-    gap: 0.3rem;
-    margin-block-start: 0.2rem;
   }
 
-  .leaderboard-quiet .entry-meta-sep {
-    color: var(--border-strong-color);
-  }
-
-  .leaderboard-quiet .entry-meta-tag {
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  .leaderboard-quiet .plan-pct-badge {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 0.03rem 0.3rem;
-  }
-
-  .leaderboard-quiet .plan-pct-partial {
-    border: 1px solid var(--hl-acid);
-    color: var(--hl-acid);
-    background-color: transparent;
-  }
-
-  :global([data-theme="light"]) .leaderboard-quiet .plan-pct-partial {
-    border-color: var(--raw-ebony);
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-  }
-
-  .stage-strip-btn {
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .stage-strip-btn:hover {
-    border-color: var(--hl-acid);
-  }
-
-  .leaderboard-quiet .stage-pill {
-    font-size: 0.6rem;
-    padding: 0.12rem 0.24rem;
-  }
-
-  .leaderboard-quiet .stage-pill.done {
-    background-color: transparent;
-    color: var(--text-muted);
-    border-block-end: none;
-  }
-
-  .leaderboard-quiet .stage-pill.pending {
-    color: var(--text-primary);
-    border-block-end: 2px solid var(--hl-magenta);
-  }
-
-  .leaderboard-quiet .stage-pill.is-peak-stage {
-    color: var(--text-primary);
-    border-block-end: 2px solid var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .leaderboard-quiet .stage-pill.is-peak-stage {
-    border-block-end-color: var(--raw-ebony);
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-  }
-
-  .cost-cell-head {
-    display: flex;
-    align-items: center;
-    gap: 0.32rem;
-  }
-
-  .cost-leader-tag {
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 700;
-    padding: 0.03rem 0.26rem;
-    border: 1px solid var(--hl-acid);
-    color: var(--hl-acid);
-    background-color: transparent;
-  }
-
-  :global([data-theme="light"]) .cost-leader-tag {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
-  }
-
-  .row-action-stack {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.22rem;
-    white-space: nowrap;
-  }
-
-  .peek-row-btn,
-  .pin-diff-btn {
-    border-width: 1px;
-    border-color: var(--border-subtle-color);
-    color: var(--text-muted);
-    padding: 0.22rem 0.38rem;
-    font-size: 0.64rem;
-    background-color: transparent;
-    white-space: nowrap;
-  }
-
-  .peek-row-btn:hover,
-  .pin-diff-btn:hover {
-    border-color: var(--border-strong-color);
-    color: var(--text-primary);
-    background-color: var(--bg-surface);
-  }
-
-  .peek-row-btn.is-open,
-  .pin-diff-btn[aria-pressed="true"] {
-    border-color: var(--hl-acid);
-    color: var(--hl-acid);
-    background-color: var(--bg-surface);
-  }
-
-  :global([data-theme="light"]) .peek-row-btn.is-open,
-  :global([data-theme="light"]) .pin-diff-btn[aria-pressed="true"] {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
-  }
-
-  /* Inline Forensic Drawer Row */
-  .forensic-drawer-row > .forensic-drawer-cell {
-    background-color: var(--bg-surface) !important;
-    padding: 0.8rem 1rem !important;
-    border-block-end: var(--border-frame) !important;
-  }
-
-  .forensic-drawer-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-    gap: 1.1rem;
-    align-items: start;
-  }
-
-  .forensic-col-head {
+  .ledger-heading-row {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.5rem;
-    margin-block-end: 0.45rem;
+    gap: 1rem;
+    margin-block-end: 1.25rem;
   }
 
-  .forensic-col-title {
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+  .ledger-heading-row h2,
+  .reading-exploration h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .controls-result-count {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  .reading-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .scenario-pills-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .scenario-pill {
+    min-block-size: 2.75rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-none);
+    background: transparent;
+    font: 0.9375rem/1.4 var(--font-body);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .scenario-pill:hover,
+  .scenario-pill.is-active {
+    background: var(--bg-surface);
     color: var(--text-primary);
   }
 
-  .forensic-col-meta {
-    font-size: 0.66rem;
+  .scenario-pill.is-active {
+    border-color: var(--border-subtle-color);
+  }
+
+  .toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    inline-size: min(100%, 18rem);
+    border: var(--border-row);
+    padding-inline-start: 0.8rem;
+  }
+
+  .toolbar-search svg {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+
+  .toolbar-search .input {
+    min-inline-size: 0;
+    border: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    padding-inline-start: 0;
+  }
+
+  .run-options {
+    border-block: none;
+    margin-block: 0.25rem 0.75rem;
+  }
+
+  .run-options > summary {
+    inline-size: fit-content;
+    min-block-size: 2.75rem;
+    padding-block: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    padding-block: 1rem 1.75rem;
+  }
+
+  .option-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .option-field .select,
+  .option-field .btn {
+    border: var(--border-row);
+    background: var(--bg-canvas);
+    font-size: 0.9375rem;
+  }
+
+  .option-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block-start: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+
+  .option-check input {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    flex-shrink: 0;
+  }
+
+  .option-scenarios {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .reading-table-ledger > .table-wrapper {
+    border: none;
+    border-block: var(--border-row);
+  }
+
+  .readable-run-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .readable-run-table thead th {
+    padding: 0.8rem 1rem;
+    font: 400 0.875rem var(--font-body);
+    text-transform: none;
+    letter-spacing: normal;
+    background: var(--bg-canvas);
+    border-block-end: var(--border-row);
+    color: var(--text-muted);
+  }
+
+  .readable-run-table .sort-header-btn {
+    min-block-size: 2.75rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .readable-run-table thead th.active-sort .sort-header-btn,
+  .readable-run-table thead th.sortable:hover .sort-header-btn {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+
+  .readable-run-table :is(td, tbody th) {
+    padding: 1.2rem 1rem;
+    border-block-end: var(--border-row);
+  }
+
+  .readable-run-table .col-rank {
+    inline-size: 3rem;
+  }
+
+  .readable-run-table .rank-badge {
+    min-inline-size: 1.5rem;
+    block-size: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+
+  .readable-run-table .cell-stack {
+    gap: 0.35rem;
+  }
+
+  .entry-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+
+  .readable-run-table .entry-model {
+    font: 700 1rem var(--font-body);
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  .readable-run-table .entry-meta {
+    font: 0.8125rem var(--font-body);
+    margin-block-start: 0.25rem;
+    gap: 0.4rem;
+    color: var(--text-muted);
+  }
+
+  .entry-meta-harness {
+    color: var(--text-secondary);
+  }
+
+  .readable-run-table .metric-primary {
+    font-size: 0.9375rem;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .readable-run-table .metric-sub {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .outcome-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 2.75rem;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font: 0.8125rem var(--font-body);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .outcome-button .metric-primary {
+    color: var(--text-primary);
+  }
+
+  .outcome-button svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  .outcome-button[aria-expanded="true"] svg {
+    rotate: 180deg;
+  }
+
+  .outcome-button:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .readable-run-table:not(.show-telemetry) thead .telemetry-column,
+  .readable-run-table:not(.show-telemetry) .run-row > .telemetry-column,
+  .readable-run-table:not(.show-telemetry) .extra-detail {
+    display: none;
+  }
+
+  .pareto-inline-badge {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .forensic-drawer-row > .forensic-drawer-cell {
+    background: var(--bg-surface);
+    padding: 1.75rem;
+  }
+
+  .forensic-drawer-inner,
+  .pareto-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .forensic-col-head,
+  .panel-top-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-end: 1rem;
+  }
+
+  .forensic-col-title {
+    font: 700 1rem var(--font-body);
+    color: var(--text-primary);
+  }
+
+  .forensic-col-meta,
+  .forensic-stage-status,
+  .forensic-stage-turns {
+    font-size: 0.8125rem;
+    line-height: 1.6;
     color: var(--text-muted);
   }
 
   .forensic-stage-grid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 0.32rem;
+    gap: 0.75rem;
   }
 
   .forensic-stage-card {
-    border: 1px solid var(--border-subtle-color);
-    background-color: var(--bg-canvas);
-    padding: 0.38rem 0.45rem;
+    min-inline-size: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.14rem;
-    min-inline-size: 0;
-  }
-
-  .forensic-stage-card.is-peak {
-    border-color: var(--border-strong-color);
-    box-shadow: inset 0 -2px 0 var(--hl-acid);
-  }
-
-  .forensic-stage-card.is-miss {
-    border-color: var(--hl-magenta);
-  }
-
-  .forensic-stage-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.25rem;
-  }
-
-  .forensic-stage-id {
-    font-size: 0.66rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .forensic-stage-status.is-miss {
-    font-size: 0.56rem;
-    font-weight: 700;
-    background-color: var(--hl-magenta);
-    color: var(--hl-ink);
-    padding: 0.02rem 0.2rem;
-  }
-
-  .forensic-stage-cost {
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .forensic-stage-turns {
-    font-size: 0.62rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .forensic-stage-bar-track {
-    inline-size: 100%;
-    block-size: 0.18rem;
-    background-color: var(--bg-surface);
-    margin-block-start: 0.16rem;
-  }
-
-  .forensic-stage-bar-fill {
-    display: block;
-    block-size: 100%;
-    background-color: var(--text-muted);
-  }
-
-  .forensic-stage-card.is-peak .forensic-stage-bar-fill {
-    background-color: var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .forensic-stage-card.is-peak .forensic-stage-bar-fill {
-    background-color: var(--raw-ebony);
-  }
-
-  .forensic-quick-links {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  .forensic-action-link {
-    font-size: 0.66rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-decoration: none;
+    gap: 0.5rem;
+    padding-block: 0.5rem;
     border-block-end: 1px solid var(--border-strong-color);
   }
 
-  .forensic-action-link.is-primary {
-    color: var(--hl-acid);
-    border-block-end-color: var(--hl-acid);
+  .forensic-stage-top,
+  .pareto-step-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+    min-inline-size: 0;
   }
 
-  :global([data-theme="light"]) .forensic-action-link.is-primary {
-    color: var(--raw-ebony);
-    background-color: var(--hl-acid);
-    padding-inline: 0.28rem;
-    border-block-end: none;
+  .forensic-stage-id,
+  .forensic-stage-cost {
+    font-size: 0.875rem;
+    color: var(--text-primary);
   }
 
-  .forensic-action-link:hover {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
+  .forensic-stage-bar-track,
+  .bottleneck-bar-track {
+    inline-size: 100%;
+    block-size: 0.2rem;
+    margin-block-start: auto;
+    background: var(--bg-canvas);
+  }
+
+  .forensic-stage-bar-fill,
+  .bottleneck-bar-fill {
+    display: block;
+    block-size: 100%;
+    background: var(--text-muted);
+  }
+
+  .forensic-stage-card.is-peak .forensic-stage-bar-fill {
+    background: var(--text-primary);
+  }
+
+  .forensic-quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+  }
+
+  .pin-diff-btn {
+    border: var(--border-row);
+    font-size: 0.875rem;
+  }
+
+  .pin-diff-btn[aria-pressed="true"] {
+    border-color: var(--text-muted);
+  }
+
+  .forensic-action-link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.75rem;
+    font: 0.9375rem var(--font-body);
+    color: var(--text-secondary);
+    text-underline-offset: 0.3em;
+    text-decoration-thickness: 1px;
   }
 
   .forensic-notes-list {
-    margin: 0;
-    padding-inline-start: 1.05rem;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    font-size: 0.76rem;
-    line-height: 1.42;
+    gap: 0.75rem;
+    max-inline-size: 70ch;
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    font-size: 1rem;
+    line-height: 1.8;
     color: var(--text-secondary);
   }
 
   .forensic-notes-empty {
     margin: 0;
-    font-size: 0.76rem;
-    color: var(--text-muted);
+    font-size: 1rem;
+    color: var(--text-secondary);
   }
 
-  /* Sticky Quick-Compare Dock */
   .quick-compare-dock {
-    position: sticky;
-    inset-block-end: 0.85rem;
-    z-index: 30;
-    border: var(--border-frame);
-    background-color: var(--bg-elevated);
-    padding: 0.6rem 0.95rem;
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
+    margin-block-start: 1.5rem;
+    padding: 1.25rem;
+    border: var(--border-row);
+    background: var(--bg-surface);
   }
 
-  .qc-dock-inner {
+  .qc-dock-inner,
+  .pareto-step-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.6rem 1rem;
-  }
-
-  .qc-contenders {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-  }
-
-  .qc-badge {
-    font-size: 0.625rem;
-    padding: 0.06rem 0.35rem;
+    gap: 1rem;
   }
 
   .qc-pair-text {
-    font-size: 0.76rem;
-    font-weight: 700;
+    font-size: 0.9375rem;
     color: var(--text-primary);
   }
 
-  .qc-deltas {
-    font-size: 0.74rem;
-    color: var(--text-secondary);
+  .qc-deltas,
+  .pareto-step-metrics {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.7rem;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
   }
 
   .qc-actions {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-  }
-
-  /* 4. TABBED ANALYTICS WORKBENCH */
-  .analytics-workbench {
-    border: var(--border-frame);
-    background-color: transparent;
-    margin-block-start: 0.25rem;
-  }
-
-  .analytics-tabs-bar {
-    display: flex;
-    flex-wrap: wrap;
-    border-block-end: var(--border-frame);
-    background-color: var(--bg-surface);
-  }
-
-  .analytics-tab-btn {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.68rem 1.1rem;
-    background-color: transparent;
-    color: var(--text-muted);
-    border: none;
-    border-inline-end: var(--border-row);
-    cursor: pointer;
-    transition: background-color 0.12s ease, color 0.12s ease;
-  }
-
-  .analytics-tab-btn:hover {
-    color: var(--text-primary);
-    background-color: var(--bg-canvas);
-  }
-
-  .analytics-tab-btn.is-active {
-    color: var(--text-primary);
-    background-color: var(--bg-canvas);
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
-  }
-
-  .analytics-panel {
-    padding: 1rem 1.2rem;
-    display: flex;
-    flex-direction: column;
     gap: 0.75rem;
   }
 
-  .panel-top-row {
+  .reading-exploration {
+    margin-block-start: 4rem;
+  }
+
+  .exploration-description {
+    margin-block: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: var(--text-muted);
+  }
+
+  .analytics-panel {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-block-start: 0.75rem;
   }
 
   .section-subnote {
+    max-inline-size: 68ch;
     margin: 0;
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+  }
+
+  .reading-exploration .action-link {
+    min-block-size: 2.75rem;
+    align-items: center;
+    font: 400 0.9375rem var(--font-body);
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+    text-decoration-thickness: 1px;
+  }
+
+  .reading-exploration .action-link:hover {
+    background: transparent;
+    color: var(--text-primary);
   }
 
   .pareto-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 1fr);
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: 2rem;
     align-items: start;
-  }
-
-  .pareto-svg-frame {
-    border: 1px solid var(--border-subtle-color);
-    background-color: var(--bg-surface);
-    padding: 0.6rem;
   }
 
   .pareto-svg {
@@ -1854,31 +1509,27 @@ if (paretoFrontierRuns.length > 0) {
   .pareto-grid-line {
     stroke: var(--border-subtle-color);
     stroke-width: 1;
-    stroke-dasharray: 3 3;
   }
 
   .pareto-axis-line {
     stroke: var(--border-strong-color);
-    stroke-width: 1.5;
+    stroke-width: 1;
   }
 
-  .pareto-axis-label {
+  .pareto-axis-label,
+  .pareto-node-label {
     fill: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .pareto-step-path {
-    stroke: var(--hl-acid);
-    stroke-width: 2.5;
-  }
-
-  :global([data-theme="light"]) .pareto-step-path {
-    stroke: var(--raw-ebony);
+    stroke: var(--text-secondary);
+    stroke-width: 1.5;
   }
 
   .pareto-node-optimal {
     fill: var(--hl-acid);
-    stroke: var(--raw-ebony);
+    stroke: var(--bg-canvas);
     stroke-width: 2;
   }
 
@@ -1888,296 +1539,275 @@ if (paretoFrontierRuns.length > 0) {
     stroke-width: 1.5;
   }
 
-  .pareto-node-label {
-    font-size: 10px;
-    fill: var(--text-muted);
-  }
-
   .pareto-node-label.is-optimal {
     fill: var(--text-primary);
-    font-weight: 700;
   }
 
-  .pareto-point-link:hover .pareto-node-label {
-    fill: var(--hl-acid);
+  .pareto-point-link:hover .pareto-node-label,
+  .pareto-point-link:focus-visible .pareto-node-label {
     text-decoration: underline;
   }
 
-  :global([data-theme="light"]) .pareto-point-link:hover .pareto-node-label {
-    fill: var(--accent-cobalt);
-  }
-
-  .pareto-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-  }
-
   .pareto-step-list {
-    border: 1px solid var(--border-subtle-color);
+    border: none;
   }
 
   .pareto-step-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.55rem 0.75rem;
-    cursor: pointer;
+    padding: 0.9rem 0;
+    border-block-end: var(--border-row);
   }
 
   .pareto-step-row.is-active {
-    background-color: var(--bg-surface);
-    box-shadow: inset 3px 0 0 var(--hl-acid);
-  }
-
-  .pareto-step-left {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-inline-size: 0;
+    background: var(--bg-surface);
   }
 
   .pareto-order-pill {
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 700;
-    padding: 0.04rem 0.3rem;
-    border: 1px solid var(--hl-acid);
-    color: var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .pareto-order-pill {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
+    font: 0.8125rem var(--font-mono);
+    color: var(--text-muted);
   }
 
   .pareto-step-link {
     color: var(--text-primary);
+    font-size: 0.9375rem;
     text-decoration: none;
-    font-size: 0.8rem;
   }
 
   .pareto-step-link:hover {
     text-decoration: underline;
   }
 
-  .pareto-step-metrics {
-    display: flex;
-    align-items: center;
-    gap: 0.32rem;
-    font-size: 0.76rem;
-    white-space: nowrap;
-  }
-
   .pareto-inspector {
-    border: 1px solid var(--border-subtle-color);
-    background-color: var(--bg-surface);
-    padding: 0.65rem 0.8rem;
+    padding: 1.25rem;
+    background: var(--bg-surface);
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.75rem;
   }
 
   .pareto-inspector-head {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
-  .pareto-inspector-tag {
-    font-size: 0.625rem;
-    font-weight: 700;
-    color: var(--hl-acid);
-    text-transform: uppercase;
-  }
-
-  :global([data-theme="light"]) .pareto-inspector-tag {
-    color: var(--raw-ebony);
-    background-color: var(--hl-acid);
-    padding-inline: 0.28rem;
-  }
-
-  .pareto-inspector-link {
-    font-size: 0.66rem;
-    color: var(--text-secondary);
-    text-decoration: underline;
+  .pareto-inspector-tag,
+  .pareto-inspector-link,
+  .pareto-inspector-stats {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.75;
   }
 
   .pareto-inspector-title {
-    font-size: 0.84rem;
-    color: var(--text-primary);
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
   }
 
-  .pareto-inspector-stats {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-  }
-
-  /* Stage Bottleneck Table */
   .bottleneck-table-wrap {
-    border: 1px solid var(--border-subtle-color);
+    border: var(--border-row);
   }
 
-  .bottleneck-stage-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  .bottleneck-table th,
+  .bottleneck-table td.mono {
+    font-size: 0.8125rem;
   }
 
-  .stage-legend-id.is-peak-id {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
+  .bottleneck-table thead th {
+    font-family: var(--font-body);
+    text-transform: none;
+    letter-spacing: normal;
   }
 
-  .is-peak-text {
-    color: var(--text-primary);
-    font-weight: 700;
-  }
-
+  .bottleneck-stage-cell,
   .bottleneck-bar-wrap {
     display: flex;
-    align-items: center;
-    gap: 0.55rem;
+    align-items: baseline;
+    gap: 0.75rem;
   }
 
   .bottleneck-bar-track {
-    inline-size: 5.5rem;
-    block-size: 0.28rem;
-    background-color: var(--bg-surface);
-  }
-
-  .bottleneck-bar-fill {
-    display: block;
-    block-size: 100%;
-    background-color: var(--text-muted);
-  }
-
-  .bottleneck-bar-fill.is-peak {
-    background-color: var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .bottleneck-bar-fill.is-peak {
-    background-color: var(--raw-ebony);
+    inline-size: 4rem;
+    background: var(--bg-surface);
   }
 
   .peak-count-pill {
-    font-size: 0.66rem;
-    padding: 0.06rem 0.34rem;
-    border: 1px solid var(--border-subtle-color);
     color: var(--text-secondary);
   }
 
-  .peak-count-pill.is-top-peak {
-    border-color: var(--hl-acid);
-    color: var(--hl-acid);
-    font-weight: 700;
-  }
-
-  :global([data-theme="light"]) .peak-count-pill.is-top-peak {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-color: var(--raw-ebony);
-  }
-
-  /* Ablation Teaser Cards */
   .ablation-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.85rem;
+    display: flex;
+    flex-direction: column;
   }
 
   .ablation-teaser-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    padding: 0.85rem 1rem;
+    display: block;
+    padding-block: 1.5rem;
+    color: var(--text-primary);
     text-decoration: none;
-    background-color: transparent;
-    border: 1px solid var(--border-strong-color);
+    border-block-end: var(--border-row);
+  }
+
+  .ablation-teaser-card:hover .ablation-teaser-title {
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
   }
 
   .ablation-teaser-top {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    align-items: center;
     gap: 0.5rem;
+    margin-block-end: 0.75rem;
   }
 
-  .ablation-badge {
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--hl-acid);
-  }
-
-  :global([data-theme="light"]) .ablation-badge {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    padding: 0.04rem 0.28rem;
-  }
-
+  .ablation-badge,
   .ablation-cta {
-    font-size: 0.7rem;
+    font-size: 0.8125rem;
     color: var(--text-muted);
   }
 
   .ablation-teaser-title {
-    font-size: 0.875rem;
-    color: var(--text-primary);
-    line-height: 1.35;
+    font-size: 1rem;
   }
 
   .ablation-teaser-copy {
-    font-size: 0.78rem;
-    line-height: 1.45;
+    max-inline-size: 70ch;
+    font-size: 1rem;
     color: var(--text-secondary);
-    margin: 0;
+    line-height: 1.75;
+    margin-block: 0.5rem 0;
   }
 
-  @media (max-width: 960px) {
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (max-width: 850px) {
+    .reading-intro {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
     }
 
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:nth-child(2) {
-      border-inline-end: none;
+    .reading-invitation {
+      max-inline-size: 36rem;
+      padding: 1.25rem;
     }
 
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:nth-child(-n + 2) {
-      border-block-end: var(--border-row);
-    }
-
-    .pareto-layout,
-    .forensic-drawer-inner,
-    .ablation-cards-grid {
+    .pareto-layout {
       grid-template-columns: 1fr;
     }
 
-    .forensic-stage-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+    .options-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (max-width: 560px) {
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip {
-      grid-template-columns: 1fr;
+  @container (width < 42rem) {
+    .readable-run-table,
+    .readable-run-table tbody {
+      display: block;
     }
 
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card {
-      border-inline-end: none;
+    .readable-run-table thead {
+      display: none;
+    }
+
+    .readable-run-table tr.run-row:not([hidden]) {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem 0.75rem;
+      padding: 1.5rem 0;
       border-block-end: var(--border-row);
     }
 
-    .leaderboard-quiet.lb-v1 .v1-kpi-strip .stat-card:last-child {
-      border-block-end: none;
+    .readable-run-table .run-row > :is(td, th) {
+      min-inline-size: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      padding: 0;
+      border: none;
+    }
+
+    .readable-run-table .run-row > td:first-child {
+      display: none;
+    }
+
+    .readable-run-table .run-row > th {
+      grid-column: 1 / -1;
+      margin-block-end: 0.35rem;
+    }
+
+    .readable-run-table .run-row > th::before {
+      content: none;
+    }
+
+    .readable-run-table .run-row > td[data-cell]::before {
+      content: attr(data-cell);
+      font: 400 0.8125rem var(--font-body);
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text-muted);
+    }
+
+    .readable-run-table .cell-stack,
+    .readable-run-table .cell-stack .entry-meta,
+    .readable-run-table .cell-stack .entry-title-link {
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: start;
+      margin-inline-start: 0;
+    }
+
+    .readable-run-table .run-row:hover > :is(th, td) {
+      background: transparent;
+    }
+
+    .readable-run-table .outcome-button {
+      margin-block-start: -0.4rem;
+    }
+
+    .readable-run-table .forensic-drawer-row:not([hidden]) {
+      display: block;
+      padding: 0;
+    }
+
+    .readable-run-table .forensic-drawer-cell {
+      display: block;
+      padding: 1.25rem;
     }
 
     .forensic-stage-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 500px) {
+    .leaderboard-quiet {
+      padding-block-start: 2.5rem;
+    }
+
+    .reading-intro {
+      margin-block-end: 2.75rem;
+    }
+
+    .reading-toolbar {
+      align-items: stretch;
+    }
+
+    .toolbar-search {
+      inline-size: 100%;
+    }
+
+    .options-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .option-check {
+      padding-block: 0.75rem;
+    }
+
+    .reading-exploration {
+      margin-block-start: 3rem;
     }
   }
 </style>
@@ -2193,8 +1823,7 @@ if (paretoFrontierRuns.length > 0) {
   const providerFilter = document.getElementById('provider-filter') as HTMLSelectElement | null;
   const pricingLensSelect = document.getElementById('pricing-lens-select') as HTMLSelectElement | null;
   const costColHeaderLabel = document.getElementById('cost-col-header-label') as HTMLElement | null;
-  const fullPassToggle = document.getElementById('full-pass-toggle') as HTMLInputElement | null;
-  const paretoOnlyToggle = document.getElementById('pareto-only-toggle') as HTMLInputElement | null;
+  const showTelemetry = document.getElementById('show-telemetry') as HTMLInputElement | null;
   const sortSelect = document.getElementById('sort-select') as HTMLSelectElement | null;
   const sortDirBtn = document.getElementById('sort-dir-btn') as HTMLButtonElement | null;
   const visibleCountBadge = document.getElementById('visible-count-badge') as HTMLElement | null;
@@ -2202,8 +1831,6 @@ if (paretoFrontierRuns.length > 0) {
   const statusRegion = document.getElementById('leaderboard-status') as HTMLElement | null;
   const sortableHeaders = document.querySelectorAll<HTMLTableCellElement>('th.sortable');
   const scenarioPills = document.querySelectorAll<HTMLButtonElement>('.scenario-pill');
-  const lensSegBtns = document.querySelectorAll<HTMLButtonElement>('.lens-seg-btn');
-  const analyticsTabBtns = document.querySelectorAll<HTMLButtonElement>('[data-analytics-tab]');
 
   let activeQuickScenario = 'all';
   const expandedRunIds = new Set<string>();
@@ -2230,22 +1857,17 @@ if (paretoFrontierRuns.length > 0) {
   function setSortDirButtonState(dir: 'asc' | 'desc') {
     if (!sortDirBtn) return;
     sortDirBtn.dataset.dir = dir;
+    sortDirBtn.textContent = dir === 'asc' ? 'Ascending' : 'Descending';
+    sortDirBtn.setAttribute('aria-label', `Sort ${dir === 'asc' ? 'ascending; activate to sort descending' : 'descending; activate to sort ascending'}`);
   }
 
   function applyPricingLensToRows(lens: string) {
     if (!tbody) return;
     if (costColHeaderLabel) {
       costColHeaderLabel.textContent =
-        lens === 'standard'
-          ? 'Cost (API Rate)'
-          : lens === 'uncached'
-            ? 'Cost (0% Cache)'
-            : 'Cost (Billed)';
+        lens === 'standard' ? 'API cost' : lens === 'uncached' ? 'Uncached cost' : 'Cost';
     }
 
-    lensSegBtns.forEach((btn) => {
-      btn.classList.toggle('is-active', btn.dataset.lensBtn === lens);
-    });
 
     const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr.run-row'));
     for (const row of rows) {
@@ -2265,23 +1887,26 @@ if (paretoFrontierRuns.length > 0) {
         primaryEl.textContent = usdFmt.format(activeCost);
       }
       if (subEl) {
+        const freeBadge = row.dataset.pricingBadge ?? 'free tier';
         if (lens === 'uncached') {
           subEl.textContent =
-            savings > 0 ? `vs ${usdFmt.format(standard)} cached` : 'no cache delta';
+            savings > 0 ? `vs ${usdFmt.format(standard)} cached` : freeBadge;
         } else if (lens === 'standard') {
           subEl.textContent =
             standard !== billed
               ? `billed ${usdFmt.format(billed)}`
               : savings > 0
                 ? `-${usdFmt.format(savings)} saved`
-                : 'standard API';
+                : billed === 0
+                  ? freeBadge
+                  : 'standard API';
         } else {
           subEl.textContent =
             savings > 0
               ? `-${usdFmt.format(savings)} saved`
               : standard > billed
                 ? `${usdFmt.format(standard)} API equiv.`
-                : 'free tier';
+                : freeBadge;
         }
       }
     }
@@ -2327,8 +1952,8 @@ if (paretoFrontierRuns.length > 0) {
       }
 
       const qs = params.toString();
-      const nextUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-      if (nextUrl !== `${window.location.pathname}${window.location.search}`) {
+      const nextUrl = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`;
+      if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
         window.history.replaceState(null, '', nextUrl);
       }
     } catch {}
@@ -2368,14 +1993,8 @@ if (paretoFrontierRuns.length > 0) {
       ) {
         pricingLensSelect.value = lens;
       }
-      if (pass === '1' && fullPassToggle) {
-        fullPassToggle.checked = true;
-        activeQuickScenario = 'full-pass';
-      }
-      if (pareto === '1' && paretoOnlyToggle) {
-        paretoOnlyToggle.checked = true;
-        activeQuickScenario = 'pareto';
-      }
+      if (pass === '1') activeQuickScenario = 'full-pass';
+      if (pareto === '1') activeQuickScenario = 'pareto';
       if (
         sort &&
         sortSelect &&
@@ -2398,8 +2017,8 @@ if (paretoFrontierRuns.length > 0) {
     const harness = harnessFilter?.value ?? 'all';
     const provider = providerFilter?.value ?? 'all';
     const lens = pricingLensSelect?.value ?? 'billed';
-    const fullPassOnly = Boolean(fullPassToggle?.checked);
-    const paretoOnly = Boolean(paretoOnlyToggle?.checked);
+    const fullPassOnly = activeQuickScenario === 'full-pass';
+    const paretoOnly = activeQuickScenario === 'pareto';
     const sortBy = sortSelect.value;
     const sortDir = (sortDirBtn.dataset.dir as 'asc' | 'desc') || 'desc';
 
@@ -2539,7 +2158,9 @@ if (paretoFrontierRuns.length > 0) {
     }
 
     scenarioPills.forEach((pill) => {
-      pill.classList.toggle('is-active', pill.dataset.scenario === activeQuickScenario);
+      const active = pill.dataset.scenario === activeQuickScenario;
+      pill.classList.toggle('is-active', active);
+      pill.setAttribute('aria-pressed', String(active));
     });
 
     if (resetFiltersBtn) {
@@ -2580,13 +2201,8 @@ if (paretoFrontierRuns.length > 0) {
     }
   }
 
-  function updateLeaderboard(withTransition = true) {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (withTransition && !prefersReducedMotion && 'startViewTransition' in document) {
-      document.startViewTransition(() => applyLeaderboardUpdate());
-    } else {
-      applyLeaderboardUpdate();
-    }
+  function updateLeaderboard() {
+    applyLeaderboardUpdate();
   }
 
   function resetAllControls() {
@@ -2595,11 +2211,9 @@ if (paretoFrontierRuns.length > 0) {
     if (harnessFilter) harnessFilter.value = 'all';
     if (providerFilter) providerFilter.value = 'all';
     if (pricingLensSelect) pricingLensSelect.value = 'billed';
-    if (fullPassToggle) fullPassToggle.checked = false;
-    if (paretoOnlyToggle) paretoOnlyToggle.checked = false;
     if (sortSelect) sortSelect.value = 'plan';
     setSortDirButtonState('desc');
-    updateLeaderboard(true);
+    updateLeaderboard();
   }
 
   // Scenario Lens Click Handlers
@@ -2607,38 +2221,10 @@ if (paretoFrontierRuns.length > 0) {
     pill.addEventListener('click', () => {
       const sc = pill.dataset.scenario ?? 'all';
       activeQuickScenario = sc;
-      if (fullPassToggle) fullPassToggle.checked = sc === 'full-pass';
-      if (paretoOnlyToggle) paretoOnlyToggle.checked = sc === 'pareto';
-      updateLeaderboard(true);
+      updateLeaderboard();
     });
   });
 
-  // Segmented Pricing Lens Click Handlers
-  lensSegBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const lens = btn.dataset.lensBtn ?? 'billed';
-      if (pricingLensSelect) {
-        pricingLensSelect.value = lens;
-        updateLeaderboard(sortSelect?.value === 'cost');
-      }
-    });
-  });
-
-  // Analytics Tab Switcher
-  analyticsTabBtns.forEach((tabBtn) => {
-    tabBtn.addEventListener('click', () => {
-      const targetId = tabBtn.dataset.analyticsTab;
-      if (!targetId) return;
-      analyticsTabBtns.forEach((b) => {
-        const active = b.dataset.analyticsTab === targetId;
-        b.classList.toggle('is-active', active);
-        b.setAttribute('aria-selected', active ? 'true' : 'false');
-      });
-      document.querySelectorAll<HTMLElement>('.analytics-panel').forEach((panel) => {
-        panel.hidden = panel.id !== targetId;
-      });
-    });
-  });
 
   // Toggle Inline Forensic Drawer
   function toggleForensicDrawer(runId: string) {
@@ -2678,7 +2264,7 @@ if (paretoFrontierRuns.length > 0) {
       const idx = pinnedRunIds.indexOf(id);
       const isPinned = idx !== -1;
       btn.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-      btn.textContent = isPinned ? (idx === 0 ? 'Pin A' : 'Pin B') : '+ Diff';
+      btn.textContent = isPinned ? (idx === 0 ? 'Selected as A' : 'Selected as B') : 'Add to comparison';
     });
 
     if (!qcDock || !tbody) return;
@@ -2754,25 +2340,42 @@ if (paretoFrontierRuns.length > 0) {
     });
   });
 
-  if (window.location.search) {
-    hydrateFromUrlState();
-    applyLeaderboardUpdate();
+  hydrateFromUrlState();
+  applyLeaderboardUpdate();
+
+  function updateDetailVisibility() {
+    const expanded = Boolean(showTelemetry?.checked);
+    table?.classList.toggle('show-telemetry', expanded);
+    tbody?.querySelectorAll<HTMLTableCellElement>('[colspan]').forEach((cell) => {
+      cell.colSpan = expanded ? 7 : 5;
+    });
   }
 
-  searchInput?.addEventListener('input', () => updateLeaderboard(false));
+  showTelemetry?.addEventListener('change', updateDetailVisibility);
+  updateDetailVisibility();
+
+  searchInput?.addEventListener('input', updateLeaderboard);
   searchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       if (searchInput.value) {
         searchInput.value = '';
-        updateLeaderboard(false);
+        updateLeaderboard();
       }
       searchInput.blur();
     }
   });
-  harnessFilter?.addEventListener('change', () => updateLeaderboard(true));
-  providerFilter?.addEventListener('change', () => updateLeaderboard(true));
-  pricingLensSelect?.addEventListener('change', () => updateLeaderboard(true));
+  harnessFilter?.addEventListener('change', updateLeaderboard);
+  providerFilter?.addEventListener('change', updateLeaderboard);
+  pricingLensSelect?.addEventListener('change', updateLeaderboard);
+  sortSelect?.addEventListener('change', () => {
+    setSortDirButtonState(defaultSortDirs[sortSelect.value] ?? 'desc');
+    updateLeaderboard();
+  });
+  sortDirBtn?.addEventListener('click', () => {
+    setSortDirButtonState(sortDirBtn.dataset.dir === 'asc' ? 'desc' : 'asc');
+    updateLeaderboard();
+  });
   resetFiltersBtn?.addEventListener('click', resetAllControls);
   emptyResetBtn?.addEventListener('click', resetAllControls);
 
@@ -2807,7 +2410,7 @@ if (paretoFrontierRuns.length > 0) {
         const defaultDir = defaultSortDirs[col] ?? 'desc';
         setSortDirButtonState(defaultDir);
       }
-      updateLeaderboard(true);
+      updateLeaderboard();
     });
   });
 

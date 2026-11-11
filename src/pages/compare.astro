@@ -76,67 +76,70 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   title="Compare & Ablations"
   description="Side-by-side econometric and stage-by-stage (S1–S7) comparison workbench for Capy Bench coding agent runs—isolating harness overhead, reasoning effort scaling, and model generation."
   activeNav="compare"
-  breadcrumbLabel="Compare & Ablations"
-  breadcrumbTone="hl-acid"
 >
-  <div class="compare-quiet compare-v3">
-    <header class="v3-top-header">
+  <div class="compare-quiet">
+    <header class="compare-hero">
       <h1 id="compare-hero-heading" class="headline-two-tone">
-        Compare Runs.{' '}
-        <span class="muted">
-          Head-to-head telemetry &amp; S1–S7 stage diff.
-        </span>
+        Two runs.<br />
+        <span class="muted">A closer look.</span>
       </h1>
+      <p class="compare-lead">
+        Choose two runs to see what changed. Start with outcome, time, and cost;
+        open the stages and field notes when you want the whole story.
+      </p>
 
-      <div class="v3-preset-bar" role="list" aria-label="Controlled ablation presets">
-        <span class="mono preset-bar-label">Presets:</span>
-        {ablationPresets.map((preset, idx) => (
-          <button
-            type="button"
-            role="listitem"
-            class:list={['preset-btn', { 'is-active': idx === 0 }]}
-            data-preset-id={preset.id}
-            data-run-a={preset.runAId}
-            data-run-b={preset.runBId}
-            data-finding={preset.findingHeadline}
-            data-badge={preset.badge}
-            data-title={preset.title}
-            title={`${preset.badge}: ${preset.title}`}
-          >
-            <span class="preset-title">{shortPresetLabels[preset.id] ?? preset.title}</span>
-          </button>
-        ))}
-      </div>
+      <details class="reading-disclosure preset-disclosure" id="guided-comparisons-details">
+        <summary class="preset-summary">
+          Guided comparisons
+        </summary>
+        <div class="disclosure-body">
+          <p class="preset-summary-active" id="active-preset-summary">
+            {shortPresetLabels[defaultPreset?.id ?? ''] ?? defaultPreset?.title ?? 'Choose a pair'}
+          </p>
+          <div class="v3-preset-bar preset-grid" role="group" aria-label="Controlled ablation presets">
+            {ablationPresets.map((preset, idx) => (
+              <button
+                type="button"
+                aria-pressed={idx === 0 ? 'true' : 'false'}
+                class:list={['preset-btn', { 'is-active': idx === 0 }]}
+                data-preset-id={preset.id}
+                data-run-a={preset.runAId}
+                data-run-b={preset.runBId}
+                data-finding={preset.findingHeadline}
+                data-badge={preset.badge}
+                data-title={preset.title}
+                data-short-label={shortPresetLabels[preset.id] ?? preset.title}
+              >
+                <span class="preset-title">{shortPresetLabels[preset.id] ?? preset.title}</span>
+                <span class="preset-subtitle">{preset.title}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </details>
     </header>
 
-    <!-- Unified Single-Sheet Comparison Workbench -->
-    <section class="v3-dossier-frame" aria-label="Head-to-head run comparison">
-      <div class="v3-verdict-banner" id="ablation-finding-banner" role="status" aria-live="polite">
-        <span class="hl hl-acid" id="finding-badge">{defaultPreset?.badge ?? 'HEAD-TO-HEAD DIFF'}</span>
-        <p class="mono finding-copy" id="finding-copy">
-          {defaultPreset?.findingHeadline ?? 'Comparing telemetry and stage-by-stage cost profiles.'}
-        </p>
-      </div>
-
+    <section class="compare-workbench" aria-label="Head-to-head run comparison">
       <div class="v3-contenders-grid">
         <div class="v3-contender-card v3-contender-a">
           <div class="contender-card-head">
-            <label class="field-label contender-label" for="select-run-a">
+            <label class="contender-label" for="select-run-a">
               <span class="contender-index contender-index-a">A</span>
-              <span class="mono contender-role">BASELINE</span>
+              <span class="contender-role">Baseline run</span>
             </label>
-            <div class="mono contender-meta-inline">
-              <span id="contender-meta-a">Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunA.id) + 1} · {defaultRunA.displayProvider}</span>
-              <span aria-hidden="true">·</span>
+            <div class="contender-meta-inline">
+              <span id="contender-meta-a">
+                Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunA.id) + 1} · {defaultRunA.displayProvider} · {defaultRunA.data.effort ?? 'Standard'}
+              </span>
               <a href={`/runs/${defaultRunA.id}`} class="contender-inspect-link" id="contender-link-a">
-                Inspect →
+                Inspect run →
               </a>
             </div>
           </div>
           <select id="select-run-a" class="select control-select">
             {serializedRuns.map((r) => (
               <option value={r.id} selected={r.id === defaultRunA.id}>
-                #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)}
+                {r.harness} / {r.model} ({r.effort})
               </option>
             ))}
           </select>
@@ -146,87 +149,182 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
           <button
             type="button"
             id="swap-runs-btn"
-            class="btn btn-sm btn-secondary swap-btn"
+            class="btn btn-secondary swap-btn"
             title="Swap Run A and Run B"
           >
             <svg class="swap-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M3 5h10M10 2l3 3-3 3M13 11H3M6 8l-3 3 3 3" />
             </svg>
-            Swap
+            Swap A / B
           </button>
         </div>
 
         <div class="v3-contender-card v3-contender-b">
           <div class="contender-card-head">
-            <label class="field-label contender-label" for="select-run-b">
+            <label class="contender-label" for="select-run-b">
               <span class="contender-index contender-index-b">B</span>
-              <span class="mono contender-role">COMPARISON</span>
+              <span class="contender-role">Comparison run</span>
             </label>
-            <div class="mono contender-meta-inline">
-              <span id="contender-meta-b">Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunB.id) + 1} · {defaultRunB.displayProvider}</span>
-              <span aria-hidden="true">·</span>
+            <div class="contender-meta-inline">
+              <span id="contender-meta-b">
+                Rank #{analyzedRuns.findIndex((r) => r.id === defaultRunB.id) + 1} · {defaultRunB.displayProvider} · {defaultRunB.data.effort ?? 'Standard'}
+              </span>
               <a href={`/runs/${defaultRunB.id}`} class="contender-inspect-link" id="contender-link-b">
-                Inspect →
+                Inspect run →
               </a>
             </div>
           </div>
           <select id="select-run-b" class="select control-select">
             {serializedRuns.map((r) => (
               <option value={r.id} selected={r.id === defaultRunB.id}>
-                #{r.rank} · {r.harness} / {r.model} ({r.effort}) — {r.planCompleted}/{r.planTotal} · {formatCost(r.costUsd)}
+                {r.harness} / {r.model} ({r.effort})
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <div class="table-wrapper unified-table-wrap" tabindex="0" role="region" aria-label="Side-by-side comparison table">
+      <div class="v3-verdict-banner" id="ablation-finding-banner" role="status" aria-live="polite">
+        <span class="finding-badge" id="finding-badge">{defaultPreset?.badge ?? 'Head-to-head diff'}</span>
+        <p class="finding-copy" id="finding-copy">
+          {defaultPreset?.findingHeadline ?? 'Comparing telemetry and stage-by-stage cost profiles.'}
+        </p>
+      </div>
+
+      <div class="table-wrapper compare-table-wrap" tabindex="0" role="region" aria-label="Core outcome, duration, and cost comparison">
         <table class="app-table leaderboard-table static-table compare-table">
           <caption class="visually-hidden">
-            Side-by-side comparison of Run A and Run B across core metrics and S1 through S7 implementation slices
+            Side-by-side comparison of Run A and Run B across holdout specification outcome, wall-clock duration, and billed API cost
           </caption>
           <thead>
             <tr>
-              <th scope="col" class="col-metric">Dimension</th>
+              <th scope="col" class="col-metric">Metric</th>
               <th scope="col" class="col-run-a" id="th-run-a">
-                <a href={`/runs/${defaultRunA.id}`} class="compare-th-link" id="th-link-a">
+                <a href={`/runs/${defaultRunA.id}`} class="compare-th-link js-th-link-a" id="th-link-a">
                   A · {defaultRunA.displayHarness} / {defaultRunA.data.model}
                 </a>
               </th>
               <th scope="col" class="col-run-b" id="th-run-b">
-                <a href={`/runs/${defaultRunB.id}`} class="compare-th-link" id="th-link-b">
+                <a href={`/runs/${defaultRunB.id}`} class="compare-th-link js-th-link-b" id="th-link-b">
                   B · {defaultRunB.displayHarness} / {defaultRunB.data.model}
                 </a>
               </th>
-              <th scope="col" class="col-delta">Delta</th>
+              <th scope="col" class="col-delta">Difference</th>
             </tr>
           </thead>
           <tbody id="telemetry-diff-tbody">
-            <!-- Core 6 metrics populated deterministically -->
+            <!-- Core 3 visible metrics (Outcome, Duration, Billed Cost) populated deterministically -->
           </tbody>
-          <tbody id="stage-diff-tbody">
-            <!-- S1-S7 stages populated deterministically -->
-          </tbody>
-          <tfoot id="stage-diff-tfoot">
-            <!-- Stage total populated deterministically -->
-          </tfoot>
         </table>
       </div>
     </section>
 
-    <details class="deep-accounting-details">
-      <summary class="mono deep-accounting-summary">
-        <span>Deep Token &amp; Cache Accounting (5 secondary metrics)</span>
-        <span class="deep-summary-hint">Expand +</span>
-      </summary>
-      <div class="table-wrapper deep-table-wrap" tabindex="0" role="region" aria-label="Deep token and cache accounting">
-        <table class="app-table leaderboard-table static-table compare-table">
-          <tbody id="deep-accounting-tbody">
-            <!-- Secondary accounting rows populated deterministically -->
-          </tbody>
-        </table>
-      </div>
-    </details>
+    <section class="compare-disclosures" aria-label="Detailed telemetry disclosures">
+      <details class="reading-disclosure" id="more-core-metrics-details">
+        <summary>
+          Tests, tokens &amp; context
+        </summary>
+        <div class="disclosure-body">
+          <div class="table-wrapper compare-table-wrap" tabindex="0" role="region" aria-label="Execution and context metrics comparison">
+            <table class="app-table leaderboard-table static-table compare-table">
+              <caption class="visually-hidden">
+                Comparison of Run A and Run B across total token volume, peak context window, and LLM turns with test suite results
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-metric">Metric</th>
+                  <th scope="col" class="col-run-a">
+                    <a href={`/runs/${defaultRunA.id}`} class="compare-th-link js-th-link-a">
+                      A · {defaultRunA.displayHarness} / {defaultRunA.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-run-b">
+                    <a href={`/runs/${defaultRunB.id}`} class="compare-th-link js-th-link-b">
+                      B · {defaultRunB.displayHarness} / {defaultRunB.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-delta">Difference</th>
+                </tr>
+              </thead>
+              <tbody id="secondary-telemetry-tbody">
+                <!-- Additional core metrics populated deterministically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details class="reading-disclosure" id="stage-breakdown-details">
+        <summary>
+          The seven stages, side by side
+        </summary>
+        <div class="disclosure-body">
+          <div class="table-wrapper compare-table-wrap" tabindex="0" role="region" aria-label="Stage-by-stage S1 to S7 comparison">
+            <table class="app-table leaderboard-table static-table compare-table">
+              <caption class="visually-hidden">
+                Stage-by-stage comparison of Run A and Run B across S1 through S7 implementation slices and stage totals
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-metric">Stage slice</th>
+                  <th scope="col" class="col-run-a">
+                    <a href={`/runs/${defaultRunA.id}`} class="compare-th-link js-th-link-a">
+                      A · {defaultRunA.displayHarness} / {defaultRunA.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-run-b">
+                    <a href={`/runs/${defaultRunB.id}`} class="compare-th-link js-th-link-b">
+                      B · {defaultRunB.displayHarness} / {defaultRunB.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-delta">Stage difference</th>
+                </tr>
+              </thead>
+              <tbody id="stage-diff-tbody">
+                <!-- S1-S7 stages populated deterministically -->
+              </tbody>
+              <tfoot id="stage-diff-tfoot">
+                <!-- Stage total populated deterministically -->
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details class="reading-disclosure deep-accounting-details" id="deep-accounting-details">
+        <summary>
+          Token accounting &amp; cache savings
+        </summary>
+        <div class="disclosure-body">
+          <div class="table-wrapper compare-table-wrap" tabindex="0" role="region" aria-label="Deep token and cache accounting">
+            <table class="app-table leaderboard-table static-table compare-table">
+              <caption class="visually-hidden">
+                Deep token and cache accounting comparison between Run A and Run B across standard API equivalent cost, uncached counterfactual cost, prefix cache hit rate, output and reasoning tokens, and tool errors and task polling
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="col-metric">Accounting metric</th>
+                  <th scope="col" class="col-run-a">
+                    <a href={`/runs/${defaultRunA.id}`} class="compare-th-link js-th-link-a">
+                      A · {defaultRunA.displayHarness} / {defaultRunA.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-run-b">
+                    <a href={`/runs/${defaultRunB.id}`} class="compare-th-link js-th-link-b">
+                      B · {defaultRunB.displayHarness} / {defaultRunB.data.model}
+                    </a>
+                  </th>
+                  <th scope="col" class="col-delta">Difference</th>
+                </tr>
+              </thead>
+              <tbody id="deep-accounting-tbody">
+                <!-- Secondary accounting rows populated deterministically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </section>
   </div>
 
   <script
@@ -245,245 +343,325 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   .compare-quiet {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding-block-start: 0.25rem;
+    gap: 2.75rem;
+    padding-block: 2rem 3rem;
     font-variant-numeric: tabular-nums;
   }
 
-  .headline-two-tone {
+  /* 1. HERO & GUIDED COMPARISONS DISCLOSURE */
+  .compare-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding-block-end: 0.5rem;
+  }
+
+  .compare-hero .headline-two-tone {
+    font-size: clamp(1.75rem, 3.2vw, 2.35rem);
+    line-height: 1.3;
+    margin: 0;
     text-wrap: balance;
   }
 
-  .swap-svg {
-    inline-size: 0.85rem;
-    block-size: 0.85rem;
-    vertical-align: -0.12em;
-    margin-inline-end: 0.25rem;
-    flex-shrink: 0;
-  }
-
-  /* 1. COMPACT HEADER & SINGLE-LINE PRESET STRIP */
-  .v3-top-header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-  }
-
-  .v3-top-header .headline-two-tone {
-    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+  .compare-lead {
     margin: 0;
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    max-inline-size: 64ch;
   }
 
-  .v3-preset-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem;
+  /* Fallback & reinforcement for shared .reading-disclosure / .disclosure-body */
+  .reading-disclosure {
+    border-block-start: var(--border-row);
+    border-block-end: var(--border-row);
   }
 
-  .preset-bar-label {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    margin-inline-end: 0.2rem;
+  .reading-disclosure + .reading-disclosure {
+    border-block-start: none;
+  }
+
+  .reading-disclosure > summary {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+    padding: 1rem 0.25rem;
+    min-block-size: 3rem;
+    cursor: pointer;
+  }
+
+  .reading-disclosure > summary:hover {
+    color: var(--link-color);
+  }
+
+  .disclosure-body {
+    padding-block: 0.5rem 1.5rem;
+  }
+
+  .preset-summary-active {
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+    margin-inline-start: 0.35rem;
+  }
+
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 0.75rem;
   }
 
   .preset-btn {
     text-align: start;
     cursor: pointer;
-    background-color: transparent;
+    background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle-color);
     border-radius: var(--radius-none);
-    padding: 0.32rem 0.6rem;
-    display: inline-flex;
-    align-items: center;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 700;
+    min-block-size: 3.25rem;
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.25rem;
+    color: var(--text-primary);
+    font-family: var(--font-body);
     transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
   }
 
-  .preset-btn:hover {
-    background-color: var(--bg-surface);
-    border-color: var(--border-strong-color);
+  .preset-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
     color: var(--text-primary);
+  }
+
+  .preset-subtitle {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
+  .preset-btn:hover {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-strong-color);
   }
 
   .preset-btn.is-active {
-    border-color: var(--border-strong-color);
-    box-shadow: inset 0 -2px 0 var(--hl-acid);
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
+    border: var(--border-frame);
+    border-color: var(--hl-acid);
+    background-color: var(--bg-elevated);
   }
 
   :global([data-theme="light"]) .preset-btn.is-active {
-    border-color: var(--raw-ebony);
-    box-shadow: inset 0 -3px 0 var(--hl-acid);
+    border-color: var(--accent-cobalt);
   }
 
-  /* 2. UNIFIED SINGLE-SHEET WORKBENCH */
-  .v3-dossier-frame {
-    border: var(--border-frame);
-    background-color: transparent;
-  }
-
-  .v3-verdict-banner {
+  /* 2. COMPARISON WORKBENCH (SELECTORS, FINDING, CORE TABLE) */
+  .compare-workbench {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.65rem 1rem;
-    background-color: var(--bg-surface);
-    border-block-end: var(--border-row);
-  }
-
-  .finding-copy {
-    margin: 0;
-    font-size: 0.8125rem;
-    color: var(--text-primary);
-    line-height: 1.4;
+    flex-direction: column;
+    gap: 1.75rem;
   }
 
   .v3-contenders-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    border-block-end: var(--border-frame);
+    gap: 1.25rem;
+    align-items: end;
   }
 
   .v3-contender-card {
-    padding: 0.75rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.65rem;
     min-inline-size: 0;
   }
 
   .contender-card-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.5rem 0.75rem;
   }
 
   .contender-label {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.55rem;
     margin: 0;
+    font-family: var(--font-body);
+    cursor: pointer;
   }
 
   .contender-index {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    inline-size: 1.25rem;
-    block-size: 1.25rem;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.875rem;
     font-weight: 700;
+    flex-shrink: 0;
   }
 
-  .contender-index-a {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border: 1px solid var(--raw-ebony);
-  }
-
+  .contender-index-a,
   .contender-index-b {
     background-color: var(--bg-surface);
     color: var(--text-primary);
-    border: 1px solid var(--border-strong-color);
+    border: 1px solid var(--border-subtle-color);
   }
 
   .contender-role {
-    font-size: 0.68rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
+    color: var(--text-primary);
   }
 
   .contender-meta-inline {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.7rem;
-    color: var(--text-muted);
+    gap: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
   }
 
   .contender-inspect-link {
-    color: var(--text-secondary);
-    text-decoration: none;
-    border-block-end: 1px solid var(--border-strong-color);
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.75rem;
+    padding-inline: 0.25rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .contender-inspect-link:hover {
     background-color: var(--hl-acid);
     color: var(--hl-ink);
-    border-block-end-color: var(--raw-ebony);
+    text-decoration: none;
   }
 
   .control-select {
-    border-width: 1px;
-    background-color: var(--bg-canvas);
-    font-size: 0.78rem;
-    padding: 0.45rem 1.8rem 0.45rem 0.65rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 400;
+    min-block-size: 3rem;
+    padding: 0.65rem 2.25rem 0.65rem 0.9rem;
+    background-color: var(--bg-surface);
+    border: var(--border-row);
+    color: var(--text-primary);
+    text-overflow: ellipsis;
   }
 
   .v3-swap-bridge {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-inline: 0.55rem;
-    border-inline: var(--border-row);
   }
 
   .swap-btn {
-    border-width: 1px;
-    padding: 0.35rem 0.55rem;
-    font-size: 0.72rem;
+    min-block-size: 3rem;
+    min-inline-size: 7.5rem;
+    padding: 0.65rem 1.1rem;
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    background-color: var(--bg-surface);
   }
 
-  /* 3. UNIFIED TABLE */
-  .unified-table-wrap {
-    border: none;
+  .swap-svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  /* Finding callout */
+  .v3-verdict-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--bg-surface);
+    border-block: var(--border-row);
+  }
+
+  .finding-badge {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .finding-copy {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+    max-inline-size: 72ch;
+  }
+  /* 3. COMPARISON TABLES */
+  .compare-table-wrap {
+    border: var(--border-row);
   }
 
   .compare-table {
-    table-layout: fixed;
+    table-layout: auto;
+    inline-size: 100%;
   }
 
   .compare-table .col-metric {
-    inline-size: 25%;
+    inline-size: 26%;
   }
 
   .compare-table .col-run-a,
   .compare-table .col-run-b {
-    inline-size: 27%;
+    inline-size: 26%;
   }
 
   .compare-table .col-delta {
-    inline-size: 21%;
+    inline-size: 22%;
   }
 
   .compare-quiet .leaderboard-table thead th {
     background-color: var(--bg-surface);
-    padding: 0.55rem 0.9rem;
-    font-size: 0.7rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 0.95rem 1.15rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text-secondary);
+    white-space: normal;
   }
 
-  .compare-quiet .leaderboard-table :is(td, tbody th, tfoot th) {
-    padding: 0.55rem 0.9rem;
-    font-size: 0.8125rem;
+  .compare-quiet :global(.leaderboard-table :is(td, tbody th, tfoot th)) {
+    padding: 1rem 1.15rem;
+    font-size: 1rem;
+    line-height: 1.5;
     vertical-align: middle;
   }
 
-  @container (width >= 32rem) {
-    .compare-quiet .leaderboard-table :is(thead, tbody, tfoot) tr:not(.compare-group-row) > :is(th, td):not(:first-child) {
+  .compare-quiet :global(.leaderboard-table :is(tbody th, tfoot th)) {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+  }
+
+  @container (width >= 40rem) {
+    .compare-quiet :global(.leaderboard-table :is(thead, tbody, tfoot) tr > :is(th, td):not(:first-child)) {
       border-inline-start: var(--border-row);
     }
   }
@@ -492,6 +670,7 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     color: var(--text-primary);
     text-decoration: underline;
     text-underline-offset: 3px;
+    font-weight: 700;
   }
 
   .compare-th-link:hover {
@@ -500,21 +679,9 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     text-decoration: none;
   }
 
-  :global(.compare-group-row th) {
-    background-color: var(--bg-surface) !important;
-    color: var(--text-muted) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 0.65rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase !important;
-    padding: 0.36rem 0.9rem !important;
-    border-block-start: var(--border-row) !important;
-    border-block-end: var(--border-row) !important;
-  }
-
   :global(.cell-primary) {
     color: var(--text-secondary);
+    font-size: 1rem;
   }
 
   :global(.cell-primary.is-lead) {
@@ -523,17 +690,18 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   }
 
   :global(.cell-inline-muted) {
-    font-size: 0.72rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
     color: var(--text-muted);
-    margin-inline-start: 0.3rem;
+    margin-inline-start: 0.35rem;
   }
 
   /* Quiet Delta cell layout */
   :global(.delta-cell-wrap) {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem;
-    white-space: nowrap;
+    gap: 0.45rem;
   }
 
   :global(.adv-pill) {
@@ -541,13 +709,13 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     align-items: center;
     justify-content: center;
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-size: 0.8125rem;
     font-weight: 700;
-    padding: 0.04rem 0.28rem;
+    padding: 0.1rem 0.4rem;
     border: 1px solid var(--border-subtle-color);
-    color: var(--text-muted);
+    color: var(--text-secondary);
     background-color: transparent;
-    line-height: 1.2;
+    line-height: 1.25;
     flex-shrink: 0;
   }
 
@@ -571,23 +739,25 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   :global(.delta-figure) {
     color: var(--text-primary);
     font-weight: 700;
+    font-size: 0.9375rem;
   }
 
   :global(.delta-neutral) {
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
-  /* Stage-by-Stage single-line cell structure */
+  /* Stage-by-Stage cell structure */
   :global(.stage-cell-line) {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.35rem;
-    white-space: nowrap;
+    gap: 0.4rem;
   }
 
   :global(.stage-cost) {
     color: var(--text-secondary);
+    font-size: 1rem;
   }
 
   :global(.stage-cost.is-lead) {
@@ -596,28 +766,29 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   }
 
   :global(.stage-inline-meta) {
-    font-size: 0.72rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
     color: var(--text-muted);
   }
 
   :global(.stage-miss-tag) {
     display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
     font-weight: 700;
-    padding: 0.03rem 0.26rem;
-    line-height: 1.2;
-    background-color: var(--hl-magenta);
-    color: var(--hl-ink);
-    border: 1px solid var(--raw-ebony);
+    padding: 0.08rem 0.4rem;
+    line-height: 1.25;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong-color);
   }
 
   :global(.stage-compare-bar-track) {
     inline-size: 100%;
-    max-inline-size: 9rem;
-    block-size: 0.2rem;
+    max-inline-size: 10rem;
+    block-size: 0.25rem;
     background-color: var(--bg-surface);
-    margin-block-start: 0.22rem;
+    margin-block-start: 0.35rem;
     overflow: hidden;
   }
 
@@ -642,55 +813,82 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     border-block-start: var(--border-frame);
   }
 
-  /* 4. COLLAPSIBLE DEEP ACCOUNTING DRAWER */
-  .deep-accounting-details {
-    border: 1px solid var(--border-subtle-color);
-    background-color: transparent;
-  }
-
-  .deep-accounting-summary {
-    padding: 0.6rem 1rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    cursor: pointer;
+  /* 4. SECONDARY DISCLOSURES STACK */
+  .compare-disclosures {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    list-style: none;
+    flex-direction: column;
   }
 
-  .deep-accounting-summary::-webkit-details-marker {
-    display: none;
+  /* 5. MOBILE & NARROW CONTAINER ADAPTATIONS */
+  @container (width < 40rem) {
+    .compare-quiet :global(.leaderboard-table),
+    .compare-quiet :global(.leaderboard-table tbody),
+    .compare-quiet :global(.leaderboard-table tfoot),
+    .compare-quiet :global(.leaderboard-table tr:not([hidden])),
+    .compare-quiet :global(.leaderboard-table tbody th),
+    .compare-quiet :global(.leaderboard-table tfoot th),
+    .compare-quiet :global(.leaderboard-table td) {
+      display: block;
+    }
+
+    .compare-quiet .leaderboard-table thead {
+      display: none;
+    }
+
+    .compare-quiet :global(.leaderboard-table.static-table :is(tbody, tfoot) tr:not([hidden])) {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding: 1rem 1.15rem;
+    }
+
+    .compare-quiet :global(.leaderboard-table :is(tbody th, tfoot th)) {
+      padding: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    .compare-quiet :global(.leaderboard-table.static-table td) {
+      padding: 0.6rem 0;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 0.5rem 1rem;
+    }
+
+    .compare-quiet :global(.leaderboard-table :is(td, tbody th, tfoot th)[data-cell]::before) {
+      content: attr(data-cell);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text-secondary);
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      flex-shrink: 1;
+      overflow-wrap: anywhere;
+    }
+
+    :global(.stage-compare-bar-track) {
+      display: none;
+    }
   }
 
-  .deep-accounting-summary:hover {
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-  }
+  @media (max-width: 820px) {
+    .compare-quiet {
+      gap: 2.5rem;
+      padding-block: 1.5rem 2.5rem;
+    }
 
-  .deep-accounting-details[open] .deep-accounting-summary {
-    border-block-end: var(--border-row);
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-  }
-
-  .deep-table-wrap {
-    border: none;
-  }
-
-  @media (max-width: 760px) {
     .v3-contenders-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
     .v3-swap-bridge {
-      padding-block: 0.45rem;
-      border-inline: none;
-      border-block: var(--border-row);
-    }
-
-    .compare-table {
-      table-layout: auto;
+      justify-content: flex-start;
     }
   }
 </style>
@@ -795,31 +993,37 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
   }
 
+  function fmtBadgeLabel(raw: string): string {
+    if (!raw) return 'Head-to-head comparison';
+    const lower = raw.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+
   function computeAutoFinding(a: SerializedRun, b: SerializedRun): { badge: string; text: string } {
     const matchingPreset = presetsList.find(
       (p) => (p.runAId === a.id && p.runBId === b.id) || (p.runAId === b.id && p.runBId === a.id)
     );
     if (matchingPreset) {
-      return { badge: matchingPreset.badge, text: matchingPreset.findingHeadline };
+      return { badge: fmtBadgeLabel(matchingPreset.badge), text: matchingPreset.findingHeadline };
     }
 
     if (a.model.toLowerCase() === b.model.toLowerCase() && a.harness !== b.harness) {
       const tokRatio = b.tokens.total > 0 ? ((a.tokens.total - b.tokens.total) / b.tokens.total) * 100 : 0;
       return {
-        badge: 'HARNESS ABLATION',
+        badge: 'Harness ablation',
         text: `Same model (${a.model}), different coding harness (${a.harness} vs ${b.harness}): ${Math.abs(Math.round(tokRatio))}% token volume delta (${fmtCompact(a.tokens.total)} vs ${fmtCompact(b.tokens.total)}).`,
       };
     }
 
     if (a.harness === b.harness && a.model.toLowerCase() === b.model.toLowerCase() && a.effort !== b.effort) {
       return {
-        badge: 'EFFORT SCALING',
+        badge: 'Effort scaling',
         text: `Same harness & model (${a.harness} / ${a.model}) at ${a.effort} vs ${b.effort} effort: ${a.planCompleted}/7 (${usd.format(a.costUsd)}, ${fmtDur(a.durationMinutes)}) vs ${b.planCompleted}/7 (${usd.format(b.costUsd)}, ${fmtDur(b.durationMinutes)}).`,
       };
     }
 
     return {
-      badge: 'HEAD-TO-HEAD DIFF',
+      badge: 'Head-to-head comparison',
       text: `${a.harness} / ${a.model} (#${a.rank}, ${a.planCompleted}/7, ${usd.format(a.costUsd)}) vs. ${b.harness} / ${b.model} (#${b.rank}, ${b.planCompleted}/7, ${usd.format(b.costUsd)}).`,
     };
   }
@@ -836,24 +1040,35 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       if (selB.value !== b.id) selB.value = b.id;
     }
 
+    let activePresetLabel = 'Custom pair';
     for (const btn of qAll<HTMLButtonElement>('.preset-btn')) {
       const pA = btn.dataset.runA;
       const pB = btn.dataset.runB;
       const isMatch = (pA === a.id && pB === b.id) || (pA === b.id && pB === a.id);
       btn.classList.toggle('is-active', isMatch);
+      btn.setAttribute('aria-pressed', String(isMatch));
+      if (isMatch) {
+        activePresetLabel = btn.dataset.shortLabel || btn.dataset.title || 'Preset';
+      }
+    }
+    for (const el of qAll('[id="active-preset-summary"]')) {
+      el.textContent = activePresetLabel;
     }
 
     const finding = computeAutoFinding(a, b);
     for (const el of qAll('[id="finding-badge"]')) el.textContent = finding.badge;
     for (const el of qAll('[id="finding-copy"]')) el.textContent = finding.text;
 
-    for (const linkA of qAll<HTMLAnchorElement>('[id="th-link-a"]')) {
+    const labelA = `A · ${a.harness} / ${a.model}`;
+    const labelB = `B · ${b.harness} / ${b.model}`;
+
+    for (const linkA of qAll<HTMLAnchorElement>('[id="th-link-a"], .js-th-link-a')) {
       linkA.href = `/runs/${a.id}`;
-      linkA.textContent = `A · ${a.harness} / ${a.model}`;
+      linkA.textContent = labelA;
     }
-    for (const linkB of qAll<HTMLAnchorElement>('[id="th-link-b"]')) {
+    for (const linkB of qAll<HTMLAnchorElement>('[id="th-link-b"], .js-th-link-b')) {
       linkB.href = `/runs/${b.id}`;
-      linkB.textContent = `B · ${b.harness} / ${b.model}`;
+      linkB.textContent = labelB;
     }
     for (const linkA of qAll<HTMLAnchorElement>('[id="contender-link-a"]')) {
       linkA.href = `/runs/${a.id}`;
@@ -869,10 +1084,11 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     }
 
     const cDiff = a.costUsd - b.costUsd;
-    const pct = b.costUsd > 0 ? Math.round((Math.abs(cDiff) / b.costUsd) * 100) : 0;
+    const pctA = b.costUsd > 0 ? Math.round((Math.abs(cDiff) / b.costUsd) * 100) : 0;
+    const pctB = a.costUsd > 0 ? Math.round((Math.abs(cDiff) / a.costUsd) * 100) : 0;
     const tDiff = a.tokens.total - b.tokens.total;
-    const tokPct = b.tokens.total > 0 ? Math.round((Math.abs(tDiff) / b.tokens.total) * 100) : 0;
-
+    const tokPctA = b.tokens.total > 0 ? Math.round((Math.abs(tDiff) / b.tokens.total) * 100) : 0;
+    const tokPctB = a.tokens.total > 0 ? Math.round((Math.abs(tDiff) / a.tokens.total) * 100) : 0;
     const fmtDeltaCell = (winner: 'a' | 'b' | 'par' | 'info', text: string) => {
       if (winner === 'par') {
         return `<span class="delta-cell-wrap"><span class="adv-pill">PAR</span><span class="delta-neutral">${text}</span></span>`;
@@ -903,8 +1119,8 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     const callLead: 'a' | 'b' | 'par' =
       a.llmCalls < b.llmCalls ? 'a' : a.llmCalls > b.llmCalls ? 'b' : 'par';
 
-    // 1. Core 6 Metrics (Single-line per cell, zero duplication)
-    const coreRows = [
+    // 1. Primary Visible Metrics (Outcome, Duration, Billed Cost)
+    const primaryCoreRows = [
       {
         label: 'Holdout Spec (S1–S7)',
         valA: `${a.planCompleted}/${a.planTotal} (${Math.round(a.planRatio * 100)}%)`,
@@ -916,18 +1132,6 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
             : specLead === 'a'
               ? fmtDeltaCell('a', `+${a.planCompleted - b.planCompleted} stages`)
               : fmtDeltaCell('b', `+${b.planCompleted - a.planCompleted} stages`),
-      },
-      {
-        label: 'Billed API Cost',
-        valA: usd.format(a.costUsd),
-        valB: usd.format(b.costUsd),
-        lead: costLead,
-        deltaHtml:
-          costLead === 'par'
-            ? fmtDeltaCell('par', '$0.00')
-            : costLead === 'a'
-              ? fmtDeltaCell('a', `-${usd.format(b.costUsd - a.costUsd)} (-${pct}%)`)
-              : fmtDeltaCell('b', `-${usd.format(a.costUsd - b.costUsd)}`),
       },
       {
         label: 'Wall-Clock Duration',
@@ -942,6 +1146,22 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
               : fmtDeltaCell('b', `-${fmtDur(a.durationMinutes - b.durationMinutes)} faster`),
       },
       {
+        label: 'Billed API Cost',
+        valA: usd.format(a.costUsd),
+        valB: usd.format(b.costUsd),
+        lead: costLead,
+        deltaHtml:
+          costLead === 'par'
+            ? fmtDeltaCell('par', '$0.00')
+            : costLead === 'a'
+              ? fmtDeltaCell('a', `-${usd.format(b.costUsd - a.costUsd)} (-${pctA}%)`)
+              : fmtDeltaCell('b', `-${usd.format(a.costUsd - b.costUsd)} (-${pctB}%)`),
+      },
+    ];
+
+    // 2. Secondary Core Metrics (Available in Disclosure)
+    const secondaryCoreRows = [
+      {
         label: 'Total Token Volume',
         valA: fmtCompact(a.tokens.total),
         valB: fmtCompact(b.tokens.total),
@@ -950,8 +1170,8 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
           tokLead === 'par'
             ? fmtDeltaCell('par', '0 tok')
             : tokLead === 'a'
-              ? fmtDeltaCell('a', `-${fmtCompact(b.tokens.total - a.tokens.total)} (-${tokPct}%)`)
-              : fmtDeltaCell('b', `-${fmtCompact(a.tokens.total - b.tokens.total)}`),
+              ? fmtDeltaCell('a', `-${fmtCompact(b.tokens.total - a.tokens.total)} (-${tokPctA}%)`)
+              : fmtDeltaCell('b', `-${fmtCompact(a.tokens.total - b.tokens.total)} (-${tokPctB}%)`),
       },
       {
         label: 'Peak Context Window',
@@ -981,25 +1201,29 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       },
     ];
 
-    const coreMarkup = [
-      `<tr class="compare-group-row"><th colspan="4" scope="colgroup">Core Run Summary</th></tr>`,
-      ...coreRows.map(
-        (r) => `
+    const renderMetricRows = (rows: typeof primaryCoreRows) =>
+      rows
+        .map(
+          (r) => `
         <tr>
           <th scope="row"><strong>${r.label}</strong></th>
-          <td class="mono" data-cell="Run A"><span class="cell-primary ${r.lead === 'a' ? 'is-lead' : ''}">${r.valA}</span></td>
-          <td class="mono" data-cell="Run B"><span class="cell-primary ${r.lead === 'b' ? 'is-lead' : ''}">${r.valB}</span></td>
-          <td class="mono" data-cell="Delta">${r.deltaHtml}</td>
+          <td class="mono" data-cell="${labelA}"><span class="cell-primary ${r.lead === 'a' ? 'is-lead' : ''}">${r.valA}</span></td>
+          <td class="mono" data-cell="${labelB}"><span class="cell-primary ${r.lead === 'b' ? 'is-lead' : ''}">${r.valB}</span></td>
+          <td class="mono" data-cell="Difference">${r.deltaHtml}</td>
         </tr>
       `
-      ),
-    ].join('');
+        )
+        .join('');
 
     for (const tbody of qAll('[id="telemetry-diff-tbody"]')) {
-      tbody.innerHTML = coreMarkup;
+      tbody.innerHTML = renderMetricRows(primaryCoreRows);
     }
 
-    // 2. Stage-by-Stage S1-S7 Rows (Integrated into the same table)
+    for (const tbody of qAll('[id="secondary-telemetry-tbody"]')) {
+      tbody.innerHTML = renderMetricRows(secondaryCoreRows);
+    }
+
+    // 3. Stage-by-Stage S1-S7 Rows (Separate Disclosure Table)
     {
       const maxStageCost = Math.max(
         0.01,
@@ -1039,8 +1263,8 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
 
           const solePassA = Boolean(sA?.completed && !sB?.completed);
           const solePassB = Boolean(sB?.completed && !sA?.completed);
-          const missA = !sA?.completed ? `<span class="stage-miss-tag">MISS</span>` : '';
-          const missB = !sB?.completed ? `<span class="stage-miss-tag">MISS</span>` : '';
+          const missA = !sA?.completed ? `<span class="stage-miss-tag">Missed</span>` : '';
+          const missB = !sB?.completed ? `<span class="stage-miss-tag">Missed</span>` : '';
 
           const leadCostA = hasA && hasB && sA && sB && sA.costUsd < sB.costUsd;
           const leadCostB = hasA && hasB && sA && sB && sB.costUsd < sA.costUsd;
@@ -1055,7 +1279,7 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
                  <div class="stage-compare-bar-track" aria-hidden="true"><span class="stage-compare-bar-fill-a" style="inline-size:${wA}%"></span></div>`
               : `<div class="stage-cell-line">
                    ${missA}
-                   <span class="delta-neutral">${sA?.completed ? 'Passed (no slice log)' : 'Missed'}</span>
+                   <span class="delta-neutral">${sA?.completed ? 'Passed (no slice log)' : 'Not completed'}</span>
                  </div>`;
 
           const cellBText =
@@ -1068,7 +1292,7 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
                  <div class="stage-compare-bar-track" aria-hidden="true"><span class="stage-compare-bar-fill-b" style="inline-size:${wB}%"></span></div>`
               : `<div class="stage-cell-line">
                    ${missB}
-                   <span class="delta-neutral">${sB?.completed ? 'Passed (no slice log)' : 'Missed'}</span>
+                   <span class="delta-neutral">${sB?.completed ? 'Passed (no slice log)' : 'Not completed'}</span>
                  </div>`;
 
           let deltaStr = '<span class="delta-neutral">—</span>';
@@ -1095,16 +1319,16 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
               <th scope="row">
                 <strong>${st.id}: ${st.title}</strong>
               </th>
-              <td class="mono" data-cell="Run A">${cellAText}</td>
-              <td class="mono" data-cell="Run B">${cellBText}</td>
-              <td class="mono" data-cell="Stage Delta">${deltaStr}</td>
+              <td class="mono" data-cell="${labelA}">${cellAText}</td>
+              <td class="mono" data-cell="${labelB}">${cellBText}</td>
+              <td class="mono" data-cell="Stage difference">${deltaStr}</td>
             </tr>
           `;
         })
         .join('');
 
       for (const tbody of qAll('[id="stage-diff-tbody"]')) {
-        tbody.innerHTML = `<tr class="compare-group-row"><th colspan="4" scope="colgroup">S1–S7 Stage Breakdown</th></tr>${stageRowsMarkup}`;
+        tbody.innerHTML = stageRowsMarkup;
       }
 
       const footWinner: 'a' | 'b' | 'par' =
@@ -1120,21 +1344,21 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       const footMarkup = `
         <tr>
           <th scope="row"><strong>S1–S7 Total</strong></th>
-          <td class="mono" data-cell="Run A">
+          <td class="mono" data-cell="${labelA}">
             ${
               hasAnySliceA
                 ? `<span class="cell-primary ${footWinner === 'a' ? 'is-lead' : ''}">${usd.format(sumCostA)}</span> <span class="cell-inline-muted">· ${sumCallsA} turns</span>`
                 : `<span class="delta-neutral">${usd.format(a.costUsd)} (${a.llmCalls} turns)</span>`
             }
           </td>
-          <td class="mono" data-cell="Run B">
+          <td class="mono" data-cell="${labelB}">
             ${
               hasAnySliceB
                 ? `<span class="cell-primary ${footWinner === 'b' ? 'is-lead' : ''}">${usd.format(sumCostB)}</span> <span class="cell-inline-muted">· ${sumCallsB} turns</span>`
                 : `<span class="delta-neutral">${usd.format(b.costUsd)} (${b.llmCalls} turns)</span>`
             }
           </td>
-          <td class="mono" data-cell="Stage Delta">
+          <td class="mono" data-cell="Stage difference">
             ${
               hasAnySliceA && hasAnySliceB
                 ? fmtDeltaCell(
@@ -1153,7 +1377,7 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
       }
     }
 
-    // 3. Populate Collapsible Deep Accounting Drawer
+    // 4. Populate Collapsible Deep Accounting Drawer
     {
       const stdCostLead: 'a' | 'b' | 'par' =
         Math.abs(a.standardApiCostUsd - b.standardApiCostUsd) < 0.005
@@ -1215,9 +1439,9 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
             (r) => `
             <tr>
               <th scope="row" class="col-metric"><strong>${r.label}</strong></th>
-              <td class="mono col-run-a" data-cell="Run A">${r.valA}</td>
-              <td class="mono col-run-b" data-cell="Run B">${r.valB}</td>
-              <td class="mono col-delta" data-cell="Delta">${r.delta}</td>
+              <td class="mono col-run-a" data-cell="${labelA}">${r.valA}</td>
+              <td class="mono col-run-b" data-cell="${labelB}">${r.valB}</td>
+              <td class="mono col-delta" data-cell="Difference">${r.delta}</td>
             </tr>
           `
           )

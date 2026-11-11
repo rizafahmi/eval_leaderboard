@@ -1,6 +1,6 @@
 ---
 name: neo-acid
-description: Personal app design system combining the brutalist Neo-Acid Gallery foundation of rizafahmi.com with utilitarian highlighter playbooks inspired by github/lever. Dark-first by default.
+description: Dark-first Neo-Acid foundation with a calm field-note reading treatment: restrained chrome, comfortable typography, and on-demand benchmark detail.
 colors:
   neutral-dark-bg: "#121519"
   neutral-dark-surface: "#1b2026"
@@ -15,7 +15,7 @@ colors:
   neutral-light-elevated: "#ffffff"
   neutral-light-text: "#3f454d"
   neutral-light-heading: "#0a0b0d"
-  neutral-light-muted: "#6e7882"
+  neutral-light-muted: "#59636d"
   neutral-light-border-strong: "#0a0b0d"
   neutral-light-border-subtle: "#d8dad3"
   highlighter-ink: "#0a0b0d"
@@ -76,6 +76,16 @@ typography:
     fontSize: "0.6875rem"
     fontWeight: 700
     lineHeight: 1.2
+  reading-display:
+    fontFamily: "Unbounded, system-ui, sans-serif"
+    fontSize: "clamp(1.75rem, 3.2vw, 2.5rem)"
+    fontWeight: 800
+    lineHeight: 1.3
+  comparison-display:
+    fontFamily: "Unbounded, system-ui, sans-serif"
+    fontSize: "clamp(1.75rem, 3.2vw, 2.35rem)"
+    fontWeight: 800
+    lineHeight: 1.3
 rounded:
   none: "0px"
   sm: "2px"
@@ -104,17 +114,17 @@ components:
 
 ## 1. Overview
 
-**Creative North Star: "The Neo-Acid Highlighter Gallery"**
+**Creative North Star: "A quiet field-note archive"**
 
-A dark-first, high-contrast brutalist application design system that combines the bold typographic presence of `rizafahmi.com` ("Neo-Acid Gallery") with the semantic marker-highlighter system and calm data density of `github/lever`.
+Capy Bench retains Neo-Acid’s Obsidian/Plaster surfaces, two-tone Unbounded headlines, square corners, and five semantic swatches. Its reading surfaces use restraint: one clear outcome at a time, generous spacing, and technical depth revealed only when the reader asks.
 
 ### Key Characteristics
 
 - **Dark-First Obsidian Canvas**: Defaults to softened Obsidian Clay (`#121519`) with Silver White (`#e7ecf2`) headings and Slate (`#8c96a3`) secondary copy; switches cleanly to warm Raw Gallery Plaster (`#f7f7f5`) via `[data-theme="light"]`.
 - **Ultra-Wide Display + Two-Tone Phrasing**: Headlines use `Unbounded` (`800` weight) and pair primary white/ebony hooks with muted slate continuations in the same block.
-- **Semantic Highlighter Swatches**: Five high-luminance marker tokens (`--hl-acid`, `--hl-violet`, `--hl-mint`, `--hl-sky`, `--hl-magenta`) encode action verbs, categories, and system states.
-- **Dual Border Architecture**: Thick `2px`/`4px` solid structural frames paired with whisper-quiet `1px` dividers inside dense lists, command playbooks, and tables.
-- **Tactile Color Drenches**: Interactive buttons, nav pills, and cards drench completely with `--hl-acid` (and `#0a0b0d` ink) on hover.
+- **Restrained Color**: Highlighters remain available for true status and emphasis, not repeated decoration or navigation fills.
+- **Open Reading Structure**: `1px` subtle separators organize navigation, run rows, and disclosures; heavy structural frames remain for explicit controls and technical media, not every section.
+- **Progressive Detail**: Native non-exclusive disclosures keep all benchmark evidence accessible without presenting it all at once.
 
 ---
 
@@ -134,7 +144,7 @@ A dark-first, high-contrast brutalist application design system that combines th
 - **Raw Gallery Plaster** (`#f7f7f5` / `--bg-canvas`): Warm off-white background.
 - **Plaster Alt** (`#ecece6` / `--bg-surface`): Subtle surface fill for table headers and callouts.
 - **Ebony Ink** (`#0a0b0d` / `--text-primary`): Crisp near-black text and structural borders.
-- **Slate Light** (`#6e7882` / `--text-muted`): Muted headline continuations and metadata notes.
+- **Slate Light** (`#59636d` / `--text-muted`): Readable muted text on Plaster, including metadata, navigation, and input placeholders.
 
 ### Semantic Highlighter Swatches
 
@@ -160,18 +170,17 @@ Every highlighter swatch is calibrated to achieve **WCAG AAA (>7:1)** contrast a
 
 - **Display Font (`--font-display`):** `Unbounded` (Extra Bold `800` only)
 - **Body Font (`--font-body`):** `Schibsted Grotesk` (Regular `400`, Bold `700`)
-- **Mono/Label Font (`--font-mono`):** `Martian Mono` (Regular `400`, Bold `700`)
+- **Mono Font (`--font-mono`):** `Martian Mono` (Regular `400`, Bold `700`), reserved for code, numbers, and measurement rather than prose/navigation.
 
 ### Hierarchy
 
-- **Two-Tone Hero Headline (`.headline-two-tone`)**: `Unbounded 800`, `clamp(1.65rem, 3.6vw, 2.5rem)`, line-height `1.15`.
+- **Reading Hero Headline (`.headline-two-tone`)**: `Unbounded 800`, `clamp(1.75rem, 3.2vw, 2.5rem)` (`2.35rem` cap in comparison), line-height `1.3`. The general primitive remains `1.65rem`–`2.5rem` with line-height `1.15`.
 - **Section Heading (`h2`) & KPI Figure (`.kpi-val`)**: `Unbounded 800` / `Martian Mono 700`, `1.5rem` (`--text-xl`), line-height `1.15`.
 - **Card Heading (`.card-heading`)**: `Unbounded 800`, `1.25rem` (`--text-lg`), line-height `1.2`.
-- **Body Copy**: `Schibsted Grotesk 400`, `1.0625rem` (`--text-body`), line-height `1.6`, capped at `65ch` for reading views (`1rem` / `--text-base` for compact cards/notes, `0.9375rem` / `--text-compact` for dense tables and secondary blurbs).
-- **Primary Mono Metric (`.metric-primary`, `.btn`, `.action-link`)**: `Martian Mono 700`, `0.875rem` (`--text-mono`), `tabular-nums`.
-- **Dense Mono Telemetry (`.terminal-box`, `.commit-msg`, `.plan-stage-title`)**: `Martian Mono 400/700`, `0.8125rem` (`--text-sm`).
-- **Section Kicker (`.section-kicker`) & Static Badge (`.badge-static`, `.metric-sub`)**: `Martian Mono 700`, `0.75rem` (`--text-xs`), uppercase for kickers, `letter-spacing: 0.06em`, `--text-muted`.
-- **Micro Stage Pill & Shortcut Badge (`.stage-pill`, `.commit-stage-badge`, `.menu-kbd`)**: `Martian Mono 700`, `0.6875rem` (`--text-2xs`).
+- **Body Copy**: `Schibsted Grotesk 400`, `1rem`–`1.0625rem`, line-height `1.75`–`1.8`, generally capped at `65`–`70ch`.
+- **Controls and Metadata**: Schibsted for navigation, filters, summaries, and descriptive labels; metadata at least `0.8125rem`, controls typically `0.9375rem`–`1rem` with `44px` minimum hit targets.
+- **Measured Data**: Martian Mono for token counts, duration, cost, code, and telemetry, with tabular numerals. Default run-table metrics are `0.9375rem`.
+- **Headings**: Short, two-tone page titles; space and size establish hierarchy rather than competing uppercase labels.
 
 ### Named Rules
 
@@ -184,14 +193,14 @@ Every highlighter swatch is calibrated to achieve **WCAG AAA (>7:1)** contrast a
 
 We reject drop shadows, blurs, and gradients. Hierarchy is expressed strictly through border weight and surface contrast.
 
-- **Major Split (`--border-split`):** `4px solid var(--border-strong-color)` — used for top app navbar and bottom app footer boundaries.
-- **Structural Frame (`--border-frame`):** `2px solid var(--border-strong-color)` — used for cards, buttons, inputs, dropdown menus, tables, and media frames.
-- **Dense Row Divider (`--border-row`):** `1px solid var(--border-subtle-color)` — used inside `.command-list` rows and `.app-table` body cells.
+- **Major Reading Split:** `1px solid var(--border-subtle-color)` on the app header/footer and run ledger.
+- **Structural Frame (`--border-frame`):** `2px solid var(--border-strong-color)` remains available for explicit controls and technical media; quiet reading controls may use a `1px` separator.
+- **Dense Row Divider (`--border-row`):** `1px solid var(--border-subtle-color)` inside lists, tables, and `.reading-disclosure`.
 - **Corner Radius (`--radius-none`):** `0px` across all buttons, badges, inputs, cards, and menus.
 
 ### Named Rules
 
-- **The Dual Border Rule:** Use `2px`/`4px` borders to frame components and page regions, but drop to `1px solid var(--border-subtle-color)` for repeating rows inside lists and tables so dense data UIs never feel visually noisy.
+- **The Reading Hierarchy Rule:** Prefer whitespace and subtle separators to outer card cages. Default views surface outcome, time, and cost; secondary telemetry belongs in labelled disclosures.
 
 ---
 
@@ -199,14 +208,14 @@ We reject drop shadows, blurs, and gradients. Hierarchy is expressed strictly th
 
 All reference implementations live in `tokens.css` and `specimen.html`:
 
-1. **App Navbar & Sub-Nav (`.app-navbar`, `.app-tabs`, `.app-breadcrumbs`)**:Bounded by a `4px` bottom border. Nav items (`.app-nav-item`) are square-edged `Martian Mono` links that fill with `--hl-acid` and `--hl-ink` on hover or `.is-active`.
-2. **Buttons & Segmented Controls (`.btn`, `.btn-secondary`, `.btn-acid`, `.btn-cobalt`, `.btn-danger`, `.btn-group`)**: `2px` solid border, `0px` radius, `Martian Mono 700`. Primary buttons invert canvas/ink and drench with `--hl-acid` on hover. Destructive buttons (`.btn-danger`) drench with `--hl-magenta` on hover.
+1. **App Navbar & Footer:** Compact, nonsticky navigation and a simple field-note colophon. Active navigation uses an understated underline rather than a highlighter fill.
+2. **Buttons & Controls:** Square edges, Schibsted labels, at least `44px` tall. Focus uses a real outline, not a shadow. Semantic primary/destructive treatments retain Neo-Acid ink rules.
 3. **Menus & Playbook Lists (`.menu-dropdown`, `.menu-item`, `.command-list`, `.command-row`)**: Dropdown menus use a `2px` frame on `--bg-elevated` with `.hl` verb badges and `.menu-kbd` shortcut hints. Command lists use `1px` row borders with a muted prefix (`/lever`), a `.hl` verb pill, the prompt string, and a right-aligned muted `.note`.
 4. **Links (`.prose-link`, `.action-link`, `.card-interactive`)**: In-text links carry a `3px` underline (`--hl-acid` in dark mode, `--accent-cobalt` in light mode) and drench on hover. Whole-card links (`.card-interactive`) drench the entire card surface with `--hl-acid` and switch all inner text (including `.text-muted` and `.section-kicker`) to `--hl-ink` (`#0a0b0d`) so contrast never fails.
-5. **Forms & Command Bar (`.command-input-wrap`, `.input`, `.select`, `.check-input`)**: Sharp `0px` inputs on `--bg-elevated` with an inset `2px` focus ring (`--hl-acid` in dark, `--accent-cobalt` in light). `.command-input-wrap` pairs a hard-bordered `--hl-acid` prefix block (`/lever`) with a monospace text input.
+5. **Forms:** Search remains immediately visible; harness/provider filters, cost lens, sorting, and extra telemetry sit in “Filter & sort.” Inputs and selects use a theme-aware outline for keyboard focus.
 6. **Brutalist Media Frame (`.media-frame`, `.media-canvas`, `.media-caption`, `.media-badge`)**: Wraps images, charts, or video facades in a `2px` border with an absolute top-left `.hl` badge and a `2px` top-bordered `Martian Mono` metadata caption bar.
 7. **Tables & Callouts (`.app-table`, `.callout`)**: Tables use a `2px` outer border and `1px` row dividers. Callouts use a `2px` frame with an `8px` left highlighter border (`.callout-mint`, `.callout-magenta`, `.callout-acid`, `.callout-violet`, `.callout-sky`).
-8. **App Footer (`.app-footer`, `.app-footer-grid`, `.app-footer-colophon`, `.status-dot`)**: `4px` top border, multi-column sitemap links, a square `--hl-mint` operational status indicator, and a bottom monospace colophon bar.
+8. **Reading Disclosures:** Native `<details>`/`<summary>` elements, closed by default and independently expandable. Keep headings outside summary. Shared hash navigation opens enclosing disclosures and scrolls to the exact target.
 
 ---
 
@@ -217,7 +226,7 @@ All reference implementations live in `tokens.css` and `specimen.html`:
 - **Do** default to Dark Mode (`:root` Obsidian Clay `#121519`) and support `[data-theme="light"]` (`#f7f7f5`).
 - **Do** keep text inside `.hl` / `<mark data-hl>` badges pinned to `#0a0b0d` (`--hl-ink`) in both themes.
 - **Do** pair statistical figures (`.stat-value`) with their sample size and range in `Martian Mono`.
-- **Do** combine `2px`/`4px` outer structural borders with `1px` subtle inner row dividers.
+- **Do** use `1px` separators and generous spacing on reading surfaces; reserve heavier frames for explicit controls and technical media.
 
 ### Don'ts
 
@@ -225,3 +234,12 @@ All reference implementations live in `tokens.css` and `specimen.html`:
 - **Don't** round corners (`border-radius: 9999px` or `8px`) on pills, buttons, cards, or inputs — keep everything `0px`.
 - **Don't** load extra font weights of `Unbounded` — keep the display family strictly at `800`.
 - **Don't** center-align body copy or multi-line cards; keep alignment left-anchored and crisp.
+
+## 7. Benchmark Reading Surfaces
+
+- **Leaderboard:** Model/harness, outcome, duration, and billed cost by default. “Show tests, tokens & extra detail” restores secondary columns and metadata. Outcome buttons reveal stage data and field notes. Search/filter/sort updates are immediate, without row motion. Speed/cost, stage bottlenecks, and controlled comparisons appear as question-led disclosures.
+- **Comparison:** Three visible result rows; presets, execution/context metrics, stage breakdown, and cache/accounting each have independent disclosures. Selectors and table headers stay synchronized with URL state and swapping.
+- **Run Reports:** Modest metadata, one existing field-note lead, outcome/time/cost. Verification failures remain visible. Plan and notes are readable ledgers; deep technical sections open on demand or through anchors.
+- **Methodology:** Clear seven-stage overview. Stage checks, full plan, CLI contract, prompt, and sample transcript open independently; copy controls and all deep links remain available.
+- **Mobile:** Run rows become compact three-metric reading entries. Comparison tables use container queries, hidden desktop headers, and explicit A/B/difference labels. No page-level horizontal overflow.
+

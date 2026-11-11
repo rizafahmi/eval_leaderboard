@@ -136,34 +136,41 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 ---
 
 <BaseLayout
-  title="About & Benchmark Plan"
-  description="Methodology, V1 CLI product contract, and S1–S7 Outside-In TDD implementation slices for the Capy Bench Elixir/OTP coding agent benchmark."
+  title="About This Evaluation"
+  description="Riza Fahmi’s personal coding-agent evaluation on an Elixir/OTP CLI task using outside-in TDD. Methodology, specifications, and why results may differ for other stacks."
   activeNav="about"
 >
   <div class="about-quiet">
     <header class="about-masthead" aria-labelledby="about-hero-heading">
       <div class="about-masthead-main">
         <h1 id="about-hero-heading" class="headline-two-tone">
-          One starter repo, seven TDD slices.{' '}
-          <span class="muted">
-            The rest is the coding agent shipping a real HTTP benchmark CLI.
-          </span>
+          My stack.<br />
+          <span class="muted">My field notes.</span>
         </h1>
         <p class="hero-subtitle">
-          Capy Bench is a backend-focused Elixir/OTP command-line HTTP benchmark (<code>./cb</code>)
-          for macOS and Linux. Every Coding Harness + Model pair receives the identical starter
-          repository (<code>README.md</code> V1 product contract, <code>PLAN.md</code> implementation
-          slices <code>S1</code>–<code>S7</code>, and <code>AGENTS.md</code> conventions) and is
-          evaluated on HTTP/TLS networking, local test servers, monotonic rate pacing, in-flight
-          timeout cancellation, and foreground <code>Ctrl-C</code> — with zero UI boilerplate.
+          I’m <a href="https://rizafahmi.com" class="prose-link">Riza Fahmi</a>.
+          Capy Bench is my personal coding-agent evaluation, built around my chosen stack and
+          workflow: Elixir/OTP, a command-line HTTP tool, and outside-in TDD.
+        </p>
+        <p class="hero-subtitle" id="evaluation-scope">
+          A different language, framework, project, or way of working may produce different
+          results—even a different ranking. Read these as field notes to guide your own
+          experiments, not a universal verdict on which agent is best.
         </p>
       </div>
 
+      <details class="reading-disclosure about-parameters">
+        <summary>The task at a glance</summary>
+        <p class="hero-subtitle">
+          Each run builds <code>./cb</code>, a bounded HTTP benchmark CLI for macOS and Linux.
+          Agents receive the same starter repository and work through seven stages, from the
+          first executable to a verified foreground <code>Ctrl-C</code> exit.
+        </p>
       <dl class="about-spec-strip" aria-label="Benchmark specification parameters">
         <div class="about-spec-param">
           <dt>Protocol</dt>
           <dd>
-            <span class="hl hl-acid">S1–S7</span>
+            <strong class="mono">S1–S7</strong>
             <span class="about-spec-note">Outside-In TDD slices</span>
           </dd>
         </div>
@@ -189,15 +196,16 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           </dd>
         </div>
       </dl>
+      </details>
     </header>
 
-    <div class="v1-doc-shell">
+    <div class="reading-doc-shell">
       <aside class="v1-doc-rail" aria-label="Specification navigation">
         <nav aria-label="On this page" class="v1-toc-box" id="about-jump-bar">
           <p class="v1-toc-title">On this page</p>
           <div class="v1-toc-list" id="about-jump-links">
             {aboutSections.map((sec) => (
-              <a href={`#${sec.id}`} class="mono detail-jump-link">
+              <a href={`#${sec.id}`} class="detail-jump-link">
                 {sec.label}
               </a>
             ))}
@@ -205,14 +213,14 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
         </nav>
       </aside>
 
-      <div class="v1-doc-spine section-grid">
+      <div class="reading-doc-spine section-grid">
         <section class="doc-section col-12" id="stages" aria-labelledby="stages-heading">
           <div class="doc-section-header">
             <h2 id="stages-heading" class="card-heading headline-two-tone">
               The Implementation Slices{' '}
               <span class="muted">/ Preparation &amp; S1–S7</span>
             </h2>
-            <span class="mono doc-section-meta">Preparation + 7 sequential checkpoints</span>
+            <span class="doc-section-meta">Preparation + 7 sequential checkpoints</span>
           </div>
           <p class="section-lead">
             With <strong>Preparation</strong> (establishing the <code>README.md</code> contract)
@@ -227,7 +235,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
             <li id="stage-prep" class="stage-spec-card stage-spec-card-prep">
               <div class="stage-spec-gutter">
                 <span class="stage-id-badge is-prep">PREP</span>
-                <span class="stage-check-count">Pre-checked [x]</span>
+                <span class="stage-check-count">Completed before the run</span>
               </div>
               <div class="stage-spec-body">
                 <h3 class="stage-spec-title">
@@ -237,6 +245,8 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
                   Move the V1 CLI product contract and example output into <code>README.md</code> and
                   link to it from <code>PLAN.md</code> without retaining a duplicate.
                 </p>
+                <details class="reading-disclosure stage-checks">
+                  <summary>What gets checked</summary>
                 <ul class="stage-deliverables-list" role="list">
                   <li class="stage-deliverable-item">
                     <span class="check-box-mark" aria-hidden="true"></span>
@@ -251,6 +261,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
                     <span>Baseline repository state committed before S1 dispatch</span>
                   </li>
                 </ul>
+                </details>
               </div>
             </li>
             {BENCHMARK_STAGES.map((stage) => (
@@ -264,6 +275,8 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
                     <span class="visually-hidden">{stage.id}: </span>{stage.title}
                   </h3>
                   <p class="stage-spec-desc">{stage.description}</p>
+                  <details class="reading-disclosure stage-checks">
+                    <summary>{stage.deliverables.length} things to check</summary>
                   <ul class="stage-deliverables-list" role="list">
                     {stage.deliverables.map((item) => (
                       <li class="stage-deliverable-item">
@@ -272,13 +285,16 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
                       </li>
                     ))}
                   </ul>
+                  </details>
                 </div>
               </li>
             ))}
           </ol>
         </section>
 
-        <section class="doc-section col-12" id="end-product" aria-labelledby="end-product-heading">
+        <details class="reading-disclosure doc-disclosure col-12" id="end-product">
+          <summary>What does the finished CLI look like?</summary>
+          <section class="doc-section disclosure-body" aria-labelledby="end-product-heading">
           <div class="doc-section-header">
             <h2 id="end-product-heading" class="card-heading headline-two-tone">
               Glimpse of the End Product{' '}
@@ -315,6 +331,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 <span class="cli-out-line"><span class="cli-out-key">Transport failures:</span> 1</span>
 <span class="cli-out-line"><span class="cli-out-key">Latency (HTTP responses):</span> p50 38 ms, p95 91 ms</span></code></pre>
         </section>
+        </details>
 
         <section class="doc-section col-12" id="judging" aria-labelledby="judging-heading">
           <div class="doc-section-header">
@@ -352,7 +369,9 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           </dl>
         </section>
 
-        <section class="doc-section col-12" id="plan-spec" aria-labelledby="plan-spec-heading">
+        <details class="reading-disclosure doc-disclosure col-12" id="plan-spec">
+          <summary>Read the implementation plan · PLAN.md</summary>
+          <section class="doc-section disclosure-body" aria-labelledby="plan-spec-heading">
           <div class="doc-section-header">
             <h2 id="plan-spec-heading" class="card-heading headline-two-tone">
               Implementation Plan{' '}
@@ -426,8 +445,11 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
             })}
           </article>
         </section>
+        </details>
 
-        <section class="doc-section col-12" id="contract-spec" aria-labelledby="contract-spec-heading">
+        <details class="reading-disclosure doc-disclosure col-12" id="contract-spec">
+          <summary>Read the CLI contract · README.md</summary>
+          <section class="doc-section disclosure-body" aria-labelledby="contract-spec-heading">
           <div class="doc-section-header">
             <h2 id="contract-spec-heading" class="card-heading headline-two-tone">
               V1 CLI Product Contract{' '}
@@ -465,8 +487,11 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
             </ul>
           </article>
         </section>
+        </details>
 
-        <section class="doc-section col-12" id="prompt-spec" aria-labelledby="prompt-spec-heading">
+        <details class="reading-disclosure doc-disclosure col-12" id="prompt-spec">
+          <summary>Read the exact agent prompt · PROMPT.md</summary>
+          <section class="doc-section disclosure-body" aria-labelledby="prompt-spec-heading">
           <div class="doc-section-header">
             <h2 id="prompt-spec-heading" class="card-heading headline-two-tone">
               Agent Dispatch Prompt{' '}
@@ -500,22 +525,23 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
             ))}
           </article>
         </section>
+        </details>
       </div>
     </div>
 
     <nav aria-label="Benchmark navigation" class="detail-bottom-pager">
       <a href="/" class="card card-interactive detail-pager-card">
-        <span class="mono detail-pager-dir">&larr; LEADERBOARD TABLE</span>
+        <span class="detail-pager-dir">Back to the runs</span>
         <strong class="detail-pager-title">
-          Compare All {sortedRuns.length} Verified Agent Runs
+          Explore all {sortedRuns.length} published runs
         </strong>
         <span class="mono detail-pager-meta">
-          Filter &amp; sort S1–S7 completion, test pass rates, token efficiency, and API cost
+          Compare results, then follow a run’s field notes.
         </span>
       </a>
       {topRun && topRunPlan ? (
         <a href={`/runs/${topRun.id}`} class="card card-interactive detail-pager-card">
-          <span class="mono detail-pager-dir">INSPECT #1 VERIFIED RUN &rarr;</span>
+          <span class="detail-pager-dir">A run to explore</span>
           <strong class="detail-pager-title">
             {formatHarnessName(topRun.data.codingHarness)} / {topRun.data.model}
             {topRun.data.effort ? ` (${topRun.data.effort})` : ''}
@@ -531,17 +557,12 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 </BaseLayout>
 
 <style>
-  /* ==========================================================================
-     QUIETER ABOUT & SPECS (Neo-Acid Read Mode)
-     Retains the signature --hl-acid brand color for primary anchors and active
-     states while removing nested card boxes, multi-color badge noise, and
-     narrow column cramping so extended technical reading is effortless.
-     ========================================================================== */
+  /* Calm reading surfaces; exact specifications remain available on demand. */
   .about-quiet {
     display: flex;
     flex-direction: column;
-    gap: 2.25rem;
-    padding-block-start: 0.75rem;
+    gap: 2.75rem;
+    padding-block-start: 3.5rem;
     font-variant-numeric: tabular-nums;
   }
 
@@ -566,26 +587,26 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    padding-block-end: 1.5rem;
-    border-block-end: 1px solid var(--border-strong-color);
+    padding-block-end: 0;
+    border-block-end: none;
   }
 
   .about-masthead-main {
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    gap: 1.25rem;
   }
 
   .about-masthead .headline-two-tone {
-    font-size: clamp(1.5rem, 2.5vw, 2.05rem);
-    line-height: 1.18;
+    font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+    line-height: 1.3;
     max-inline-size: 34ch;
     margin: 0;
   }
 
   .about-masthead .hero-subtitle {
     font-size: 1.0625rem;
-    line-height: 1.68;
+    line-height: 1.8;
     color: var(--text-secondary);
     max-inline-size: 66ch;
     margin: 0;
@@ -593,8 +614,8 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 
   .about-spec-strip {
     margin: 0;
-    padding-block-start: 1.15rem;
-    border-block-start: var(--border-row);
+    padding-block: 0.75rem 1.5rem;
+    border-block-start: none;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem 1.5rem;
@@ -623,29 +644,20 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     color: var(--text-primary);
   }
 
-  .about-spec-param .hl-acid {
-    font-size: 0.75rem;
-    padding: 0.08rem 0.4rem;
-  }
 
   .about-spec-note {
     font-size: 0.8125rem;
     color: var(--text-muted);
   }
 
-  /* --------------------------------------------------------------------------
-     2. DOCUMENT SHELL & WHISPER-QUIET STICKY TOC
-     -------------------------------------------------------------------------- */
-  .v1-doc-shell {
-    display: grid;
-    grid-template-columns: 12.5rem minmax(0, 1fr);
+  .reading-doc-shell {
+    display: flex;
+    flex-direction: column;
     gap: 2.5rem;
-    align-items: start;
   }
 
   .v1-doc-rail {
-    position: sticky;
-    inset-block-start: 1.5rem;
+    position: static;
   }
 
   .v1-toc-box {
@@ -657,62 +669,52 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   .v1-toc-title {
     font-family: var(--font-body);
     font-weight: 700;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     color: var(--text-primary);
     margin: 0;
-    padding-inline-start: 0.85rem;
+    padding-inline-start: 0;
   }
 
   .v1-toc-list {
     display: flex;
-    flex-direction: column;
-    border-inline-start: 1px solid var(--border-subtle-color);
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 0.5rem 1rem;
   }
 
   .v1-toc-list .detail-jump-link {
-    display: block;
-    padding: 0.42rem 0.85rem;
-    margin-inline-start: -1px;
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.75rem;
+    padding: 0.5rem 0;
     background-color: transparent;
     border: none;
-    border-inline-start: 2px solid transparent;
-    text-decoration: none;
-    font-size: 0.75rem;
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+    text-decoration-thickness: 1px;
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
     font-weight: 400;
     color: var(--text-muted);
     transition: color 0.12s ease, border-color 0.12s ease;
   }
 
-  .v1-toc-list .detail-jump-link:hover {
-    color: var(--text-primary);
-    border-inline-start-color: var(--border-strong-color);
-  }
-
+  .v1-toc-list .detail-jump-link:hover,
   .v1-toc-list .detail-jump-link[aria-current="true"] {
     color: var(--text-primary);
-    font-weight: 700;
-    border-inline-start-color: var(--hl-acid);
   }
 
-  :global([data-theme="light"]) .v1-toc-list .detail-jump-link[aria-current="true"] {
-    border-inline-start-color: var(--raw-ebony);
-    background-color: var(--bg-surface);
-  }
-
-  /* --------------------------------------------------------------------------
-     3. OPEN EDITORIAL DOCUMENT SPINE (No Outer 2px Card Boxes)
-     -------------------------------------------------------------------------- */
-  .v1-doc-spine {
+  .reading-doc-spine {
     display: flex;
     flex-direction: column;
     gap: 0;
     min-inline-size: 0;
-    max-inline-size: 52rem;
+    max-inline-size: 70ch;
   }
 
   .doc-section {
     padding-block: 2.25rem;
-    border-block-start: 1px solid var(--border-strong-color);
+    border-block-start: var(--border-row);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -721,6 +723,21 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   .doc-section:first-child {
     padding-block-start: 0;
     border-block-start: none;
+  }
+
+  .doc-disclosure > .doc-section {
+    padding-block-start: 0.75rem;
+    border: none;
+  }
+
+  .stage-checks {
+    border: none;
+  }
+
+  .stage-checks > summary {
+    min-block-size: 2.75rem;
+    padding-block: 0.5rem;
+    font-size: 0.875rem;
   }
 
   .doc-section-header {
@@ -739,7 +756,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 
   .doc-section-meta,
   .doc-file-path {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: var(--text-muted);
   }
 
@@ -751,7 +768,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   .about-quiet .section-lead,
   .about-quiet .section-body-copy {
     font-size: 1.0625rem;
-    line-height: 1.68;
+    line-height: 1.8;
     color: var(--text-secondary);
     max-inline-size: 66ch;
     margin: 0;
@@ -789,29 +806,22 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 
   .stage-id-badge {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    padding: 0.1rem 0.35rem;
-    background-color: var(--bg-surface);
-    border-block-end: 2px solid var(--hl-acid);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    padding: 0;
+    background-color: transparent;
+    border: none;
   }
 
-  :global([data-theme="light"]) .stage-id-badge {
-    background-color: var(--hl-acid);
-    color: var(--hl-ink);
-    border-block-end-color: var(--raw-ebony);
-  }
 
   .stage-id-badge.is-prep {
-    border-block-end-color: var(--border-strong-color);
-    color: var(--text-secondary);
-    background-color: var(--bg-surface);
+    color: var(--text-muted);
   }
 
   .stage-check-count {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
     color: var(--text-muted);
   }
 
@@ -908,8 +918,8 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
 
   .judging-row {
     display: grid;
-    grid-template-columns: 15.5rem minmax(0, 1fr);
-    gap: 1.25rem;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
     padding-block: 1.15rem;
     border-block-end: var(--border-row);
     align-items: baseline;
@@ -1049,45 +1059,11 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
   }
 
   /* Responsive Adaptations */
-  @media (max-width: 980px) {
-    .about-spec-strip {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .v1-doc-shell {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-
-    .v1-doc-rail {
-      position: static;
-    }
-
-    .v1-toc-list {
-      flex-direction: row;
-      flex-wrap: wrap;
-      border-inline-start: none;
-      border-block-end: 1px solid var(--border-subtle-color);
-      gap: 0.25rem;
-    }
-
-    .v1-toc-title {
-      padding-inline-start: 0;
-    }
-
-    .v1-toc-list .detail-jump-link {
-      margin-inline-start: 0;
-      border-inline-start: none;
-      border-block-end: 2px solid transparent;
-      padding: 0.4rem 0.65rem;
-    }
-
-    .v1-toc-list .detail-jump-link[aria-current="true"] {
-      border-block-end-color: var(--hl-acid);
-    }
-  }
 
   @media (max-width: 640px) {
+    .about-quiet {
+      padding-block-start: 2.5rem;
+    }
     .about-spec-strip,
     .about-quiet .stage-spec-card,
     .judging-row {
@@ -1144,7 +1120,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
         if (status) status.textContent = '';
       }, 1800);
     } catch {
-      const container = btn.closest('section, .v2-dossier-right');
+      const container = btn.closest('section');
       const codeEl = container?.querySelector<HTMLElement>('.terminal-box');
       if (codeEl && window.getSelection) {
         const selection = window.getSelection();
@@ -1167,7 +1143,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     document.querySelectorAll<HTMLAnchorElement>('#about-jump-bar .detail-jump-link')
   );
   const sections = Array.from(
-    document.querySelectorAll<HTMLElement>('.v1-doc-spine section[id]')
+    document.querySelectorAll<HTMLElement>('.reading-doc-spine > [id]')
   );
 
   if (jumpLinks.length > 0 && sections.length > 0) {
