@@ -358,7 +358,7 @@ const wallClockMatch = d.interface?.details?.match(
 );
 const wallClockMinutes = wallClockMatch ? Number(wallClockMatch[1] ?? wallClockMatch[2]) : null;
 const contextWindowParts = splitContextWindow(d.contextWindow);
-const runDescription = `Capy Bench evaluation run for ${displayHarness} (${d.model} by ${displayProvider}): ${plan.completed}/${plan.total} stages (${Math.round(plan.ratio * 100)}%) completed in ${formatDuration(d.durationMinutes)} at ${formatCost(d.costUsd)}.`;
+const runDescription = `Riza Fahmi’s personal Elixir/OTP evaluation: ${displayHarness} / ${d.model} (${displayProvider}), ${plan.completed}/${plan.total} stages, ${formatDuration(d.durationMinutes)}, ${formatCost(d.costUsd)} billed. Other stacks may differ.`;
 const peakStageId = telemetry.peakStageId;
 const peakStageStat = peakStageId ? telemetry.stages[peakStageId] : null;
 const peakStageTitle = peakStageId ? stageMap.get(peakStageId) : null;

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Capy Bench social image source</title>
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <style>
+      @font-face {
+        font-family: "Unbounded";
+        src: url("../node_modules/@fontsource/unbounded/files/unbounded-latin-800-normal.woff2") format("woff2");
+        font-style: normal;
+        font-weight: 800;
+        font-display: block;
+      }
+
+      @font-face {
+        font-family: "Schibsted Grotesk";
+        src: url("../node_modules/@fontsource/schibsted-grotesk/files/schibsted-grotesk-latin-400-normal.woff2") format("woff2");
+        font-style: normal;
+        font-weight: 400;
+        font-display: block;
+      }
+
+      body {
+        inline-size: 1200px;
+        block-size: 630px;
+        overflow: hidden;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        block-size: 100%;
+        padding: 56px 64px 40px;
+      }
+
+      .share-brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-family: var(--font-display);
+        font-size: 22px;
+        line-height: 1.4;
+      }
+
+      .share-mark {
+        display: grid;
+        grid-template-columns: repeat(2, 14px);
+        grid-template-rows: repeat(2, 14px);
+        border: 2px solid var(--border-strong-color);
+      }
+
+      .share-mark span:nth-child(1) { background: var(--hl-acid); }
+      .share-mark span:nth-child(2) { background: var(--raw-ebony); }
+      .share-mark span:nth-child(3) { background: var(--hl-mint); }
+      .share-mark span:nth-child(4) { background: var(--hl-violet); }
+
+      .share-headline {
+        margin-block: 40px 20px;
+        font-size: 68px;
+        line-height: 1.25;
+        letter-spacing: -0.025em;
+      }
+
+      .share-copy {
+        margin: 0;
+        font-size: 27px;
+        line-height: 1.65;
+        color: var(--text-secondary);
+      }
+
+      .share-context {
+        margin-block: 4px 0;
+        font-size: 24px;
+        color: var(--text-muted);
+      }
+
+      .share-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 24px;
+        margin-block-start: auto;
+        padding-block-start: 20px;
+        border-block-start: var(--border-row);
+        font-size: 22px;
+        color: var(--text-secondary);
+      }
+
+      .share-footer p {
+        margin: 0;
+      }
+
+      .share-footer-address {
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="share-brand">
+        <span class="share-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>CAPY.BENCH</span>
+      </header>
+      <h1 class="headline-two-tone share-headline">My stack.<br /><span class="muted">My field notes.</span></h1>
+      <p class="share-copy">A personal coding-agent evaluation by Riza Fahmi.</p>
+      <p class="share-context">Elixir/OTP · Outside-in TDD · Seven stages</p>
+      <footer class="share-footer">
+        <p>One workflow, not a universal ranking.</p>
+        <p class="share-footer-address">eval.rizafahmi.com</p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -285,6 +285,9 @@ pnpm build
 ├── .github/workflows/
 │   └── ci.yml                 # GitHub Actions workflow: schema check, build & GitHub Pages deploy
 ├── public/                    # Static assets (favicons, Apple touch icon, OG social image, webmanifest)
+├── scripts/
+│   ├── ingest-run.ts          # Raw transcript ingestion & telemetry normalization CLI
+│   └── og-image.html          # 1200×630 source for public/og-image.png
 ├── src/
 │   ├── content/
 │   │   └── runs/*.json        # Individual benchmark run entries (10 published, 2 unpublished)

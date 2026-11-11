@@ -1,11 +1,11 @@
 {
-  "name": "Capy Bench Leaderboard",
+  "name": "Capy Bench — Personal Field Notes",
   "short_name": "Capy Bench",
-  "description": "Capy Bench — Personal coding agent & LLM benchmark evaluating end-to-end Elixir/OTP CLI engineering (S1–S7) on completion, tests, tokens, and cost.",
+  "description": "Riza Fahmi’s personal coding-agent field notes: Elixir/OTP, outside-in TDD, completion, time, and cost. Other stacks may produce different results.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121519",
-  "theme_color": "#c5f82a",
+  "theme_color": "#121519",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

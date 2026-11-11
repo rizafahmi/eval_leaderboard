@@ -17,15 +17,15 @@ interface Props {
 }
 
 const DEFAULT_DESCRIPTION =
-  'Capy Bench — Personal coding agent & LLM benchmark evaluating end-to-end Elixir/OTP CLI engineering (S1–S7) on completion, tests, tokens, and cost.';
+  'Riza Fahmi’s personal coding-agent field notes: Elixir/OTP, outside-in TDD, completion, time, and cost. Other stacks may produce different results.';
 
 const {
   title,
   description = DEFAULT_DESCRIPTION,
   activeNav,
   ogType = 'website',
-  ogImage = '/og-image.png',
-  ogImageAlt = 'Capy Bench Leaderboard — Personal coding agent and LLM benchmark for Elixir/OTP CLI engineering (S1–S7)',
+  ogImage = '/og-image.png?v=personal-field-notes',
+  ogImageAlt = 'Capy Bench: My stack. My field notes. A personal coding-agent evaluation by Riza Fahmi. Elixir/OTP, outside-in TDD, seven stages. One workflow, not a universal ranking.',
 } = Astro.props;
 
 const siteOrigin = (Astro.site ?? new URL('https://eval.rizafahmi.com')).origin;
@@ -76,6 +76,7 @@ const jsonLd = {
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="author" content="Riza Fahmi" />
     <link rel="canonical" href={canonicalUrl} />
 
     <!-- Favicons & Web App Manifest -->
