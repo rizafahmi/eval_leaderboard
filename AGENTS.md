@@ -43,3 +43,4 @@ pnpm preview   # Previews the production build locally
 - `src/pages/runs/[id].astro` — Detailed forensic view for an individual benchmark run.
 - `scripts/ingest-run.ts` — Raw JSONL transcript & git history ingestion and telemetry normalization CLI.
 - `tests/audit-runs.test.ts` — Automated conservation law and econometric regression test suite.
+- `.agents/skills/capybench-run-ingestion/SKILL.md` — Agent skill for auditing raw harness logs against manual notes, probing foreground PTY `Ctrl-C` edge cases, and ingesting conservation-verified run records.
