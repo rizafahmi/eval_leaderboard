@@ -699,6 +699,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3b. Model Comparison: omp gemini-4-argon vs gemini-4-carbon (High)
+  const ompArgon = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'gemini-4-argon'
+  );
+  const ompCarbon = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'gemini-4-carbon'
+  );
+  if (ompArgon && ompCarbon) {
+    presets.push({
+      id: 'model-gemini4-argon-vs-carbon',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'omp: gemini-4-argon vs. gemini-4-carbon (High)',
+      subtitle: 'Same harness, flags & $2/$0.10/$10 rate schedule — parallel tool batching & cache stability',
+      runAId: ompArgon.id,
+      runBId: ompCarbon.id,
+      findingHeadline: `gemini-4-argon cut 7/7 turns by 38% (132 vs 214), tokens by 33% (18.29M vs 27.47M), time by 10m (53m vs 63m), and cost by 33% ($3.97 vs $5.91).`,
+    });
+  }
+
   // 4. Model Family Tier: ZCode glm-5.3-flash (High) vs glm-5.3 (High)
   const glmFlagshipHigh = runs.find(
     (r) => r.data.model === 'glm-5.3' && r.data.effort?.toLowerCase() === 'high'

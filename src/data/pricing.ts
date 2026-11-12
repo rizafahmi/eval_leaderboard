@@ -266,6 +266,30 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 20.0,
     },
   },
+  'gemini-4-argon': {
+    modelKey: 'gemini-4-argon',
+    displayName: 'gemini-4-argon',
+    provider: 'Gemini',
+    billedTier: {
+      label: '2026 Standard API (95% cache off)',
+      inputPerMillionUsd: 2.0,
+      cachedInputPerMillionUsd: 0.1,
+      outputPerMillionUsd: 10.0,
+      notes: '95% context caching discount',
+    },
+    standardApiTier: {
+      label: '2026 Standard API',
+      inputPerMillionUsd: 2.0,
+      cachedInputPerMillionUsd: 0.1,
+      outputPerMillionUsd: 10.0,
+    },
+    comparisonTier: {
+      label: '2027 Standard API',
+      inputPerMillionUsd: 4.0,
+      cachedInputPerMillionUsd: 0.2,
+      outputPerMillionUsd: 20.0,
+    },
+  },
 };
 
 export interface NumericTokenBag {

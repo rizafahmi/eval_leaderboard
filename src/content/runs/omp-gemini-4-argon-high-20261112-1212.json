@@ -1,0 +1,290 @@
+{
+  "timestamp": "2026-11-12T12:12:20+07:00",
+  "codingHarness": "omp",
+  "model": "gemini-4-argon",
+  "effort": "High",
+  "provider": "Gemini",
+  "durationMinutes": 53,
+  "costUsd": 3.97,
+  "commits": 7,
+  "tests": {
+    "passed": 29,
+    "total": 29,
+    "durationSeconds": 50.5,
+    "details": "Finished in 50.5 seconds (50.5s async, 0.00s sync) — 29 passed (50.6s across S7 & release checks in JSONL; mix format --check-formatted clean; mix credo --strict: 69 checks on 10 files, 117 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 29,
+    "agentSuiteTotal": 29
+  },
+  "interface": {
+    "type": "cli",
+    "command": "omp -p --mode json --model google-antigravity/gemini-4-argon --thinking high --tools read,bash,edit,write --no-extensions --no-skills --no-rules --no-lsp --no-pty --no-title --no-prewalk --auto-approve --no-context-files --config <bench-config.yml> --session-dir ./records @PROMPT.md",
+    "details": "Run window: 12:12:20–13:05:14 WIB (52m 53s / 3,173.3s wall-clock in JSONL; 12:12 start in manual note, 12:12:01 git init) • Session 01a1ce2b-d05b-716e-9d1b-f48357dab2bf (google-antigravity / gemini-4-argon, thinking: high, omp v18.19.0, 132 LLM turns, 0 compactions)"
+  },
+  "tokens": {
+    "input": "440.5k",
+    "cachedInput": "17.72M",
+    "output": "131.7k",
+    "thinking": "61.5k",
+    "total": "18.29M",
+    "cacheHitRate": "97.57%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 440506,
+    "cachedInput": 17720965,
+    "output": 131691,
+    "thinking": 61473,
+    "total": 18293162,
+    "cacheHitRatePct": 97.57
+  },
+  "contextWindow": "294.4k peak (5,682 → 294,420 prompt tokens; 295,157 total; 28.08% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 5682,
+    "avgTokens": 137587,
+    "peakTokens": 294420,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 28.08
+  },
+  "calls": {
+    "llmCalls": 132,
+    "toolCalls": {
+      "total": 246,
+      "done": 213,
+      "error": 33,
+      "breakdown": [
+        {
+          "tool": "bash",
+          "total": 99,
+          "done": 70,
+          "error": 29
+        },
+        {
+          "tool": "edit",
+          "total": 72,
+          "done": 68,
+          "error": 4
+        },
+        {
+          "tool": "read",
+          "total": 60,
+          "done": 60,
+          "error": 0
+        },
+        {
+          "tool": "write",
+          "total": 15,
+          "done": 15,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "07c2441",
+      "relativeTime": "4 minutes",
+      "author": "Riza Fahmi",
+      "message": "S7: handle foreground Ctrl-C with partial summary and exit 130"
+    },
+    {
+      "hash": "bb53a3a",
+      "relativeTime": "8 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and completed-response p50/p95 latencies"
+    },
+    {
+      "hash": "e62f749",
+      "relativeTime": "12 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: report HTTP response counts, transport failures, and exit codes"
+    },
+    {
+      "hash": "4dc76a6",
+      "relativeTime": "16 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: run paced five-second loop with connection reuse"
+    },
+    {
+      "hash": "7d33d0d",
+      "relativeTime": "25 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: send one bounded HTTP/HTTPS GET with streaming and timeouts"
+    },
+    {
+      "hash": "8736a83",
+      "relativeTime": "37 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments before network requests"
+    },
+    {
+      "hash": "7ac4b25",
+      "relativeTime": "42 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch CLI and print help"
+    },
+    {
+      "hash": "47c2ba8",
+      "relativeTime": "55 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "440,506",
+      "rate2026": "$2.00 / 1M",
+      "cost2026": "$0.8810",
+      "rate2027": "$4.00 / 1M",
+      "cost2027": "$1.7620"
+    },
+    {
+      "component": "Cached Input (cacheRead)",
+      "tokens": "17,720,965",
+      "rate2026": "$0.10 / 1M (95% off)",
+      "cost2026": "$1.7721",
+      "rate2027": "$0.20 / 1M (95% off)",
+      "cost2027": "$3.5442"
+    },
+    {
+      "component": "Output (incl. 61,473 reasoning)",
+      "tokens": "131,691",
+      "rate2026": "$10.00 / 1M",
+      "cost2026": "$1.3169",
+      "rate2027": "$20.00 / 1M",
+      "cost2027": "$2.6338"
+    },
+    {
+      "component": "Total",
+      "tokens": "18,293,162",
+      "cost2026": "$3.97 ($3.9700)",
+      "cost2027": "$7.94 ($7.9400)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation & OTP 28 bytecode audit: :erl_signal_handler & :httpc_handler",
+      "stepRange": "1–89",
+      "llmCalls": 22,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 13461,
+      "costUsd": 0.42
+    },
+    {
+      "slice": "S1: CLI help, +Bi escript wrapper & SIGUSR2 PTY probe (7ac4b25)",
+      "stepRange": "90–183",
+      "llmCalls": 20,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4676,
+      "costUsd": 0.36
+    },
+    {
+      "slice": "S2: Argument & URL validation before network requests (8736a83)",
+      "stepRange": "184–272",
+      "llmCalls": 17,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2647,
+      "costUsd": 0.3
+    },
+    {
+      "slice": "S3: Bounded :gen_tcp/:ssl GET, TLS verify & streaming discard (7d33d0d)",
+      "stepRange": "273–398",
+      "llmCalls": 28,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 17939,
+      "costUsd": 0.95
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & connection reuse (4dc76a6)",
+      "stepRange": "399–494",
+      "llmCalls": 20,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 11863,
+      "costUsd": 0.82
+    },
+    {
+      "slice": "S5: HTTP status counts, transport failures & exit codes (e62f749)",
+      "stepRange": "495–535",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1526,
+      "costUsd": 0.26
+    },
+    {
+      "slice": "S6: Elapsed duration & completed-response p50/p95 latencies (bb53a3a)",
+      "stepRange": "536–572",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 3967,
+      "costUsd": 0.31
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (07c2441)",
+      "stepRange": "573–623",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 5181,
+      "costUsd": 0.38
+    },
+    {
+      "slice": "Release verification: HTTP/HTTPS/untrusted-CA & PTY Ctrl-C checks",
+      "stepRange": "624–634",
+      "llmCalls": 4,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 213,
+      "costUsd": 0.17
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 52m 53s Wall-Clock, gemini-4-argon Model ID, 7 Slice Commits & Truncated S7 Checkbox",
+    "OTP 28 BEAM Bytecode Decompilation in Reconnaissance & ~200 ms Boot-Window SIGUSR2 Race in ./cb",
+    "38% Fewer Turns & 33% Lower Cost Than gemini-4-carbon via Parallel Tool Batching (1.86 Tools/Turn)",
+    "Zero Mid-Run Prefix Cache Evictions (97.57% Cache Hit Rate, $33.67 Saved) & 80.8% Inference Wall-Clock"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 52m 53s Wall-Clock, gemini-4-argon Model ID, 7 Slice Commits & Truncated S7 Checkbox",
+      "bullets": [
+        "Filling the Blank Runtime (`TIme 12:12 ()` → `52m 53s` / `53m`): Following the pre-run `init` commit (`47c2ba8` at `12:12:01 WIB`), session `01a1ce2b-d05b-716e-9d1b-f48357dab2bf` opened at `2026-11-12T05:12:20.315Z` (`12:12:20.315 WIB`), dispatched Turn 1 at `12:12:21.141 WIB`, completed Turn 132 at `13:05:13.428 WIB`, and recorded `session_exit` (`kind: \"normal\"`) at `2026-11-12T06:05:13.632Z` (`13:05:13.632 WIB`) for an exact wall-clock duration of `52m 53.3s` (`3,173.32s` / `53m`).",
+        "Model Selector vs. Folder Slug (`gemini-4-argon` vs. `omp_gemini_argon_4-high`): Although the workspace directory and note transposed the slug to `omp_gemini_argon_4-high`, `model_change` (Line 3) and all 132 assistant messages in `records/*.jsonl` confirm `omp v18.19.0` ran `google-antigravity/gemini-4-argon` (`thinkingLevel: \"high\"`).",
+        "7 Organic Agent Commits + 1 Pre-Run `init` Commit: Unlike the earlier `omp gemini-4-carbon` workspace (which lacked `.git` and had the agent run `git init` for 8 commits), this repo started at `47c2ba8` (`init`, with `Preparation` already checked off in `PLAN.md`), followed by 7 organic slice commits: `7ac4b25` (`S1` at `12:25:01`), `8736a83` (`S2` at `12:29:36`), `7d33d0d` (`S3` at `12:41:46`), `4dc76a6` (`S4` at `12:50:43`), `e62f749` (`S5` at `12:54:27`), `bb53a3a` (`S6` at `12:58:42`), and `07c2441` (`S7` at `13:03:10`).",
+        "`PLAN.md` S7 Completion & Test Match: While the manual note paste stopped at `- [x] S6`, both `PLAN.md` (Line 79) and `07c2441` completed `S7`. Post-run `mix test` passed `29/29` all-async tests (`0.00s sync`) in `50.5s` (`50.6s` at Lines 611 & 629 in JSONL), `mix format --check-formatted` exited `0`, and `mix credo --strict` passed `69` checks across `10` files (`117 mods/funs, 0 issues`)."
+      ]
+    },
+    {
+      "title": "OTP 28 BEAM Bytecode Decompilation in Reconnaissance & ~200 ms Boot-Window SIGUSR2 Race in ./cb",
+      "bullets": [
+        "Decompiling `:erl_signal_handler` & `:httpc_handler` Abstract Code Upfront (Turns 13 & 17–19, Lines 60 & 72–78): Before writing a single project file, the agent extracted `:abstract_code` chunks from OTP 28's compiled `.beam` modules via `:beam_lib.chunks/2`. Confirming `:httpc_handler`'s `clobber_and_retry/1` + `retry_pipeline/2` auto-retry queues and `SIGUSR1`'s default crash dump (`erl_crash.dump`), it built a zero-dependency 396-line `CapyBench.HTTPClient` (`:gen_tcp`/`:ssl` with `:verify_peer`, `:public_key.pkix_verify_hostname_match_fun(:https)`, and `log_level: :none`) and a 39-line `CapyBench.SignalHandler` on `:sigusr2`. When an early untimed PTY probe (`Turn 7`, Line 40) crossed 60s and moved to background job `bg_1`, the agent read `proc://bg_1/streams` and terminated it cleanly via `proc://bg_1/kill` (Line 43).",
+        "Subtle ~200 ms Startup Signal Race vs. `gemini-4-carbon`: Once `CapyBench.Runner.run/2` registers `CapyBench.SignalHandler` (`>= 0.25s` after launch), foreground PTY `Ctrl-C` while pacing, during slow/stalled in-flight requests, and against live `https://rizafahmi.com` (`36/36` HTTP `200`s on full 5s run) cleanly prints the partial summary and exits `130`. However, because `./cb` launches `\"$escript_path\" \"$@\" &` without `( trap '' USR2; ... )` and defers `:os.set_signal(:sigusr2, :handle)` until `Runner.run/2`, pressing `Ctrl-C` during the first ~200 ms BEAM escript boot window hits POSIX default `SIGUSR2` termination (`User defined signal 2: 31`, exit `159`, no summary)."
+      ]
+    },
+    {
+      "title": "38% Fewer Turns & 33% Lower Cost Than gemini-4-carbon via Parallel Tool Batching (1.86 Tools/Turn)",
+      "bullets": [
+        "Controlled `omp` Ablation (`gemini-4-argon` vs. `gemini-4-carbon`): Under identical `omp` flags and `$2.00/$0.10/$10.00` token rates, `gemini-4-argon` completed all 7 stages in `132` LLM turns and `52m 53s` (`$3.97`, `18.29M` tokens; `782` production LoC across 5 modules + `1,408` test LoC) vs. `gemini-4-carbon`'s `214` turns and `63m 24s` (`$5.91`, `27.47M` tokens). The primary driver was parallel tool batching: `76` of `132` turns (`57.6%`) emitted multiple tool calls (up to `6` in a single turn, averaging `1.86` tools/turn vs. `1.18` on `gemini-4-carbon`).",
+        "Exact Audit of All 33 Tool Errors (`29 bash` + `4 edit`): Out of `29` non-zero `bash` exits across `99` shell calls, `16` were deliberate red-phase TDD `mix test` runs verifying new tests failed first (`S1` Lines 94, 110; `S2` Lines 188, 198, 208, 218, 233, 245; `S3` Lines 302, 316, 348, 365; `S4` Line 403; `S5` Line 504; `S6` Line 540; `S7` Line 584), `5` were `mix credo --strict` readability/refactoring gates (`Lines 262, 383, 476, 611, 618`), `4` were single-turn compile fixes (`Lines 223, 325, 410, 433`), and `4` were disposable OTP/TLS probes (`Line 133` nested `ProbeHandler` alias + `Lines 281, 287, 290` X.509 SAN probes). Across `72` `edit` and `15` `write` calls, `omp` hashline guardrails rejected `4` invalid patches before touching disk (`3` unseen-line range anchors at `Lines 154, 323, 565` and `1` invented hash tag `#3470` vs. `#BB64` at `Line 616`)."
+      ]
+    },
+    {
+      "title": "Zero Mid-Run Prefix Cache Evictions (97.57% Cache Hit Rate, $33.67 Saved) & 80.8% Inference Wall-Clock",
+      "bullets": [
+        "Unit Economics & $33.67 Cache Savings: Across `132` turns, `gemini-4-argon` processed `18,161,471` prompt tokens (`440,506` uncached at `$2.00/1M` = `$0.8810` + `17,720,965` cached at `$0.10/1M` = `$1.7721`; `97.57%` cache hit rate) and `131,691` output tokens including `61,473` reasoning tokens at `$10.00/1M` (`$1.3169`), totaling `18,293,162` tokens and `$3.9700` (`$3.97`, or `$7.94` under the 2027 `$4.00/$0.20/$20.00` schedule). Without the 95% cache discount, the run would have cost `$37.64` (`89.5%` saved).",
+        "131/131 Post-Initial Cache Hits: Only Turn 1 (`Line 9`, `5,682` tokens) had `cacheRead: 0`; all `131` subsequent turns hit the prefix cache cleanly as prompt context grew monotonically from `5,682` to `294,420` tokens (`295,157` total tokens on Turn 131, `28.08%` of `1,048,576`, `0` compactions)—avoiding the two mid-S3 cache evictions that added `$0.56` to `gemini-4-carbon`.",
+        "80.8% Inference vs. 19.2% Tool Wall-Clock Split: LLM inference consumed `42m 43.3s` (`2,563.3s`, avg `19.42s/turn`, avg TTFT `13.26s`, peaking at `74.7s` and `5,952` reasoning tokens on Turn 88 in S4 and `73.3s` / `4,246` reasoning tokens on Turn 68 in S3), while all `246` tool executions took `10m 10.1s` (`610.1s`), primarily seven ~48–51s all-async full-suite `mix test` runs from S4 through Release Verification."
+      ]
+    }
+  ]
+}
