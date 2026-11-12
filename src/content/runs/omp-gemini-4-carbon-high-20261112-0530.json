@@ -1,0 +1,292 @@
+{
+  "timestamp": "2026-11-12T05:29:55+07:00",
+  "codingHarness": "omp",
+  "model": "gemini-4-carbon",
+  "effort": "High",
+  "provider": "Gemini",
+  "durationMinutes": 63,
+  "costUsd": 5.91,
+  "commits": 8,
+  "tests": {
+    "passed": 39,
+    "total": 39,
+    "durationSeconds": 39.7,
+    "details": "Finished in 39.7 seconds (39.7s async, 0.00s sync) — 39 passed (39.5s and 40.2s in JSONL release checks; mix format --check-formatted clean; mix credo --strict: 69 checks on 20 files, 142 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 39,
+    "agentSuiteTotal": 39
+  },
+  "interface": {
+    "type": "cli",
+    "command": "omp -p --mode json --model google-antigravity/gemini-4-carbon --thinking high --tools read,bash,edit,write --no-extensions --no-skills --no-rules --no-lsp --no-pty --no-title --no-prewalk --auto-approve --no-context-files --config <bench-config.yml> --session-dir ./records @PROMPT.md",
+    "details": "Run window: 05:29:55–06:33:19 WIB (1h 03m 24s / 3,803.6s wall-clock in JSONL; 05:30 / 1h 03m 30s in manual note) • Session 01a1ccbb-6272-75d0-9778-4ec559934c40 (google-antigravity / gemini-4-carbon, thinking: high, omp v18.18.8, 214 LLM turns, 0 compactions)"
+  },
+  "tokens": {
+    "input": "890.0k",
+    "cachedInput": "26.43M",
+    "output": "148.5k",
+    "thinking": "76.3k",
+    "total": "27.47M",
+    "cacheHitRate": "96.74%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 889963,
+    "cachedInput": 26430872,
+    "output": 148463,
+    "thinking": 76349,
+    "total": 27469298,
+    "cacheHitRatePct": 96.74
+  },
+  "contextWindow": "249.6k peak (6,339 → 249,642 prompt tokens; 251,136 total; 23.81% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 6339,
+    "avgTokens": 127667,
+    "peakTokens": 249642,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 23.81
+  },
+  "calls": {
+    "llmCalls": 214,
+    "toolCalls": {
+      "total": 253,
+      "done": 215,
+      "error": 38,
+      "breakdown": [
+        {
+          "tool": "bash",
+          "total": 91,
+          "done": 58,
+          "error": 33
+        },
+        {
+          "tool": "read",
+          "total": 72,
+          "done": 72,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 69,
+          "done": 64,
+          "error": 5
+        },
+        {
+          "tool": "write",
+          "total": 21,
+          "done": 21,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "697039e",
+      "relativeTime": "5 hours",
+      "author": "Riza Fahmi",
+      "message": "S7: handle foreground Ctrl-C with partial summary and exit 130"
+    },
+    {
+      "hash": "703b76e",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed duration and completed-response p50/p95 latency"
+    },
+    {
+      "hash": "fcbb774",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S5: report HTTP status breakdown, transport failures, and exit codes"
+    },
+    {
+      "hash": "5625e6b",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S4: implement paced five-second loop with single-in-flight cancellation"
+    },
+    {
+      "hash": "f56698a",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S3: implement bounded HTTP/HTTPS GET with TLS verification and streaming discard"
+    },
+    {
+      "hash": "afbb412",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments and reject invalid inputs before network IO"
+    },
+    {
+      "hash": "74f830c",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI with help output and Ctrl-C signal bridge"
+    },
+    {
+      "hash": "79f9a85",
+      "relativeTime": "6 hours",
+      "author": "Riza Fahmi",
+      "message": "Initialize repository with V1 contract and plan"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "889,963",
+      "rate2026": "$2.00 / 1M",
+      "cost2026": "$1.7799",
+      "rate2027": "$4.00 / 1M",
+      "cost2027": "$3.5599"
+    },
+    {
+      "component": "Cached Input (cacheRead)",
+      "tokens": "26,430,872",
+      "rate2026": "$0.10 / 1M (95% off)",
+      "cost2026": "$2.6431",
+      "rate2027": "$0.20 / 1M (95% off)",
+      "cost2027": "$5.2862"
+    },
+    {
+      "component": "Output (incl. 76,349 reasoning)",
+      "tokens": "148,463",
+      "rate2026": "$10.00 / 1M",
+      "cost2026": "$1.4846",
+      "rate2027": "$20.00 / 1M",
+      "cost2027": "$2.9693"
+    },
+    {
+      "component": "Total",
+      "tokens": "27,469,298",
+      "cost2026": "$5.91 ($5.9076)",
+      "cost2027": "$11.82 ($11.8153)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation: OTP/:httpc source audit, README contract & git init (79f9a85)",
+      "stepRange": "1–86",
+      "llmCalls": 21,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 23571,
+      "costUsd": 0.48
+    },
+    {
+      "slice": "S1: CLI help, +Bi escript wrapper & SIGUSR2 PTY signal bridge (74f830c)",
+      "stepRange": "87–193",
+      "llmCalls": 29,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 7566,
+      "costUsd": 0.47
+    },
+    {
+      "slice": "S2: Argument & URL validation before network IO (afbb412)",
+      "stepRange": "194–330",
+      "llmCalls": 41,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4620,
+      "costUsd": 0.63
+    },
+    {
+      "slice": "S3: Zero-dep :gen_tcp/:ssl GET client, TLS verify & streaming discard (f56698a)",
+      "stepRange": "331–506",
+      "llmCalls": 52,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 17568,
+      "costUsd": 1.96
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop, 50-start cap & cancellation (5625e6b)",
+      "stepRange": "507–570",
+      "llmCalls": 20,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 8242,
+      "costUsd": 0.63
+    },
+    {
+      "slice": "S5: HTTP status breakdown, transport failures & exit codes (fcbb774)",
+      "stepRange": "571–606",
+      "llmCalls": 12,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2347,
+      "costUsd": 0.35
+    },
+    {
+      "slice": "S6: Elapsed duration & completed-response p50/p95 latency (703b76e)",
+      "stepRange": "607–653",
+      "llmCalls": 15,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 3710,
+      "costUsd": 0.49
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (697039e)",
+      "stepRange": "654–711",
+      "llmCalls": 18,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 7069,
+      "costUsd": 0.65
+    },
+    {
+      "slice": "Release verification: HTTP/HTTPS/untrusted-CA & PTY Ctrl-C checks",
+      "stepRange": "712–730",
+      "llmCalls": 6,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1656,
+      "costUsd": 0.25
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 1h 03m 24s Wall-Clock, gemini-4-carbon Model ID & 8 Agent-Authored Commits (Including git init)",
+    "Upfront OTP 28 Source Audit in Preparation: Rejecting :httpc Retry Queues & Solving Boot-Window Ctrl-C via SIGUSR2",
+    "Strict Red-Green TDD Discipline & Hashline Edit Guardrails (18 Intentional Failing Test Runs Out of 38 Tool Errors)",
+    "Two Mid-S3 Prefix Cache Evictions Added $0.56 & Wall-Clock Was 88.3% LLM Inference vs. 11.7% Async Test Execution"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 1h 03m 24s Wall-Clock, gemini-4-carbon Model ID & 8 Agent-Authored Commits (Including git init)",
+      "bullets": [
+        "Exact Runtime Alignment (`1h 03m 24s` in JSONL vs. `1h 03m 30s` in Note): Session `01a1ccbb-6272-75d0-9778-4ec559934c40` opened at `2026-11-11T22:29:54.930Z` (`05:29:54.930 WIB`), dispatched Turn 1 at `05:29:57.756 WIB`, completed Turn 214 at `06:33:18.390 WIB`, and recorded `session_exit` (`kind: \"normal\"`) at `2026-11-11T23:33:18.559Z` (`06:33:18.559 WIB`) for an exact wall-clock duration of `1h 03m 23.6s` (`3,803.63s` / `63m`), matching the manual note's `05:30 (1h3m30s)` within 6 seconds.",
+        "Model Selector vs. Folder Name (`gemini-4-carbon` vs. `omp_gemini_carbon_4-high`): Although the workspace directory and manual note transposed the slug to `omp_gemini_carbon_4-high`, `model_change` (Line 3) and all 214 assistant turns in `records/*.jsonl` confirm `omp v18.18.8` ran `google-antigravity/gemini-4-carbon` (`Gemini 4 Carbon`) with `thinkingLevel: \"high\"`.",
+        "Why Git Commit Count Is 8 Instead of 7: On Turn 1 (Line 16), `git status` failed with `fatal: not a git repository` (`exit 128`) because the workspace had not been initialized prior to launching `run_omp.fish`. After completing the `Preparation` contract migration into `README.md` and `PLAN.md`, the agent itself ran `git init`, added `/records/` to `.git/info/exclude`, and authored `79f9a85` (`Initialize repository with V1 contract and plan` at `05:37:16 WIB`) followed by the 7 organic slice commits `74f830c` (`S1`) through `697039e` (`S7`).",
+        "Test & Lint Verification Match: `mix test` passed `39/39` all-async tests (`0.00s sync`) in `39.7s` post-run (`40.2s` at Line 702 and `39.5s` at Line 714 in JSONL), `mix format --check-formatted` exited `0`, and `mix credo --strict` reported `0 issues` across 20 files (`142 mods/funs`)."
+      ]
+    },
+    {
+      "title": "Upfront OTP 28 Source Audit in Preparation: Rejecting :httpc Retry Queues & Solving Boot-Window Ctrl-C via SIGUSR2",
+      "bullets": [
+        "Inspecting OTP `inets` Before Writing S3 (Turns 11–15, Lines 54–68): During `Preparation`, the agent read `/nix/store/.../inets-9.6.2.4/src/http_client/httpc_handler.erl` and confirmed `clobber_and_retry/1` and `retry_pipeline/2` automatically re-dispatch requests on dropped keep-alive sockets. Rejecting `:httpc` upfront saved any S3/S4 rework: it built a zero-dependency 540-line `CapyBench.HTTPClient` on `:gen_tcp` and `:ssl` with `:verify_peer`, `:public_key.pkix_verify_hostname_match_fun(:https)`, IP-literal SNI suppression, 16 KiB streaming `Content-Length`/`chunked`/EOF discard, and monitored-worker 2,000 ms deadline cancellation.",
+        "Race-Free `SIGUSR2` + `SIG_IGN` Boot Bridge in `./cb` (Turns 33–46, Lines 126–181): When its first S1 PTY probe using `SIGUSR1` triggered OTP's default `erl_signal_handler` crash dump (`Received SIGUSR1 / Crash dump is being written to: erl_crash.dump`, Line 139), the agent switched `./cb` to forward `SIGUSR2` instead. To close both POSIX shell races, `./cb` launches `( trap '' USR2; exec escript \"$escript_path\" \"$@\" ) <&0 &` (so `SIG_IGN` protects the BEAM VM during early boot until `CapyBench.SignalHandler.install/1` calls `:os.set_signal(:sigusr2, :handle)`), repeats `kill -USR2` every 50 ms until child exit, and loops `wait \"$child\"` whenever `trap_fired=1` so the PTY stays open for the S7 partial summary.",
+        "Proactive `:logger` `stderr` Rebinding Before S3 (Turn 94, Line 339): Before writing TLS tests, the agent probed `:logger.update_handler_config(:default, :config, %{type: :standard_error})`, caught `{:illegal_config_change, :logger_std_h, ...}`, and implemented `route_logger_to_stderr/0` in `CapyBench.CLI.main/1` by removing and re-adding `:default`—preventing OTP TLS handshake alerts from ever polluting `stdout`."
+      ]
+    },
+    {
+      "title": "Strict Red-Green TDD Discipline & Hashline Edit Guardrails (18 Intentional Failing Test Runs Out of 38 Tool Errors)",
+      "bullets": [
+        "18 Deliberate Red-Phase `mix test` Runs: Out of 33 non-zero `bash` exits across 91 shell calls, 18 were intentional red-phase test runs verifying each new acceptance or unit test failed before writing implementation code (`S1` Lines 103 & 119; `S2` Lines 202, 226, 241, 253, 268, 283; `S3` Lines 359, 390, 411; `S4` Lines 512, 538; `S5` Lines 576, 588; `S6` Lines 612, 621; `S7` Line 684). The remaining 15 `bash` errors were Turn 1's missing-`.git` check (`1`), disposable Python PTY/OTP probes (`6`), `--warnings-as-errors` compile checks (`3`), one S3 `mix credo --strict` refactoring catch (`1`, Line 480), and `4` quick test adjustments.",
+        "5 Hashline `edit` Guardrail Catches (92.8% Edit Success): Across 69 `edit` calls and 21 `write` calls, `omp`'s hashline editor rejected 5 edits before touching disk—1 single-line `PUT 13*:` block anchor (Line 130), 1 range-boundary check on `cb` (Line 147), and 3 unseen-line anchor checks on ranged file reads (Lines 454, 465, 630) whose inline line previews allowed immediate retry on the next turn without re-reading.",
+        "28 Parallel Multi-Tool Turns: Unlike strictly sequential harnesses, the agent batched up to 6 parallel tool calls in a single turn (253 tool executions across 214 LLM turns, averaging 1.18 tools/turn), clustering parallel `read` and `edit`/`write` batches at slice transitions."
+      ]
+    },
+    {
+      "title": "Two Mid-S3 Prefix Cache Evictions Added $0.56 & Wall-Clock Was 88.3% LLM Inference vs. 11.7% Async Test Execution",
+      "bullets": [
+        "Unit Economics & $50.22 Prefix Cache Savings: Across 214 turns, `gemini-4-carbon` processed `27,320,835` prompt tokens (`889,963` uncached at `$2.00/1M` = `$1.7799` + `26,430,872` cached at `$0.10/1M` = `$2.6431`; `96.74%` cache hit rate) and `148,463` output tokens including `76,349` reasoning tokens at `$10.00/1M` (`$1.4846`), totaling `27,469,298` tokens and `$5.9076` (`$5.91`, or `$11.82` under the Dec 2026 / 2027 `$4.00/$0.20/$20.00` rate schedule). Without the 95% cache discount, the run would have cost `$56.13` (`89.5%` saved).",
+        "Four Cache-Miss Turns Explained 35.9% of Uncached Input (`$0.61`): While 209 of 213 post-initial turns hit the prefix cache cleanly as context grew from `6,339` to `249,642` prompt tokens (`23.81%` of `1,048,576`, 0 compactions), `cacheRead` dropped to `0` four times—twice during early `Preparation` (Turns 5 & 7: `11,116` and `14,140` tokens) and twice mid-`S3` (Turns 125 & 127, Lines 436 & 442: `144,331` and `149,849` tokens), adding `$0.5589` in S3 alone and making S3 the peak cost slice (`$1.96` / `33.2%` of run cost).",
+        "88.3% Inference vs. 11.7% Tool Wall-Clock Split: LLM generation accounted for `55m 57.0s` (`3,357.0s`, avg `15.69s/turn`, avg TTFT `11.68s`, peaking at `89.6s` and `7,347` reasoning tokens on Turn 21), while all 253 tool calls and harness overhead took just `7m 26.6s` (`446.6s`) because every ExUnit module ran `async: true` (`39.7s async, 0.00s sync`) and intermediate slice iterations targeted individual test files."
+      ]
+    }
+  ]
+}

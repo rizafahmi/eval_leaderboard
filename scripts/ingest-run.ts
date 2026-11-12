@@ -92,6 +92,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
 
     const thinkingTokens = Number(
       usage.reasoning_tokens ??
+        usage.reasoningTokens ??
         usage.thinking_tokens ??
         usage.thinkingTokens ??
         usage.reasoning ??
