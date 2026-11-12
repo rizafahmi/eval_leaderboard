@@ -1,0 +1,303 @@
+{
+  "timestamp": "2026-11-11T07:44:57+07:00",
+  "codingHarness": "OpenCode",
+  "model": "inkling-2-small-free",
+  "effort": "High",
+  "provider": "Thinking Machines",
+  "durationMinutes": 106,
+  "costUsd": 0,
+  "commits": 10,
+  "tests": {
+    "passed": 61,
+    "total": 61,
+    "durationSeconds": 87.1,
+    "details": "Finished in 87.1 seconds (66.8s async, 20.2s sync) — 61 passed (87.4s–87.7s across 3 full-suite runs in JSONL; mix format --check-formatted clean; mix credo: 57 checks on 24 files, 146 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 61,
+    "agentSuiteTotal": 61
+  },
+  "interface": {
+    "type": "cli",
+    "command": "opencode run --standalone --format json --thinking --auto --archived --model opencode/inkling-2-small-free#high < PROMPT.md",
+    "details": "Run window: 07:44:57–09:30:55 (1h 45m 58s / 6,358.2s wall-clock in opencode.log; 07:44–09:31 in manual note; preceded by a 1.4s 07:44:40 provider.no-route error on default openai/gpt-6-sol) • Session ses_e37ef566bffeASe6Rv96Hwq41w (opencode / inkling-2-small-free#high, OpenCode v2.2.7, 390 steps, 0 compactions)"
+  },
+  "tokens": {
+    "input": "403.2k",
+    "cachedInput": "72.73M",
+    "output": "317.6k",
+    "thinking": "207.7k",
+    "total": "73.45M",
+    "cacheHitRate": "99.45%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 403232,
+    "cachedInput": 72730624,
+    "output": 317617,
+    "thinking": 207734,
+    "total": 73451473,
+    "cacheHitRatePct": 99.45
+  },
+  "contextWindow": "378.4k peak (1,929 → 378,440 prompt tokens; 379,666 total; 36.09% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 1929,
+    "avgTokens": 187523,
+    "peakTokens": 378440,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 36.09
+  },
+  "calls": {
+    "llmCalls": 390,
+    "toolCalls": {
+      "total": 389,
+      "done": 382,
+      "error": 7,
+      "breakdown": [
+        {
+          "tool": "shell",
+          "total": 261,
+          "done": 261,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 76,
+          "done": 69,
+          "error": 7
+        },
+        {
+          "tool": "write",
+          "total": 39,
+          "done": 39,
+          "error": 0
+        },
+        {
+          "tool": "read",
+          "total": 13,
+          "done": 13,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "2f73c81",
+      "relativeTime": "41 seconds",
+      "author": "Riza Fahmi",
+      "message": "PLAN: record release verification results and unverified checks"
+    },
+    {
+      "hash": "32c0acd",
+      "relativeTime": "51 seconds",
+      "author": "Riza Fahmi",
+      "message": "Release verification: route logger output to stderr"
+    },
+    {
+      "hash": "a066cbf",
+      "relativeTime": "7 minutes",
+      "author": "Riza Fahmi",
+      "message": "PLAN: mark S7 complete with verification notes"
+    },
+    {
+      "hash": "68b7170",
+      "relativeTime": "7 minutes",
+      "author": "Riza Fahmi",
+      "message": "S7: handle Ctrl-C with partial summary and exit 130"
+    },
+    {
+      "hash": "70a8566",
+      "relativeTime": "36 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and completed-response p50/p95"
+    },
+    {
+      "hash": "bdd3ad7",
+      "relativeTime": "41 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: report outcomes and exit codes"
+    },
+    {
+      "hash": "df4f6ee",
+      "relativeTime": "51 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: paced five-second benchmark loop"
+    },
+    {
+      "hash": "839ca54",
+      "relativeTime": "68 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: one bounded GET with absolute deadline, no redirects or retries"
+    },
+    {
+      "hash": "eba5776",
+      "relativeTime": "82 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate arguments through the CLI"
+    },
+    {
+      "hash": "2a36b6b",
+      "relativeTime": "84 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI with Ctrl-C-safe entry point"
+    },
+    {
+      "hash": "f8bdd93",
+      "relativeTime": "124 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Input (uncached)",
+      "tokens": "403,232",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Cached (cacheRead)",
+      "tokens": "72,730,624",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Output (incl. 207,734 reasoning)",
+      "tokens": "317,617",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Total",
+      "tokens": "73,451,473",
+      "cost2026": "$0.00 (OpenCode limited-time free tier, Nov 2026)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation + S1: CLI help, cb-escript +Bi wrapper & SIGUSR1 handler (2a36b6b)",
+      "stepRange": "1–83",
+      "llmCalls": 83,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 38176,
+      "costUsd": 0
+    },
+    {
+      "slice": "S2: URL & argument validation before networking (eba5776)",
+      "stepRange": "84–97",
+      "llmCalls": 14,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 8085,
+      "costUsd": 0
+    },
+    {
+      "slice": "S3: :httpc streaming audit & zero-dep HTTP/1.1 + TLS client (839ca54)",
+      "stepRange": "98–181",
+      "llmCalls": 84,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 45795,
+      "costUsd": 0
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & keep-alive test server (df4f6ee)",
+      "stepRange": "182–220",
+      "llmCalls": 39,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 21478,
+      "costUsd": 0
+    },
+    {
+      "slice": "S5: HTTP status outcomes, transport failures & exit codes (bdd3ad7)",
+      "stepRange": "221–249",
+      "llmCalls": 29,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 8169,
+      "costUsd": 0
+    },
+    {
+      "slice": "S6: Elapsed time, 50-cap window drain & p50/p95 latency (70a8566)",
+      "stepRange": "250–272",
+      "llmCalls": 23,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 10882,
+      "costUsd": 0
+    },
+    {
+      "slice": "S7: OTP boot signal handler, POSIX wait loop & expect PTY Ctrl-C (68b7170, a066cbf)",
+      "stepRange": "273–364",
+      "llmCalls": 92,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 65872,
+      "costUsd": 0
+    },
+    {
+      "slice": "Release verification: OTP logger stderr swap & final sign-off (32c0acd, 2f73c81)",
+      "stepRange": "365–390",
+      "llmCalls": 26,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 9277,
+      "costUsd": 0
+    }
+  ],
+  "notes": [
+    "Full 7/7 Spec & Holdout Pass (61/61 Tests, 0 Credo Issues) on OpenCode's Free Inkling 2 Small Tier",
+    "Empirically Audited & Rejected Erlang :httpc After Proving 3xx/4xx/5xx Bodies Are Buffered Whole",
+    "Four Real Signal & PTY Fixes in S1/S7: +Bi SIGUSR1 Wrapper, POSIX Trap Wait Loop & OTP Boot Handler",
+    "Caught & Fixed Two Subtle Contract Deviations in S6/Release Verification (4.9s Early Exit & TLS Logger on stdout)",
+    "390 Strict Single-Tool Turns Across a 378.4k Uncompacted Context Window (99.45% Cache Hit Rate)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Full 7/7 Spec & Holdout Pass (61/61 Tests, 0 Credo Issues) on OpenCode's Free Inkling 2 Small Tier",
+      "bullets": [
+        "Complete Outside-In Delivery Across 10 Commits: Over 1h 45m 58s (07:44:57–09:30:55 WIB in `20261111T004457Z.events.jsonl`, preceded by a 1.4s `provider.no-route` failure at 07:44:40 when `run_opencode.fish` was initially invoked on default `openai/gpt-6-sol`), `opencode/inkling-2-small-free#high` (Thinking Machines Lab's 17B-active / 594B-total MoE model) completed all 7 stages (`S1`–`S7`) plus release verification in 10 commits (`2a36b6b` → `2f73c81`).",
+        "All Verification Gates Green: `mix format --check-formatted` passed cleanly, `mix credo` reported 0 issues across 24 files (`146 mods/funs`), and `mix test` passed 61/61 tests in 87.1s (`66.8s async, 20.2s sync`).",
+        "Strict Git Hygiene Recovery (Steps 82–83): When committing S1 at Step 82 (`git add -A`), the agent noticed `records/20261111T004440Z.*` and `records/20261111T004457Z.*` had been staged into `2a36b6b`. On the very next step (Step 83), it ran `git rm -q --cached records/... && git commit --amend --no-edit -q` and used explicit paths or `':!records'` for the remaining 9 commits."
+      ]
+    },
+    {
+      "title": "Empirically Audited & Rejected Erlang :httpc After Proving 3xx/4xx/5xx Bodies Are Buffered Whole",
+      "bullets": [
+        "24-Step Empirical `:httpc` Investigation (Steps 98–121, 5m 20s): At the start of S3, the agent built disposable probes under `/tmp/opencode/httpc_exp` testing `:httpc.request/5` with `stream: :self` and `{:sync, false}` against local servers returning `200`, `302`, `404`, and `503`.",
+        "Pinpointing `IS_STREAMED` in OTP `inets` Source (Steps 114–121): While `200 OK` produced `{:http, {ref, :stream_start, headers}}` chunks, `302`/`404`/`503` returned a single buffered `{{vsn, status, phrase}, headers, body}` tuple. Inspecting `/nix/store/.../inets/src/http_client/httpc_handler.erl` at Steps 118–121 confirmed `:httpc` only streams `200` and `206` responses, violating the V1 contract requirement to stream and discard response bodies for every status.",
+        "Zero-Dependency `CapyBench.Connection` Over `:gen_tcp` & `:ssl`: The agent implemented a custom HTTP/1.1 client with an absolute monotonic deadline (`System.monotonic_time(:millisecond) + timeout_ms`), 64 KiB response-head / 8 KiB line caps, 64 KiB chunked/Content-Length/EOF body discard, keep-alive socket reuse without automatic retries, and `:ssl` peer verification (`verify: :verify_peer`, `:public_key.cacerts_get/0` + `CB_EXTRA_CA_CERT` DER injection, and `:public_key.pkix_verify_hostname_match_fun(:https)`)."
+      ]
+    },
+    {
+      "title": "Four Real Signal & PTY Fixes in S1/S7: +Bi SIGUSR1 Wrapper, POSIX Trap Wait Loop & OTP Boot Handler",
+      "bullets": [
+        "1. Bypassing the BEAM Break Handler (`./cb` + `+Bi`, Steps 7–68): Probing `:os.set_signal(:sigint, :handle)` at Step 9 raised `ArgumentError` because the BEAM reserves `SIGINT` for its break handler, and plain escripts exited 0 on Ctrl-C without running Elixir code. After inspecting OTP's `erl_signal_server.erl` in `/nix/store` (Steps 38–43), the agent configured `escript: [main_module: CapyBench.CLI, name: \"cb-escript\", emu_args: \"+Bi\"]`, added a committed POSIX `./cb` wrapper that traps `INT`/`TERM` and forwards `kill -USR1 \"$child\"`, and installed `CapyBench.SignalHandler` on `:erl_signal_server`.",
+        "2. Moving Signal Registration to `CapyBench.Application.start/2` (Steps 320–337): During S7 `expect` PTY testing, early Ctrl-C signals crashed the BEAM with `\"Received SIGUSR1\\nCrash dump is being written...\"` on stderr because `SIGUSR1` arrived while the VM was still booting before `CapyBench.CLI.main/1` ran. Creating `CapyBench.Application` to install `CapyBench.SignalHandler` at OTP application startup eliminated the boot race.",
+        "3. Fixing POSIX `sh` Interrupted `wait` SIGHUP Race (Steps 338–347): Even with the boot handler installed, `expect` PTY runs produced empty stdout because in POSIX `/bin/sh`, `wait \"$child\"` returns immediately (status > 128) as soon as the `trap` handler fires while `cb-escript` is still finishing its in-flight request; `./cb` then exited, closing the PTY master and SIGHUP-killing the BEAM before `CapyBench.Summary` could print. Looping `while kill -0 \"$child\" 2>/dev/null; do wait \"$child\"; rc=$?; done` kept the PTY open until `cb-escript` settled.",
+        "4. Eliminating Pacing Sleep-Slicing Throughput Regression (Steps 350–357): Slicing all pacing sleeps into 10ms polling chunks caused OS timer overhead that dropped 5s loop throughput from 50 to 38–39 requests (~24% loss), breaking 3 `HTTPTest` assertions. Restricting `sleep_with_interrupt_check/2` slicing to waits `> 500ms` (the post-50-cap window drain) restored 50/50 throughput while keeping Ctrl-C responsive."
+      ]
+    },
+    {
+      "title": "Caught & Fixed Two Subtle Contract Deviations in S6/Release Verification (4.9s Early Exit & TLS Logger on stdout)",
+      "bullets": [
+        "50-Start Cap Early Return at ~4.90s (Steps 262–265): While testing S6 against a local server, the agent noticed that when all 50 requests completed rapidly on a reused keep-alive connection (the 50th request dispatching at ~4.90s), the loop exited immediately at `Elapsed: 4.91 s` instead of waiting for the 5.00s start window to close. It updated `CapyBench.Benchmark` (`acc.started >= @max_starts`) to drain the remaining start window (`max(acc.deadline - current, 0)`) and added a deterministic test asserting `summary.elapsed_ms >= 5_000`.",
+        "OTP `:logger` Writing TLS `:notice` Alerts to `stdout` (Steps 373–382, `32c0acd`): During post-S7 release verification against an untrusted HTTPS server, byte-count checks (`stdout=$(wc -c < t_out.txt)B`) revealed OTP's `:ssl` handshake logged `[notice] TLS :client: ... Unknown CA` to `stdout`, violating the contract that diagnostics go to `stderr`. When `:logger.update_handler_config(:default, :config, %{type: :standard_error})` failed at Step 377 because `:logger_std_h` forbids mutating `:type` in place, the agent removed and re-added `:default` with `type: :standard_error` in `CapyBench.Application.start/2`."
+      ]
+    },
+    {
+      "title": "390 Strict Single-Tool Turns Across a 378.4k Uncompacted Context Window (99.45% Cache Hit Rate)",
+      "bullets": [
+        "Zero Parallel Tool Calls (389 Tool Calls in 390 Steps): Across the entire 106-minute session, `inkling-2-small-free` never batched multiple tool calls in a single turn—executing exactly 1 tool call in Steps 1–389 (`261 shell`, `76 edit`, `39 write`, `13 read`) and finishing with a text summary in Step 390.",
+        "99.45% Prefix Cache Hit Rate with Zero Compactions: Prompt context grew monotonically from `1,929` tokens (Step 1) to `378,440` tokens (Step 390; `36.09%` of its `1,048,576` context window) with zero cache evictions or compactions, serving `72,730,624` cached tokens against `403,232` uncached input tokens and `317,617` output tokens (`207,734` reasoning + `109,883` visible/tool output; `73,451,473` total tokens).",
+        "Three 120s Shell Timeouts & Seven `edit` Mismatches: All 7 tool errors were `edit` `oldString` mismatches (`2` duplicate matches, `5` whitespace/context misses) that were immediately resolved on the next turn. In `shell`, 3 commands hit 120s timeouts: two during S1 signal probing (Step 25 `ctrlc2` `+Bd` loop and Step 31 `find /nix/store -name \"os.xml\"`) and one at Step 218 when running the full `mix test` suite with a 120s timeout after S4 added multiple 5s-loop CLI tests."
+      ]
+    }
+  ]
+}

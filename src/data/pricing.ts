@@ -13,6 +13,8 @@ export interface ModelPricingProfile {
   billedTier: TokenRateTier;
   standardApiTier: TokenRateTier;
   comparisonTier?: TokenRateTier;
+  pricingBadge?: string;
+  pricingStatusNote?: string;
 }
 
 export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
@@ -148,6 +150,8 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       cachedInputPerMillionUsd: 0,
       outputPerMillionUsd: 0,
     },
+    pricingBadge: 'free tier',
+    pricingStatusNote: 'OpenRouter shared :free pool ($0.00 billed at time of run)',
   },
   'muse-spark-1.3-contributor': {
     modelKey: 'muse-spark-1.3-contributor',
@@ -216,6 +220,27 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       cachedInputPerMillionUsd: 0.006,
       outputPerMillionUsd: 1.2,
     },
+  },
+  'inkling-2-small-free': {
+    modelKey: 'inkling-2-small-free',
+    displayName: 'inkling-2-small-free',
+    provider: 'Thinking Machines',
+    billedTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+      notes: 'Free for a limited time on OpenCode (as of Nov 2026); standard API pricing TBD',
+    },
+    standardApiTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+    },
+    pricingBadge: 'free (limited time)',
+    pricingStatusNote:
+      'Billed $0.00 during OpenCode limited-time free access (Nov 2026); permanent API pricing TBD',
   },
 };
 

@@ -56,9 +56,14 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
           : stepCounter;
 
     const msg = parsed.message as Record<string, unknown> | undefined;
+    const part = parsed.part as Record<string, unknown> | undefined;
+    const partTokens = part?.tokens as Record<string, unknown> | undefined;
+    const partCache = partTokens?.cache as Record<string, unknown> | undefined;
+    const partState = part?.state as Record<string, unknown> | undefined;
     const usage =
       (parsed.usage as Record<string, unknown> | undefined) ??
       (msg?.usage as Record<string, unknown> | undefined) ??
+      partTokens ??
       {};
 
     const cachedInputTokens = Number(
@@ -66,6 +71,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         usage.cached_input_tokens ??
         usage.cacheReadTokens ??
         usage.cacheRead ??
+        partCache?.read ??
         parsed.cache_read_tokens ??
         0
     );
@@ -95,13 +101,16 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         0
     );
 
-    const outputTokens = Number(
+    const rawOutput = Number(
       usage.output_tokens ??
         usage.completion_tokens ??
         usage.outputTokens ??
         usage.output ??
         0
     );
+    // OpenCode step_finish reports visible output and reasoning tokens separately
+    const outputTokens =
+      String(parsed.type ?? '') === 'step_finish' ? rawOutput + thinkingTokens : rawOutput;
 
     let role: RawTurnEvent['role'] = 'system';
     const rawType = String(msg?.role ?? parsed.type ?? parsed.role ?? '').toLowerCase();
@@ -109,6 +118,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       rawType.includes('assistant') ||
       rawType.includes('planner_response') ||
       rawType.includes('turn.completed') ||
+      rawType === 'step_finish' ||
       outputTokens > 0 ||
       uncachedInputTokens > 0
     ) {
@@ -124,16 +134,18 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         ? parsed.tool_name
         : typeof parsed.tool === 'string'
           ? parsed.tool
-          : typeof msg?.toolName === 'string'
-            ? msg.toolName
-            : undefined;
+          : typeof part?.tool === 'string'
+            ? part.tool
+            : typeof msg?.toolName === 'string'
+              ? msg.toolName
+              : undefined;
     const toolError = Boolean(
       parsed.isError === true ||
         parsed.is_error === true ||
         msg?.isError === true ||
-        String(parsed.status ?? '').toLowerCase() === 'error'
+        String(parsed.status ?? '').toLowerCase() === 'error' ||
+        String(partState?.status ?? '').toLowerCase() === 'error'
     );
-
     events.push({
       stepIndex,
       timestamp: typeof parsed.timestamp === 'string' ? parsed.timestamp : undefined,

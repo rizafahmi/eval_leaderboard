@@ -105,6 +105,7 @@ const HARNESS_DISPLAY_MAP: Record<string, string> = {
   'codex cli': 'Codex CLI',
   'cursor-agent cli': 'Cursor Agent CLI',
   'muse code': 'Muse Code',
+  opencode: 'OpenCode',
   pi: 'Pi',
   zcode: 'ZCode',
 };
@@ -124,6 +125,8 @@ const PROVIDER_DISPLAY_MAP: Record<string, string> = {
   meta: 'Meta',
   'openai-codex': 'OpenAI Codex',
   openrouter: 'OpenRouter',
+  opencode: 'OpenCode',
+  'thinking machines': 'Thinking Machines',
   'z.ai': 'Z.ai',
 };
 
