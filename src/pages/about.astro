@@ -11,24 +11,13 @@ import {
   formatCost,
   formatDuration,
   formatHarnessName,
-  getPlanStats,
 } from '../utils/format';
+import { analyzeAndRankRuns } from '../utils/telemetry';
 
 const runs = await getCollection('runs', ({ data }) => data.published !== false);
-const sortedRuns = [...runs].sort((a, b) => {
-  const planA = getPlanStats(a.data.planCompletion);
-  const planB = getPlanStats(b.data.planCompletion);
-  if (planB.ratio !== planA.ratio) return planB.ratio - planA.ratio;
-  const testsA =
-    a.data.tests && a.data.tests.total > 0 ? a.data.tests.passed / a.data.tests.total : -1;
-  const testsB =
-    b.data.tests && b.data.tests.total > 0 ? b.data.tests.passed / b.data.tests.total : -1;
-  if (testsB !== testsA) return testsB - testsA;
-  if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
-  return a.data.durationMinutes - b.data.durationMinutes;
-});
+const sortedRuns = analyzeAndRankRuns(runs);
 const topRun = sortedRuns[0];
-const topRunPlan = topRun ? getPlanStats(topRun.data.planCompletion) : null;
+const topRunPlan = topRun?.plan;
 
 const aboutSections = [
   { id: 'stages', label: 'S1–S7 Slices' },

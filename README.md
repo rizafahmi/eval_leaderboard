@@ -127,10 +127,10 @@ Complete all @PLAN.md work in this conversation.
 
 - 🥇 **Default Leaderboard Ranking Order (`src/pages/index.astro`)**:
   1. **Plan Completion Ratio** (`completed / total` stages, descending)
-  2. **Test Pass Ratio** (`tests.passed / tests.total`, descending)
-  3. **Total Cost** (`costUsd`, ascending)
-  4. **Wall-Clock Duration** (`durationMinutes`, ascending)
-- ⚖️ **Interactive Sort Tie-Breakers**: When sorting by any column in the UI, ties break by higher **Plan Completion Ratio**, followed by lower **Total Cost (`costUsd`)**.
+  2. **Wall-Clock Duration** (`durationMinutes`, ascending)
+  3. **Test Pass Ratio** (`tests.passed / tests.total`, descending)
+  4. **Total Cost** (`costUsd`, ascending)
+- ⚖️ **Interactive Sort Tie-Breakers**: Equal selected values use completion, then shortest time, then test pass ratio, then cost. Agent-test sorting first compares passed-test counts when pass ratios tie. Explicit time-only sorting remains available; reset restores completion-first, time-second ordering.
 - 🧠 **Cache Hit Rate Formula**:
   $$\text{Cache Hit Rate} = \frac{\text{CacheRead}}{\text{input} + \text{cacheRead} + \text{cacheWrite}}$$
 - 🔢 **Token & Call Normalization (`src/utils/format.ts`)**:

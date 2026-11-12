@@ -200,7 +200,7 @@ We reject drop shadows, blurs, and gradients. Hierarchy is expressed strictly th
 
 ### Named Rules
 
-- **The Reading Hierarchy Rule:** Prefer whitespace and subtle separators to outer card cages. Default views surface core single-line outcomes (`Outcome`, `Agent tests`, `Time`, `Tokens`, `Cost`); secondary row sub-notes and deep telemetry belong in labelled disclosures.
+- **The Reading Hierarchy Rule:** Prefer whitespace and subtle separators to outer card cages. Default views surface core single-line outcomes (`Outcome`, `Agent tests`, `Time`, `Turns`, `Tokens`, `Cost`); secondary row sub-notes and deep telemetry belong in labelled disclosures.
 
 ---
 
@@ -237,9 +237,9 @@ All reference implementations live in `tokens.css` and `specimen.html`:
 
 ## 7. Benchmark Reading Surfaces
 
-- **Leaderboard:** Model/harness, stage outcome, agent tests, duration, tokens, and billed cost by default (single-line cells). “Show extra row notes” restores secondary sub-notes (`cache hit`, `peak context`, `LLM/tool calls`, `commits`). Outcome buttons reveal stage data and field notes. Search/filter/sort updates are immediate, without row motion. Speed/cost, stage bottlenecks, and controlled comparisons appear as question-led disclosures.
+- **Leaderboard:** Model/harness, stage outcome, agent tests, duration, turns, tokens, and billed cost by default (single-line cells). Default ranking prioritizes most completed stages, then shortest elapsed time; an always-visible note explains this order. Explicit metric sorts remain available. “Show extra row notes” restores secondary sub-notes (`pace`, `tool calls`, `cache hit`, `peak context`, `commits`). Outcome buttons reveal stage data and field notes. Search/filter/sort updates are immediate, without row motion. Speed/cost, stage bottlenecks, and controlled comparisons appear as question-led disclosures.
 - **Comparison:** Three visible result rows; presets, execution/context metrics, stage breakdown, and cache/accounting each have independent disclosures. Selectors and table headers stay synchronized with URL state and swapping.
 - **Run Reports:** Modest metadata, one existing field-note lead, outcome/time/cost. Verification failures remain visible. Plan and notes are readable ledgers; deep technical sections open on demand or through anchors.
 - **Methodology:** Clear seven-stage overview. Stage checks, full plan, CLI contract, prompt, and sample transcript open independently; copy controls and all deep links remain available.
-- **Mobile:** Run rows stack into clean five-metric reading entries. Comparison tables use container queries, hidden desktop headers, and explicit A/B/difference labels. No page-level horizontal overflow.
+- **Mobile:** Run rows stack into clean six-metric reading entries. Comparison tables use container queries, hidden desktop headers, and explicit A/B/difference labels. No page-level horizontal overflow.
 

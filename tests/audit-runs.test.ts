@@ -143,6 +143,49 @@ test('Pareto frontier, stage bottleneck matrix, and ablation presets compute det
   assert.ok(ablations.length >= 4, 'Expected at least 4 controlled ablation presets');
 });
 
+test('Default ranking prioritizes completion, then time, with tests and cost breaking ties', () => {
+  const makeRun = (
+    id: string,
+    completed: number,
+    durationMinutes: number,
+    costUsd: number,
+    passed: number
+  ): { id: string; data: RunRecordData } => ({
+    id,
+    data: {
+      timestamp: '2026-11-12T00:00:00Z',
+      codingHarness: 'Pi',
+      model: 'gpt-6-sol',
+      provider: 'OpenAI',
+      durationMinutes,
+      costUsd,
+      tests: { passed, total: 10 },
+      planCompletion: Object.fromEntries(
+        Array.from({ length: 7 }, (_, index) => [`S${index + 1}`, index < completed])
+      ),
+    },
+  });
+  const ranked = analyzeAndRankRuns([
+    makeRun('fast-four-stages', 4, 0.5, 0, 10),
+    makeRun('slow-complete', 7, 100, 0, 10),
+    makeRun('equal-time-costly', 7, 40, 5, 5),
+    makeRun('fast-six-stages', 6, 1, 0, 10),
+    makeRun('equal-time-cheap', 7, 40, 1, 5),
+    makeRun('fast-complete', 7, 25, 5, 5),
+    makeRun('equal-time-strong-tests', 7, 40, 5, 10),
+  ]);
+
+  assert.deepEqual(ranked.map((run) => run.id), [
+    'fast-complete',
+    'equal-time-strong-tests',
+    'equal-time-cheap',
+    'equal-time-costly',
+    'slow-complete',
+    'fast-six-stages',
+    'fast-four-stages',
+  ]);
+});
+
 test('Raw JSONL transcript ingestion parses turns and builds a valid RunRecordData entry', () => {
   const sampleJsonl = [
     JSON.stringify({

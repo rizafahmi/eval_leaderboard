@@ -34,7 +34,7 @@ Unlike synthetic single-function coding puzzles or frontend boilerplate benchmar
 
 - **Static Architecture**: Built with Astro 7 (`output: 'static'`), TypeScript (`strict`), and zero external UI runtime dependencies.
 - **Schema-Validated Telemetry**: Every run entry conforms to the Zod schema in `src/content.config.ts`. Optional telemetry fields (tokens, cache hit rate, tool calls, cost breakdown, slice breakdown, commit log, notes) degrade gracefully when a harness does not expose them.
-- **Ranking Order**: Runs sort by plan completion ratio (`S1`–`S7`), then test pass ratio, then lowest API cost (`costUsd`), then fastest wall-clock duration (`durationMinutes`).
+- **Ranking Order**: Runs sort by plan completion ratio (`S1`–`S7`, descending), then fastest wall-clock duration (`durationMinutes`, ascending). Test pass ratio and lowest API cost (`costUsd`) break remaining ties. Incomplete runs never outrank complete runs in the default view.
 - **Scope Discipline**: Focused exclusively on the Capy Bench S1–S7 Elixir/OTP CLI specification (`./cb`) and maintainer-verified runs.
 - **Transferability:** Different languages, frameworks, projects, or workflows may produce different results and rankings. Make this boundary visible in the About introduction and link to it from the leaderboard; do not hide it in a disclosure or fine print.
 

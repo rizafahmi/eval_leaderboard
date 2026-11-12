@@ -506,16 +506,18 @@ export function analyzeAndRankRuns(
     r.paretoOrder = idx + 1;
   });
 
-  // Sort runs primarily by holdout spec completion (plan.ratio), then lowest cost, then fastest duration, then agent test ratio
+  // Rank by holdout completion first, then elapsed time; tests and cost break remaining ties.
   return analyzed.sort((a, b) => {
     if (b.plan.ratio !== a.plan.ratio) return b.plan.ratio - a.plan.ratio;
+    if (a.data.durationMinutes !== b.data.durationMinutes) {
+      return a.data.durationMinutes - b.data.durationMinutes;
+    }
     const testsA =
       a.data.tests && a.data.tests.total > 0 ? a.data.tests.passed / a.data.tests.total : -1;
     const testsB =
       b.data.tests && b.data.tests.total > 0 ? b.data.tests.passed / b.data.tests.total : -1;
     if (testsB !== testsA) return testsB - testsA;
-    if (a.data.costUsd !== b.data.costUsd) return a.data.costUsd - b.data.costUsd;
-    return a.data.durationMinutes - b.data.durationMinutes;
+    return a.data.costUsd - b.data.costUsd;
   });
 }
 

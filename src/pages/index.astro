@@ -28,11 +28,14 @@ const ablationPresets = discoverAblationPresets(analyzedRuns).slice(0, 3);
 const enrichedRuns = analyzedRuns.map((run) => {
   const d = run.data;
   const compactContext = formatCompactContextWindow(d.contextWindow);
-  const hasCalls =
-    d.calls && (d.calls.llmCalls !== undefined || d.calls.toolCalls?.total !== undefined);
-  const totalCalls = hasCalls
-    ? (d.calls?.llmCalls ?? 0) + (d.calls?.toolCalls?.total ?? 0)
-    : undefined;
+  const toolsPerTurn =
+    run.llmCalls > 0 && run.toolTotalCalls > 0
+      ? (run.toolTotalCalls / run.llmCalls).toFixed(2)
+      : null;
+  const secPerTurn =
+    run.llmCalls > 0 && d.durationMinutes > 0
+      ? ((d.durationMinutes * 60) / run.llmCalls).toFixed(1)
+      : null;
   const testsRatio =
     d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
   const testsPassed = d.tests?.passed ?? -1;
@@ -48,7 +51,8 @@ const enrichedRuns = analyzedRuns.map((run) => {
     outputTokens: run.tokens.output,
     totalTokens: run.tokens.total,
     compactContext,
-    totalCalls,
+    toolsPerTurn,
+    secPerTurn,
     testsRatio,
     testsPassed,
     timeMs,
@@ -203,8 +207,9 @@ if (paretoFrontierRuns.length > 0) {
             <label class="option-field">
               Sort by
               <select id="sort-select" name="sort" class="select">
-                <option value="plan" selected>Stage completion</option>
+                <option value="plan" selected>Completion, then time</option>
                 <option value="duration">Time elapsed</option>
+                <option value="turns">Turns (LLM calls)</option>
                 <option value="cost">Cost in selected lens</option>
                 <option value="tokens">Total tokens</option>
                 <option value="tests">Agent tests passed</option>
@@ -227,7 +232,7 @@ if (paretoFrontierRuns.length > 0) {
             </label>
             <label class="option-check">
               <input id="show-telemetry" name="telemetry" type="checkbox" />
-              Show extra row notes (cache, calls, commits)
+              Show extra row notes (pace, tools, cache, commits)
             </label>
             <div class="option-scenarios" role="group" aria-label="Explore a subset of runs">
               <span>Look for</span>
@@ -239,13 +244,17 @@ if (paretoFrontierRuns.length > 0) {
         </details>
         <div id="leaderboard-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       </search>
+      <p id="default-sort-note" class="controls-result-count">
+        Default: most stages completed, then shortest time.
+      </p>
 
       <div class="reading-table-ledger">
       <div class="table-wrapper" tabindex="0" role="region" aria-labelledby="leaderboard-caption">
         <table class="app-table leaderboard-table readable-run-table" id="leaderboard-table">
           <caption id="leaderboard-caption" class="visually-hidden">
-            Capy Bench evaluation runs ranked by holdout spec completion, agent test suite, duration,
-            exact token usage, and API cost
+            Capy Bench evaluation runs showing stage completion, agent tests, elapsed time,
+            LLM turns, exact token usage, and API cost. Default order: most stages completed,
+            then shortest elapsed time.
           </caption>
           <thead>
             <tr>
@@ -255,13 +264,14 @@ if (paretoFrontierRuns.length > 0) {
                 <button
                   type="button"
                   class="sort-header-btn"
-                  title="Sort by S1–S7 external holdout spec completion ratio"
+                  aria-describedby="default-sort-note"
+                  title="Sort by S1–S7 holdout completion, then shortest elapsed time"
                 >
                   <span>Outcome</span>
                   <span class="sort-indicator" aria-hidden="true">↓</span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="tests" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="tests">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -271,7 +281,7 @@ if (paretoFrontierRuns.length > 0) {
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="duration" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="duration">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -281,7 +291,17 @@ if (paretoFrontierRuns.length > 0) {
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="tokens" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="turns">
+                <button
+                  type="button"
+                  class="sort-header-btn"
+                  title="Sort by total agentic LLM turns"
+                >
+                  <span>Turns</span>
+                  <span class="sort-indicator" aria-hidden="true"></span>
+                </button>
+              </th>
+              <th scope="col" class="sortable" data-sort-col="tokens">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -291,7 +311,7 @@ if (paretoFrontierRuns.length > 0) {
                   <span class="sort-indicator" aria-hidden="true"></span>
                 </button>
               </th>
-              <th scope="col" class="sortable" data-sort-col="cost" aria-sort="none">
+              <th scope="col" class="sortable" data-sort-col="cost">
                 <button
                   type="button"
                   class="sort-header-btn"
@@ -353,6 +373,8 @@ if (paretoFrontierRuns.length > 0) {
                       data-cost-uncached={uncachedCost}
                       data-cache-savings={cacheSavings}
                       data-pricing-badge={telemetry.costMetrics.profile?.pricingBadge ?? 'free tier'}
+                      data-turns={telemetry.llmCalls}
+                      data-turns-str={telemetry.llmCalls > 0 ? String(telemetry.llmCalls) : '—'}
                       data-tokens={run.totalTokens}
                       data-tokens-str={data.tokens?.total ?? '—'}
                       data-tests={run.testsRatio}
@@ -453,12 +475,44 @@ if (paretoFrontierRuns.length > 0) {
                       <td data-cell="Time">
                         <div class="cell-stack">
                           <div class="metric-primary">{formatDuration(data.durationMinutes)}</div>
-                          {run.totalCalls !== undefined && (
-                            <div class="metric-sub extra-detail">
-                              {telemetry.llmCalls} LLM · {telemetry.toolTotalCalls} tool
+                          {run.secPerTurn && (
+                            <div
+                              class="metric-sub extra-detail"
+                              title={`Average wall-clock pace across ${telemetry.llmCalls} LLM turns`}
+                            >
+                              {run.secPerTurn}s/turn
                             </div>
                           )}
                         </div>
+                      </td>
+
+                      <td data-cell="Turns">
+                        {telemetry.llmCalls > 0 ? (
+                          <div class="cell-stack">
+                            <div
+                              class="metric-primary"
+                              title={`${telemetry.llmCalls} LLM turns · ${telemetry.toolTotalCalls} tool calls`}
+                            >
+                              {telemetry.llmCalls}
+                            </div>
+                            {telemetry.toolTotalCalls > 0 && (
+                              <div
+                                class="metric-sub extra-detail"
+                                title={`${telemetry.toolTotalCalls} tool calls across ${telemetry.llmCalls} LLM turns (${run.toolsPerTurn} tool calls per turn)`}
+                              >
+                                {telemetry.toolTotalCalls} tools
+                                {run.toolsPerTurn && (
+                                  <>
+                                    <span aria-hidden="true"> · </span>
+                                    <span>{run.toolsPerTurn}×</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span class="metric-empty">—</span>
+                        )}
                       </td>
 
                       <td data-cell="Tokens">
@@ -513,7 +567,7 @@ if (paretoFrontierRuns.length > 0) {
                       data-drawer-for={run.id}
                       hidden
                     >
-                      <td colspan="7" class="forensic-drawer-cell">
+                      <td colspan="8" class="forensic-drawer-cell">
                         <div class="forensic-drawer-inner">
                           <div class="forensic-stages-col">
                             <div class="forensic-col-head">
@@ -610,7 +664,7 @@ if (paretoFrontierRuns.length > 0) {
               })
             }
             <tr id="empty-state-row" hidden>
-              <td colspan="7" class="empty-state-cell">
+              <td colspan="8" class="empty-state-cell">
                 <div class="empty-state-wrap">
                   <p id="empty-state-msg" class="empty-state-copy">
                     No benchmark runs match the current filters.
@@ -1845,6 +1899,7 @@ if (paretoFrontierRuns.length > 0) {
     plan: 'desc',
     tests: 'desc',
     duration: 'asc',
+    turns: 'asc',
     cost: 'asc',
     tokens: 'asc',
     timestamp: 'desc',
@@ -2060,9 +2115,11 @@ if (paretoFrontierRuns.length > 0) {
       const valB = parseFloat(b.dataset[sortBy] ?? '0');
 
       const missingA =
-        (sortBy === 'tokens' && valA <= 0) || (sortBy === 'tests' && valA < 0);
+        ((sortBy === 'tokens' || sortBy === 'turns') && valA <= 0) ||
+        (sortBy === 'tests' && valA < 0);
       const missingB =
-        (sortBy === 'tokens' && valB <= 0) || (sortBy === 'tests' && valB < 0);
+        ((sortBy === 'tokens' || sortBy === 'turns') && valB <= 0) ||
+        (sortBy === 'tests' && valB < 0);
       if (missingA !== missingB) {
         return missingA ? 1 : -1;
       }
@@ -2080,16 +2137,15 @@ if (paretoFrontierRuns.length > 0) {
       const planDiff =
         parseFloat(b.dataset.plan ?? '0') - parseFloat(a.dataset.plan ?? '0');
       if (planDiff !== 0) return planDiff;
+      const durationDiff =
+        parseFloat(a.dataset.duration ?? '0') - parseFloat(b.dataset.duration ?? '0');
+      if (durationDiff !== 0) return durationDiff;
 
       const testsDiff =
         parseFloat(b.dataset.tests ?? '0') - parseFloat(a.dataset.tests ?? '0');
       if (testsDiff !== 0) return testsDiff;
 
-      const costDiff =
-        parseFloat(a.dataset.cost ?? '0') - parseFloat(b.dataset.cost ?? '0');
-      if (costDiff !== 0) return costDiff;
-
-      return parseFloat(a.dataset.duration ?? '0') - parseFloat(b.dataset.duration ?? '0');
+      return parseFloat(a.dataset.cost ?? '0') - parseFloat(b.dataset.cost ?? '0');
     });
 
     const supportsMoveBefore = 'moveBefore' in Element.prototype;
@@ -2183,7 +2239,7 @@ if (paretoFrontierRuns.length > 0) {
         if (indicator) indicator.textContent = sortDir === 'asc' ? '↑' : '↓';
       } else {
         th.classList.remove('active-sort');
-        th.setAttribute('aria-sort', 'none');
+        th.removeAttribute('aria-sort');
         if (indicator) indicator.textContent = '';
       }
     });
@@ -2290,6 +2346,7 @@ if (paretoFrontierRuns.length > 0) {
     if (qcDeltas) {
       qcDeltas.innerHTML = `
         <span>Spec: <strong>${rowA.dataset.planStr}</strong> vs <strong>${rowB.dataset.planStr}</strong></span>
+        <span>Turns: <strong>${rowA.dataset.turnsStr}</strong> vs <strong>${rowB.dataset.turnsStr}</strong></span>
         <span>Cost: <strong>${rowA.dataset.costStr}</strong> vs <strong>${rowB.dataset.costStr}</strong></span>
         <span>Time: <strong>${rowA.dataset.durationStr}</strong> vs <strong>${rowB.dataset.durationStr}</strong></span>
       `;
