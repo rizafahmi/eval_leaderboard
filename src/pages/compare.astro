@@ -55,8 +55,12 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
   isPareto: r.isParetoFrontier,
   paretoOrder: r.paretoOrder,
   tokens: r.tokens,
+  minContextTokens: r.context.minTokens,
   peakContextTokens: r.context.peakTokens,
   contextWindowStr: r.data.contextWindow ?? '—',
+  billedRateLabel: r.costMetrics.profile?.billedTier.label ?? 'Standard API',
+  agentClaimedPassed: r.data.verification?.agentClaimedPassed ?? r.plan.completed,
+  unverifiedSlices: r.data.verification?.unverifiedSlices ?? [],
   llmCalls: r.llmCalls,
   toolTotalCalls: r.toolTotalCalls,
   toolErrorCalls: r.toolErrorCalls,
@@ -1121,12 +1125,29 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
     const callLead: 'a' | 'b' | 'par' =
       a.llmCalls < b.llmCalls ? 'a' : a.llmCalls > b.llmCalls ? 'b' : 'par';
 
+    const initPromptLead: 'a' | 'b' | 'par' =
+      a.minContextTokens && b.minContextTokens
+        ? a.minContextTokens < b.minContextTokens
+          ? 'a'
+          : a.minContextTokens > b.minContextTokens
+            ? 'b'
+            : 'par'
+        : 'par';
+
+    const formatHoldoutSpecCell = (r: (typeof runs)[number]) => {
+      const base = `${r.planCompleted}/${r.planTotal} (${Math.round(r.planRatio * 100)}%)`;
+      if (r.unverifiedSlices && r.unverifiedSlices.length > 0) {
+        return `${base} <span class="cell-inline-muted">· PLAN.md claimed ${r.agentClaimedPassed}/${r.planTotal} (${r.unverifiedSlices.join(', ')} unverified)</span>`;
+      }
+      return base;
+    };
+
     // 1. Primary Visible Metrics (Outcome, Duration, Billed Cost)
     const primaryCoreRows = [
       {
         label: 'Holdout Spec (S1–S7)',
-        valA: `${a.planCompleted}/${a.planTotal} (${Math.round(a.planRatio * 100)}%)`,
-        valB: `${b.planCompleted}/${b.planTotal} (${Math.round(b.planRatio * 100)}%)`,
+        valA: formatHoldoutSpecCell(a),
+        valB: formatHoldoutSpecCell(b),
         lead: specLead,
         deltaHtml:
           specLead === 'par'
@@ -1174,6 +1195,24 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
             : tokLead === 'a'
               ? fmtDeltaCell('a', `-${fmtCompact(b.tokens.total - a.tokens.total)} (-${tokPctA}%)`)
               : fmtDeltaCell('b', `-${fmtCompact(a.tokens.total - b.tokens.total)} (-${tokPctB}%)`),
+      },
+      {
+        label: 'Initial System Prompt & Harness',
+        valA: a.minContextTokens
+          ? `${fmtCompact(a.minContextTokens)} <span class="cell-inline-muted">· ${a.harness}</span>`
+          : `— <span class="cell-inline-muted">· ${a.harness}</span>`,
+        valB: b.minContextTokens
+          ? `${fmtCompact(b.minContextTokens)} <span class="cell-inline-muted">· ${b.harness}</span>`
+          : `— <span class="cell-inline-muted">· ${b.harness}</span>`,
+        lead: initPromptLead,
+        deltaHtml:
+          a.minContextTokens && b.minContextTokens
+            ? initPromptLead === 'par'
+              ? fmtDeltaCell('par', '0 tok')
+              : initPromptLead === 'a'
+                ? fmtDeltaCell('a', `-${fmtCompact(b.minContextTokens - a.minContextTokens)} lighter start`)
+                : fmtDeltaCell('b', `-${fmtCompact(a.minContextTokens - b.minContextTokens)} lighter start`)
+            : fmtDeltaCell('info', '—'),
       },
       {
         label: 'Peak Context Window',
@@ -1388,6 +1427,15 @@ const serializedRuns = analyzedRuns.map((r, idx) => ({
             ? 'a'
             : 'b';
       const deepRows = [
+        {
+          label: 'Billed Rate Tier',
+          valA: a.billedRateLabel,
+          valB: b.billedRateLabel,
+          delta: fmtDeltaCell(
+            'info',
+            a.billedRateLabel === b.billedRateLabel ? 'Same rate tier' : 'Different rate tiers'
+          ),
+        },
         {
           label: 'Standard API Equivalent Cost',
           valA: usd.format(a.standardApiCostUsd),
