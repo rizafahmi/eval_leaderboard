@@ -32,6 +32,7 @@ export interface RunRecordData {
     details?: string;
   };
   planCompletion: Record<string, boolean>;
+  agentPlanCompletion?: Record<string, boolean>;
   interface?: {
     type?: 'cli' | 'desktop' | 'web';
     command?: string;
@@ -65,6 +66,9 @@ export interface RunRecordData {
     holdoutPassed: number;
     holdoutTotal: number;
     holdoutVerdict: 'full-pass' | 'partial-pass' | 'zero-pass';
+    agentClaimedPassed?: number;
+    agentClaimedTotal?: number;
+    unverifiedSlices?: string[];
     agentSuitePassed?: number;
     agentSuiteTotal?: number;
   };
@@ -603,9 +607,12 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
   const byId = new Map(runs.map((r) => [r.id, r]));
   const presets: AblationPreset[] = [];
 
-  // 1. Harness Ablation: Pi vs Codex CLI on gpt-6-sol (High)
+  // 1. Harness Ablation: Pi vs Codex CLI on gpt-6-sol / gpt-6.1-sol (High)
   const piGpt6 = runs.find(
     (r) => r.displayHarness === 'Pi' && r.data.model === 'gpt-6-sol'
+  );
+  const piGpt61 = runs.find(
+    (r) => r.displayHarness === 'Pi' && r.data.model === 'gpt-6.1-sol'
   );
   const codexGpt6 = runs.find(
     (r) => r.displayHarness === 'Codex CLI' && r.data.model === 'gpt-6-sol'
@@ -627,6 +634,23 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       runBId: codexGpt6.id,
       findingHeadline: `Pi used ${tokenReductionPct}% fewer tokens and ${costReductionPct}% lower cost ($${piGpt6.data.costUsd.toFixed(2)} vs $${codexGpt6.data.costUsd.toFixed(2)}) by capping peak context at 74.4k vs 135k.`,
     });
+  } else if (piGpt61 && codexGpt6) {
+    const tokenReductionPct = Math.round(
+      ((codexGpt6.tokens.total - piGpt61.tokens.total) / codexGpt6.tokens.total) * 100
+    );
+    const costReductionPct = Math.round(
+      ((codexGpt6.data.costUsd - piGpt61.data.costUsd) / codexGpt6.data.costUsd) * 100
+    );
+    presets.push({
+      id: 'harness-gpt6-sol',
+      category: 'harness',
+      badge: 'HARNESS & GENERATION',
+      title: 'Pi (gpt-6.1-sol) vs. Codex CLI (gpt-6-sol · High)',
+      subtitle: 'Minimal 4-tool Pi harness + 95% cache discount vs. Codex CLI',
+      runAId: piGpt61.id,
+      runBId: codexGpt6.id,
+      findingHeadline: `Pi / gpt-6.1-sol used ${tokenReductionPct}% fewer tokens (${piGpt61.data.tokens?.total ?? '6.50M'} vs ${codexGpt6.data.tokens?.total ?? '11.23M'}) and ${costReductionPct}% lower cost ($${piGpt61.data.costUsd.toFixed(2)} vs $${codexGpt6.data.costUsd.toFixed(2)}), while Codex CLI finished 15m faster (${codexGpt6.data.durationMinutes}m vs ${piGpt61.data.durationMinutes}m).`,
+    });
   }
 
   // 1b. Harness Ablation: Pi vs Muse Code on muse-spark-1.3-contributor (High)
@@ -637,6 +661,14 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     (r) => r.displayHarness === 'Muse Code' && r.data.model === 'muse-spark-1.3-contributor'
   );
   if (piMuseSpark && museCodeMuseSpark) {
+    const piTests = piMuseSpark.data.tests
+      ? `${piMuseSpark.data.tests.passed}/${piMuseSpark.data.tests.total} tests`
+      : 'all tests';
+    const piTok = piMuseSpark.data.tokens?.total ?? '37.69M';
+    const museTok = museCodeMuseSpark.data.tokens?.total ?? '74.07M';
+    const museFailedTests = museCodeMuseSpark.data.tests
+      ? museCodeMuseSpark.data.tests.total - museCodeMuseSpark.data.tests.passed
+      : 16;
     presets.push({
       id: 'harness-muse-spark-1-3-contrib',
       category: 'harness',
@@ -645,7 +677,7 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Unsandboxed host execution (3.4k initial prompt) vs. Seatbelt sandbox (29.2k initial prompt + 384k compaction)',
       runAId: piMuseSpark.id,
       runBId: museCodeMuseSpark.id,
-      findingHeadline: `Pi achieved 7/7 (85/85 tests) in 56m for $0.14 (29.74M tokens), whereas Muse Code's Seatbelt socket/PTY sandbox blinded the agent to 16 test failures and S7 (6/7, 77m, $0.25, 74.07M tokens).`,
+      findingHeadline: `Pi achieved ${piMuseSpark.plan.completed}/${piMuseSpark.plan.total} (${piTests}) in ${piMuseSpark.data.durationMinutes}m for $${piMuseSpark.data.costUsd.toFixed(2)} (${piTok} tokens), whereas Muse Code's Seatbelt socket/PTY sandbox blinded the agent to ${museFailedTests} test failures and S7 (${museCodeMuseSpark.plan.completed}/${museCodeMuseSpark.plan.total}, ${museCodeMuseSpark.data.durationMinutes}m, $${museCodeMuseSpark.data.costUsd.toFixed(2)}, ${museTok} tokens).`,
     });
   }
 
@@ -668,7 +700,7 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Higher reasoning effort reduced total turns and saved both time & money',
       runAId: flashHigh.id,
       runBId: flashLow.id,
-      findingHeadline: `High effort passed 7/7 in 190 calls ($0.87, 71m), whereas Low effort spiraled in S3 (156 calls) to 344 total calls ($1.10, 111m) and missed S5.`,
+      findingHeadline: `High effort passed ${flashHigh.plan.completed}/${flashHigh.plan.total} in ${flashHigh.llmCalls} calls ($${flashHigh.data.costUsd.toFixed(2)}, ${flashHigh.data.durationMinutes}m), whereas Low effort spiraled in S3 (156 calls) to ${flashLow.llmCalls} total calls ($${flashLow.data.costUsd.toFixed(2)}, ${flashLow.data.durationMinutes}m) and missed S5.`,
     });
   }
   if (flashHigh && flashMax) {
@@ -680,24 +712,21 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Testing diminishing returns at Max reasoning budget',
       runAId: flashHigh.id,
       runBId: flashMax.id,
-      findingHeadline: `Max effort nearly doubled token volume (51.95M vs 25.80M) and cost ($1.70 vs $0.87) while introducing an S5 spec miss.`,
+      findingHeadline: `Max effort nearly doubled token volume (${flashMax.data.tokens?.total ?? '51.95M'} vs ${flashHigh.data.tokens?.total ?? '25.80M'}) and cost ($${flashMax.data.costUsd.toFixed(2)} vs $${flashHigh.data.costUsd.toFixed(2)}) while introducing an S5 spec miss.`,
     });
   }
 
   // 3. Model Generation: Pi gpt-6.1-sol vs gpt-6-sol
-  const piGpt61 = runs.find(
-    (r) => r.displayHarness === 'Pi' && r.data.model === 'gpt-6.1-sol'
-  );
   if (piGpt61 && piGpt6) {
     presets.push({
       id: 'model-gpt61-vs-gpt6',
       category: 'model',
       badge: 'MODEL GENERATION',
       title: 'Pi: gpt-6.1-sol vs. gpt-6-sol (High)',
-      subtitle: '95% vs 90% prompt cache discount + deeper 23-test suite',
+      subtitle: '95% vs 90% prompt cache discount + deeper 21-test suite',
       runAId: piGpt61.id,
       runBId: piGpt6.id,
-      findingHeadline: `gpt-6.1-sol cut 7/7 run cost by 20% ($1.37 vs $1.72) despite +14% more tokens thanks to 95% cache read discount ($0.10/1M vs $0.20/1M).`,
+      findingHeadline: `gpt-6.1-sol cut 7/7 run cost by 20% ($${piGpt61.data.costUsd.toFixed(2)} vs $${piGpt6.data.costUsd.toFixed(2)}) despite +15% more tokens (${piGpt61.data.tokens?.total ?? '6.50M'} vs ${piGpt6.data.tokens?.total ?? '5.67M'}) thanks to 95% cache read discount ($0.10/1M vs $0.20/1M).`,
     });
   }
 
@@ -717,7 +746,7 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Same harness, flags & $2/$0.10/$10 rate schedule — parallel tool batching & cache stability',
       runAId: ompArgon.id,
       runBId: ompCarbon.id,
-      findingHeadline: `gemini-4-argon cut 7/7 turns by 38% (132 vs 214), tokens by 33% (18.29M vs 27.47M), time by 10m (53m vs 63m), and cost by 33% ($3.97 vs $5.91).`,
+      findingHeadline: `gemini-4-argon cut 7/7 turns by 38% (${ompArgon.llmCalls} vs ${ompCarbon.llmCalls}), tokens by 33% (${ompArgon.data.tokens?.total ?? '18.29M'} vs ${ompCarbon.data.tokens?.total ?? '27.47M'}), time by 10m (${ompArgon.data.durationMinutes}m vs ${ompCarbon.data.durationMinutes}m), and cost by 33% ($${ompArgon.data.costUsd.toFixed(2)} vs $${ompCarbon.data.costUsd.toFixed(2)}).`,
     });
   }
 
@@ -737,7 +766,7 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Same OpenCode v2.2.7 harness & 4-tool sandbox — Mint + stty -isig vs. raw :gen_tcp + SIGUSR1',
       runAId: ocHy4.id,
       runBId: ocInkling.id,
-      findingHeadline: `hy4-flash-free completed 7/7 58% faster (45m vs 106m) in 42% fewer steps (227 vs 390) and 73% fewer tokens (19.95M vs 73.45M), both at $0.00 during OpenCode's limited-time free access.`,
+      findingHeadline: `hy4-flash-free completed 7/7 58% faster (${ocHy4.data.durationMinutes}m vs ${ocInkling.data.durationMinutes}m) in 42% fewer steps (${ocHy4.llmCalls} vs ${ocInkling.llmCalls}) and 73% fewer tokens (${ocHy4.data.tokens?.total ?? '19.95M'} vs ${ocInkling.data.tokens?.total ?? '73.45M'}), both at $0.00 during OpenCode's limited-time free access.`,
     });
   }
 
@@ -754,24 +783,45 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       subtitle: 'Comparing Flash vs Flagship tier on identical 7/7 spec completion',
       runAId: flashHigh.id,
       runBId: glmFlagshipHigh.id,
-      findingHeadline: `Both achieved 7/7 spec completion, but glm-5.3-flash finished 25m faster at 14.8x lower cost ($0.87 vs $12.90).`,
+      findingHeadline: `Both achieved 7/7 spec completion, but glm-5.3-flash finished ${glmFlagshipHigh.data.durationMinutes - flashHigh.data.durationMinutes}m faster at 14.8x lower cost ($${flashHigh.data.costUsd.toFixed(2)} vs $${glmFlagshipHigh.data.costUsd.toFixed(2)}).`,
     });
   }
 
-  // 5. Pareto Frontier Leaders: Muse Spark 1.3 Contributor vs Codex CLI gpt-6-sol
+  // 5. Pareto Frontier Leaders: Lowest Billed Cost ($0.00 Free Tier / $0.14 Lowest Paid) vs. Fastest 7/7 Leader (25m)
   const museSpark = byId.get('pi-muse-spark-1-3-contrib-high-20261026-0535');
-  if (museSpark && codexGpt6) {
+  const lowestCostFrontier = runs
+    .filter((r) => r.isParetoFrontier && r.plan.ratio === 1)
+    .sort((a, b) => a.data.costUsd - b.data.costUsd || a.data.durationMinutes - b.data.durationMinutes)[0];
+  const fastestFrontier = runs
+    .filter((r) => r.isParetoFrontier && r.plan.ratio === 1)
+    .sort((a, b) => a.data.durationMinutes - b.data.durationMinutes || a.data.costUsd - b.data.costUsd)[0];
+
+  const costExtreme = lowestCostFrontier ?? museSpark;
+  const speedExtreme = fastestFrontier ?? codexGpt6;
+  if (costExtreme && speedExtreme && costExtreme.id !== speedExtreme.id) {
+    const costLabel =
+      costExtreme.data.costUsd === 0
+        ? `$0.00 free tier${museSpark ? ` · $${museSpark.data.costUsd.toFixed(2)} lowest paid` : ''}`
+        : `$${costExtreme.data.costUsd.toFixed(2)}`;
+    const costTests = costExtreme.data.tests
+      ? `${costExtreme.data.tests.passed}/${costExtreme.data.tests.total} tests`
+      : 'all tests';
+    const paidClause =
+      costExtreme.data.costUsd === 0 && museSpark
+        ? ` (and Pi / muse-spark-1.3-contributor leads paid runs at $${museSpark.data.costUsd.toFixed(2)} in ${museSpark.data.durationMinutes}m, ${museSpark.data.tests?.passed ?? 57}/${museSpark.data.tests?.total ?? 57} tests)`
+        : '';
     presets.push({
       id: 'pareto-cost-vs-speed',
       category: 'model',
       badge: 'PARETO EXTREMES',
-      title: 'Lowest Cost Leader ($0.14) vs. Fastest 7/7 Leader (25m)',
-      subtitle: 'Pi / muse-spark-1.3-contributor vs. Codex CLI / gpt-6-sol',
-      runAId: museSpark.id,
-      runBId: codexGpt6.id,
-      findingHeadline: `Muse Spark achieved 7/7 for $0.14 (56m, 85 tests), while Codex CLI / gpt-6-sol finished 2.2x faster (25m) at $3.14.`,
+      title: `Lowest Cost Leader (${costLabel}) vs. Fastest 7/7 Leader (${speedExtreme.data.durationMinutes}m)`,
+      subtitle: `${costExtreme.displayHarness} / ${costExtreme.data.model} vs. ${speedExtreme.displayHarness} / ${speedExtreme.data.model}`,
+      runAId: costExtreme.id,
+      runBId: speedExtreme.id,
+      findingHeadline: `${costExtreme.displayHarness} / ${costExtreme.data.model} achieved 7/7 for $${costExtreme.data.costUsd.toFixed(2)} (${costExtreme.data.durationMinutes}m, ${costTests})${paidClause}, while ${speedExtreme.displayHarness} / ${speedExtreme.data.model} finished fastest (${speedExtreme.data.durationMinutes}m) at $${speedExtreme.data.costUsd.toFixed(2)}.`,
     });
   }
 
   return presets;
 }
+
