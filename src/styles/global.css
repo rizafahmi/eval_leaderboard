@@ -1369,7 +1369,8 @@ progress::-moz-progress-bar {
 }
 
 .detail-jump-link:hover,
-.detail-jump-link:is(:target-current, .\:target-current) {
+.detail-jump-link[aria-current="true"],
+.detail-jump-link[aria-current="location"] {
   background-color: var(--hl-acid);
   color: var(--hl-ink);
   border-color: var(--raw-ebony);
