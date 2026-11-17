@@ -6,6 +6,7 @@ import {
   BENCHMARK_PLAN,
   BENCHMARK_README_CONTRACT,
   BENCHMARK_PROMPT,
+  BENCHMARK_AGENTS_MD,
 } from '../data/benchmark';
 import {
   formatCost,
@@ -25,6 +26,7 @@ const aboutSections = [
   { id: 'judging', label: 'Evaluation Rubric' },
   { id: 'plan-spec', label: 'PLAN.md' },
   { id: 'contract-spec', label: 'V1 Contract' },
+  { id: 'agents-spec', label: 'AGENTS.md' },
   { id: 'prompt-spec', label: 'PROMPT.md' },
 ];
 
@@ -106,6 +108,31 @@ for (const line of contractBulletsRaw.split('\n')) {
     contractBullets[contractBullets.length - 1] += ' ' + line.trim();
   }
 }
+
+interface AgentsBlock {
+  kind: 'h4' | 'p' | 'list';
+  text?: string;
+  items?: string[];
+}
+
+const agentsBlocks: AgentsBlock[] = BENCHMARK_AGENTS_MD.split(/\n\n+/).map((raw) => {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('## ')) {
+    return { kind: 'h4', text: trimmed.replace(/^##\s+/, '') };
+  }
+  if (trimmed.startsWith('- ')) {
+    const items: string[] = [];
+    for (const line of trimmed.split('\n')) {
+      if (line.startsWith('- ')) {
+        items.push(line.slice(2).trim());
+      } else if (items.length > 0) {
+        items[items.length - 1] += ' ' + line.trim();
+      }
+    }
+    return { kind: 'list', items };
+  }
+  return { kind: 'p', text: trimmed.replace(/\s*\n\s*/g, ' ') };
+});
 
 const promptParagraphs = BENCHMARK_PROMPT.split(/\n\n+/).map((block) =>
   block.replace(/\s*\n\s*/g, ' ').trim()
@@ -477,6 +504,63 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
                 </li>
               ))}
             </ul>
+          </article>
+        </section>
+        </details>
+
+        <details class="reading-disclosure doc-disclosure col-12" id="agents-spec">
+          <summary>Read the agent &amp; coding conventions · AGENTS.md</summary>
+          <section class="doc-section disclosure-body" aria-labelledby="agents-spec-heading">
+          <div class="doc-section-header">
+            <h2 id="agents-spec-heading" class="card-heading headline-two-tone">
+              Agent &amp; Coding Conventions{' '}
+              <span class="muted">/ AGENTS.md</span>
+            </h2>
+            <div class="card-title-group">
+              <span class="mono doc-file-path">starter-repo/AGENTS.md</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-secondary"
+                id="copy-agents-btn"
+                data-prompt={BENCHMARK_AGENTS_MD}
+              >
+                Copy AGENTS.md
+              </button>
+              <span id="copy-agents-status" class="visually-hidden" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+          <p class="section-body-copy">
+            Exact repository instructions reviewed first via <code>@AGENTS.md</code>—constraining
+            Elixir to <code>~&gt; 1.20.0</code>, enforcing gradual type checking without suppressing
+            warnings, and requiring outside-in TDD with standard-library/OTP preference.
+          </p>
+
+          <article class="spec-sheet terminal-box" aria-label="AGENTS.md conventions content">
+            {agentsBlocks.map((block) => {
+              if (block.kind === 'h4' && block.text) {
+                return <h3 class="spec-doc-h4">{block.text}</h3>;
+              }
+              if (block.kind === 'list' && block.items) {
+                return (
+                  <ul class="spec-contract-list" role="list">
+                    {block.items.map((item) => (
+                      <li class="spec-contract-item">
+                        {parseInlineSegments(item).map((seg) =>
+                          seg.type === 'code' ? <code>{seg.value}</code> : seg.value
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+              return (
+                <p class="spec-doc-p">
+                  {parseInlineSegments(block.text ?? '').map((seg) =>
+                    seg.type === 'code' ? <code>{seg.value}</code> : seg.value
+                  )}
+                </p>
+              );
+            })}
           </article>
         </section>
         </details>
@@ -1080,6 +1164,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     'copy-cli-btn': 'CLI Transcript',
     'copy-plan-btn': 'PLAN.md',
     'copy-contract-btn': 'V1 Contract',
+    'copy-agents-btn': 'AGENTS.md',
     'copy-prompt-btn': 'PROMPT.md',
   };
 
@@ -1088,7 +1173,7 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
     if (!target) return;
 
     const btn = target.closest<HTMLButtonElement>(
-      '[id="copy-cli-btn"], [id="copy-plan-btn"], [id="copy-contract-btn"], [id="copy-prompt-btn"]'
+      '[id="copy-cli-btn"], [id="copy-plan-btn"], [id="copy-contract-btn"], [id="copy-agents-btn"], [id="copy-prompt-btn"]'
     );
     if (!btn) return;
 

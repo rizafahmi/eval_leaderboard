@@ -46,8 +46,8 @@ Unlike synthetic single-function coding puzzles or frontend boilerplate benchmar
 
 ## Evidence on Hand
 
-- **Verified Run Dataset**: 12 published benchmark run JSON files in `src/content/runs/` spanning harnesses (`agy`, `codex-cli`, `cursor-cli`, `pi`, `zcode`) and models (`gemini-3-8-flash`, `gpt-6-sol`, `gpt-6-1-sol`, `glm-5-3`, `glm-5-3-flash`, `laguna-s-2-1-free`, `muse-spark-1-3-contrib`, `auto`).
-- **Benchmark Artifacts**: Complete `BENCHMARK_STAGES`, `BENCHMARK_PLAN` (`PLAN.md`), `BENCHMARK_README_CONTRACT` (`README.md`), and `BENCHMARK_PROMPT` (`PROMPT.md`) in `src/data/benchmark.ts`.
+- **Verified Run Dataset**: 14 published benchmark run JSON files (plus 5 draft records) in `src/content/runs/` spanning harnesses (`agy`, `codex-cli`, `cursor-cli`, `muse-code`, `omp`, `opencode`, `pi`, `zcode`) and models (`gemini-3-8-flash`, `gpt-6-sol`, `gpt-6-1-sol`, `glm-5-3`, `glm-5-3-flash`, `hy4-flash-free`, `laguna-s-2-1-free`, `muse-spark-1-3-contrib`, `auto`).
+- **Benchmark Artifacts**: Complete `BENCHMARK_STAGES`, `BENCHMARK_PLAN` (`PLAN.md`), `BENCHMARK_README_CONTRACT` (`README.md`), `BENCHMARK_AGENTS_MD` (`AGENTS.md`), and `BENCHMARK_PROMPT` (`PROMPT.md`) in `src/data/benchmark.ts`.
 - **No Fabricated Claims**: Future work must never invent synthetic runs, unverified model scores, testimonials, or external endorsements.
 
 ## Product Principles

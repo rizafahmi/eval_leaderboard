@@ -235,3 +235,35 @@ implementation as complete ([x]), validate, proof of completion then commit your
 changes with a concise message.
 
 Complete all @PLAN.md work in this conversation.`;
+
+export const BENCHMARK_AGENTS_MD = `## Agent instructions
+
+Capy Bench is a planned Elixir/OTP command-line HTTP benchmark. \`README.md\`
+defines the V1 product contract; \`PLAN.md\` defines the implementation order. Do
+not duplicate their requirements here.
+
+Follow the slices in \`PLAN.md\` in order. For behavior changes, add one failing
+test at a time and only the implementation it requires. Prefer standard-library
+and OTP facilities; justify any dependency by the capability it supplies. Keep
+code and documentation focused on V1. Add comments or module documentation when
+they explain a non-obvious invariant or public contract, not to restate the
+code.
+
+## Coding conventions
+
+- Target Elixir 1.20.x and a supported Erlang/OTP version. When creating
+  \`mix.exs\`, constrain Elixir to \`~> 1.20.0\`.
+- Use Elixir 1.20's built-in gradual type checking. Treat compiler typing
+  warnings as defects: fix the code and test the affected behavior rather than
+  suppressing warnings or weakening checks to make compilation pass.
+- Use patterns and guards when they express real input constraints. Do not add
+  redundant guards or annotations solely to influence type inference.
+- Do not require \`@spec\` on every function or treat existing Erlang typespecs as
+  the new compiler's type signatures. Add a typespec when it clarifies a public
+  contract or supports a tool the project actually uses.
+- Prefer standard-library and OTP facilities. Justify any third-party dependency
+  by the capability it supplies.
+- Add comments, module documentation, or doctests when they explain a
+  non-obvious invariant, a public contract, or useful executable examples. Do
+  not restate the code.`;
+

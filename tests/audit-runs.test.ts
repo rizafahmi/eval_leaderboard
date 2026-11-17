@@ -13,6 +13,12 @@ import {
   buildRunRecordFromEvents,
   parseRawTranscriptJsonl,
 } from '../scripts/ingest-run.ts';
+import {
+  BENCHMARK_AGENTS_MD,
+  BENCHMARK_PLAN,
+  BENCHMARK_PROMPT,
+  BENCHMARK_README_CONTRACT,
+} from '../src/data/benchmark.ts';
 
 const RUNS_DIR = path.resolve(process.cwd(), 'src/content/runs');
 
@@ -287,3 +293,31 @@ test('Raw JSONL transcript ingestion parses turns and builds a valid RunRecordDa
   assert.equal(record.verification?.holdoutPassed, 2);
   assert.equal(record.verification?.holdoutVerdict, 'partial-pass');
 });
+
+test('Benchmark specification constants match starter repository artifacts when present', () => {
+  assert.ok(BENCHMARK_AGENTS_MD.includes('Elixir 1.20.x'));
+  assert.ok(BENCHMARK_PROMPT.includes('@AGENTS.md'));
+  assert.ok(BENCHMARK_PLAN.includes('## Implementation slices'));
+  assert.ok(BENCHMARK_README_CONTRACT.includes('cb <http-or-https-url>'));
+
+  const starterDir = path.resolve(process.cwd(), '../capybench_runs/starter');
+  if (fs.existsSync(starterDir)) {
+    const normalize = (s: string) => s.replace(/\r\n/g, '\n').trim();
+    const stripFencesAndBackticks = (s: string) =>
+      normalize(s).replace(/```[a-z]*\n?/g, '').replace(/`/g, '').replace(/\s+/g, ' ');
+
+    const agentsMd = normalize(fs.readFileSync(path.join(starterDir, 'AGENTS.md'), 'utf8'));
+    const promptMd = normalize(fs.readFileSync(path.join(starterDir, 'PROMPT.md'), 'utf8'));
+    const planMd = normalize(fs.readFileSync(path.join(starterDir, 'PLAN.md'), 'utf8'));
+    const readmeMd = normalize(fs.readFileSync(path.join(starterDir, 'README.md'), 'utf8'));
+
+    assert.equal(normalize(BENCHMARK_AGENTS_MD), agentsMd);
+    assert.equal(normalize(BENCHMARK_PROMPT), promptMd);
+    assert.equal(normalize(BENCHMARK_PLAN), planMd);
+    assert.ok(
+      stripFencesAndBackticks(readmeMd).includes(stripFencesAndBackticks(BENCHMARK_README_CONTRACT)),
+      'starter/README.md must contain BENCHMARK_README_CONTRACT'
+    );
+  }
+});
+
