@@ -22,6 +22,7 @@ const runs = defineCollection({
       })
       .optional(),
     planCompletion: z.record(z.string(), z.boolean()),
+    agentPlanCompletion: z.record(z.string(), z.boolean()).optional(),
     interface: z
       .object({
         type: z.enum(['cli', 'desktop', 'web']).optional(),
@@ -64,6 +65,9 @@ const runs = defineCollection({
         holdoutPassed: z.number(),
         holdoutTotal: z.number(),
         holdoutVerdict: z.enum(['full-pass', 'partial-pass', 'zero-pass']),
+        agentClaimedPassed: z.number().optional(),
+        agentClaimedTotal: z.number().optional(),
+        unverifiedSlices: z.array(z.string()).optional(),
         agentSuitePassed: z.number().optional(),
         agentSuiteTotal: z.number().optional(),
       })
