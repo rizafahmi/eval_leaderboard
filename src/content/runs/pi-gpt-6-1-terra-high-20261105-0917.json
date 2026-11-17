@@ -7,7 +7,7 @@
   "provider": "openai-codex",
   "durationMinutes": 4,
   "costUsd": 0.07,
-  "commits": 1,
+  "commits": 0,
   "tests": {
     "passed": 1,
     "total": 1,
@@ -27,6 +27,8 @@
     "holdoutPassed": 0,
     "holdoutTotal": 7,
     "holdoutVerdict": "zero-pass",
+    "agentClaimedPassed": 0,
+    "agentClaimedTotal": 7,
     "agentSuitePassed": 1,
     "agentSuiteTotal": 1
   },

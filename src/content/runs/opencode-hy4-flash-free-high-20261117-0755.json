@@ -26,6 +26,8 @@
     "holdoutPassed": 7,
     "holdoutTotal": 7,
     "holdoutVerdict": "full-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
     "agentSuitePassed": 53,
     "agentSuiteTotal": 53
   },

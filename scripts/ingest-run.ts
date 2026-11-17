@@ -56,6 +56,11 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
           : stepCounter;
 
     const msg = parsed.message as Record<string, unknown> | undefined;
+    const resp = parsed.response as Record<string, unknown> | undefined;
+    const payload = parsed.payload as Record<string, unknown> | undefined;
+    const payloadModels = Array.isArray(payload?.models)
+      ? (payload.models[0] as Record<string, unknown> | undefined)
+      : undefined;
     const part = parsed.part as Record<string, unknown> | undefined;
     const partTokens = part?.tokens as Record<string, unknown> | undefined;
     const partCache = partTokens?.cache as Record<string, unknown> | undefined;
@@ -63,12 +68,15 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     const usage =
       (parsed.usage as Record<string, unknown> | undefined) ??
       (msg?.usage as Record<string, unknown> | undefined) ??
+      (resp?.usage as Record<string, unknown> | undefined) ??
+      payloadModels ??
       partTokens ??
       {};
 
     const cachedInputTokens = Number(
       usage.cache_read_input_tokens ??
         usage.cached_input_tokens ??
+        usage.cached_tokens ??
         usage.cacheReadTokens ??
         usage.cacheRead ??
         partCache?.read ??
@@ -78,14 +86,19 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
 
     const rawInput = Number(
       usage.input_tokens ??
+        usage.inputTokens ??
         usage.prompt_tokens ??
         usage.uncachedInputTokens ??
         usage.input ??
         0
     );
+    const hasInclusiveInput =
+      usage.cached_input_tokens !== undefined ||
+      usage.cached_tokens !== undefined ||
+      usage.cacheReadTokens !== undefined;
     const uncachedInputTokens = Number(
       usage.uncached_input_tokens ??
-        (usage.cached_input_tokens !== undefined && rawInput >= cachedInputTokens
+        (hasInclusiveInput && rawInput >= cachedInputTokens
           ? rawInput - cachedInputTokens
           : rawInput)
     );
@@ -114,11 +127,14 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       String(parsed.type ?? '') === 'step_finish' ? rawOutput + thinkingTokens : rawOutput;
 
     let role: RawTurnEvent['role'] = 'system';
-    const rawType = String(msg?.role ?? parsed.type ?? parsed.role ?? '').toLowerCase();
+    const rawType = String(
+      msg?.role ?? parsed.payload_type ?? parsed.type ?? parsed.role ?? ''
+    ).toLowerCase();
     if (
       rawType.includes('assistant') ||
       rawType.includes('planner_response') ||
       rawType.includes('turn.completed') ||
+      rawType.includes('run.usage') ||
       rawType === 'step_finish' ||
       outputTokens > 0 ||
       uncachedInputTokens > 0
@@ -184,6 +200,7 @@ export function buildRunRecordFromEvents(opts: {
   timestamp: string;
   durationMinutes: number;
   planCompletion: Record<string, boolean>;
+  agentPlanCompletion?: Record<string, boolean>;
   commits?: Array<{ hash: string; relativeTime?: string; author?: string; message: string }>;
 }): RunRecordData {
   const { events, codingHarness, model, effort, provider, timestamp, durationMinutes, planCompletion } =
@@ -239,6 +256,21 @@ export function buildRunRecordFromEvents(opts: {
   const toolDone = toolBreakdown.reduce((s, b) => s + b.done, 0);
   const toolError = toolBreakdown.reduce((s, b) => s + b.error, 0);
 
+  const agentCommitsCount = opts.commits
+    ? opts.commits.filter(
+        (c, idx, arr) =>
+          !(idx === arr.length - 1 && /^init$/i.test(c.message.trim()))
+      ).length
+    : undefined;
+  const claimedPlan = opts.agentPlanCompletion
+    ? getPlanStats(opts.agentPlanCompletion)
+    : plan;
+  const unverifiedSlices = opts.agentPlanCompletion
+    ? Object.keys(planCompletion).filter(
+        (k) => Boolean(opts.agentPlanCompletion?.[k]) && !planCompletion[k]
+      )
+    : [];
+
   return {
     timestamp,
     codingHarness,
@@ -247,8 +279,9 @@ export function buildRunRecordFromEvents(opts: {
     provider,
     durationMinutes,
     costUsd,
-    commits: opts.commits?.length,
+    commits: agentCommitsCount,
     planCompletion,
+    ...(opts.agentPlanCompletion ? { agentPlanCompletion: opts.agentPlanCompletion } : {}),
     tokens: {
       input: formatCompactTokens(uncachedInput),
       cachedInput: formatCompactTokens(cachedInput),
@@ -275,6 +308,9 @@ export function buildRunRecordFromEvents(opts: {
       holdoutTotal: plan.total,
       holdoutVerdict:
         plan.ratio === 1 ? 'full-pass' : plan.completed > 0 ? 'partial-pass' : 'zero-pass',
+      agentClaimedPassed: claimedPlan.completed,
+      agentClaimedTotal: claimedPlan.total,
+      ...(unverifiedSlices.length > 0 ? { unverifiedSlices } : {}),
     },
     calls: {
       llmCalls,
@@ -297,6 +333,14 @@ export function enrichRunRecord(d: RunRecordData): RunRecordData {
   const exactTokens = extractExactTokens(d);
   const context = extractContextTelemetry(d);
   const plan = getPlanStats(d.planCompletion);
+  const claimedPlan = d.agentPlanCompletion
+    ? getPlanStats(d.agentPlanCompletion)
+    : plan;
+  const unverifiedSlices = d.agentPlanCompletion
+    ? Object.keys(d.planCompletion).filter(
+        (k) => Boolean(d.agentPlanCompletion?.[k]) && !d.planCompletion[k]
+      )
+    : d.verification?.unverifiedSlices ?? [];
 
   const tokenCounts: NonNullable<RunRecordData['tokenCounts']> = {
     uncachedInput: exactTokens.uncachedInput,
@@ -327,6 +371,9 @@ export function enrichRunRecord(d: RunRecordData): RunRecordData {
     holdoutTotal: plan.total,
     holdoutVerdict:
       plan.ratio === 1 ? 'full-pass' : plan.completed > 0 ? 'partial-pass' : 'zero-pass',
+    agentClaimedPassed: d.verification?.agentClaimedPassed ?? claimedPlan.completed,
+    agentClaimedTotal: d.verification?.agentClaimedTotal ?? claimedPlan.total,
+    ...(unverifiedSlices.length > 0 ? { unverifiedSlices } : {}),
     ...(d.tests
       ? {
           agentSuitePassed: d.tests.passed,
@@ -348,6 +395,9 @@ export function enrichRunRecord(d: RunRecordData): RunRecordData {
     ...(d.commits !== undefined ? { commits: d.commits } : {}),
     ...(d.tests !== undefined ? { tests: d.tests } : {}),
     planCompletion: d.planCompletion,
+    ...(d.agentPlanCompletion !== undefined
+      ? { agentPlanCompletion: d.agentPlanCompletion }
+      : {}),
     verification,
     ...(d.interface !== undefined ? { interface: d.interface } : {}),
     ...(d.tokens !== undefined ? { tokens: d.tokens } : {}),
@@ -411,6 +461,22 @@ function readGitCommitsFromRepo(repoDir: string) {
   }
 }
 
+export function readPlanCheckboxesFromRepo(repoDir: string): Record<string, boolean> | undefined {
+  try {
+    const planPath = path.join(repoDir, 'PLAN.md');
+    if (!fs.existsSync(planPath)) return undefined;
+    const raw = fs.readFileSync(planPath, 'utf8');
+    const result: Record<string, boolean> = {};
+    for (let i = 1; i <= 7; i += 1) {
+      const key = `S${i}`;
+      result[key] = new RegExp(`- \\[[xX]\\] \\*\\*${key}\\.`).test(raw);
+    }
+    return result;
+  } catch {
+    return undefined;
+  }
+}
+
 // CLI entry point
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
@@ -441,6 +507,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const events = parseRawTranscriptJsonl(content);
   const repoDir = getArg('--repo');
   const commits = repoDir ? readGitCommitsFromRepo(path.resolve(repoDir)) : undefined;
+  const agentPlanCompletion = repoDir
+    ? readPlanCheckboxesFromRepo(path.resolve(repoDir))
+    : undefined;
 
   const planCompletion: Record<string, boolean> = {
     S1: false,
@@ -469,6 +538,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     timestamp: getArg('--timestamp') ?? new Date().toISOString(),
     durationMinutes: Number(getArg('--duration') ?? 0),
     planCompletion,
+    ...(agentPlanCompletion ? { agentPlanCompletion } : {}),
     commits,
   });
 

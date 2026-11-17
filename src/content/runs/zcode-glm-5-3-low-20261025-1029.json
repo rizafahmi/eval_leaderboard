@@ -23,10 +23,28 @@
     "S6": false,
     "S7": false
   },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
   "verification": {
     "holdoutPassed": 2,
     "holdoutTotal": 7,
     "holdoutVerdict": "partial-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "unverifiedSlices": [
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7"
+    ],
     "agentSuitePassed": 36,
     "agentSuiteTotal": 37
   },
