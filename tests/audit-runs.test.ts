@@ -121,11 +121,11 @@ test('Pareto frontier, stage bottleneck matrix, and ablation presets compute det
     assert.equal(fRun.dominatedBy.length, 0);
   }
 
-  // Muse Spark ($0.14, 56m) and Codex CLI gpt-6-sol ($3.14, 25m) must both be on the frontier
+  // OpenCode hy4-flash-free ($0.00, 45m) and Codex CLI gpt-6-sol ($3.14, 25m) must both be on the frontier
   const frontierIds = new Set(frontier.map((r) => r.id));
   assert.ok(
-    frontierIds.has('pi-muse-spark-1-3-contrib-high-20261026-0535'),
-    'Lowest cost 7/7 run (Muse Spark) must be on the Pareto frontier'
+    frontierIds.has('opencode-hy4-flash-free-high-20261117-0755'),
+    'Lowest cost 7/7 run (OpenCode hy4-flash-free: $0.00, 45m) must be on the Pareto frontier'
   );
   assert.ok(
     frontierIds.has('codex-cli-gpt-6-sol-high-20261025-1935'),

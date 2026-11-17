@@ -721,6 +721,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3c. Model Comparison: OpenCode hy4-flash-free vs inkling-2-small-free (High)
+  const ocHy4 = runs.find(
+    (r) => r.displayHarness === 'OpenCode' && r.data.model === 'hy4-flash-free'
+  );
+  const ocInkling = runs.find(
+    (r) => r.displayHarness === 'OpenCode' && r.data.model === 'inkling-2-small-free'
+  );
+  if (ocHy4 && ocInkling) {
+    presets.push({
+      id: 'model-opencode-hy4-vs-inkling',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'OpenCode: hy4-flash-free vs. inkling-2-small-free (High)',
+      subtitle: 'Same OpenCode v2.2.7 harness & 4-tool sandbox — Mint + stty -isig vs. raw :gen_tcp + SIGUSR1',
+      runAId: ocHy4.id,
+      runBId: ocInkling.id,
+      findingHeadline: `hy4-flash-free completed 7/7 58% faster (45m vs 106m) in 42% fewer steps (227 vs 390) and 73% fewer tokens (19.95M vs 73.45M), both at $0.00 during OpenCode's limited-time free access.`,
+    });
+  }
+
   // 4. Model Family Tier: ZCode glm-5.3-flash (High) vs glm-5.3 (High)
   const glmFlagshipHigh = runs.find(
     (r) => r.data.model === 'glm-5.3' && r.data.effort?.toLowerCase() === 'high'

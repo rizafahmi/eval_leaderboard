@@ -290,6 +290,27 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 20.0,
     },
   },
+  'hy4-flash-free': {
+    modelKey: 'hy4-flash-free',
+    displayName: 'hy4-flash-free',
+    provider: 'Tencent',
+    billedTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+      notes: 'Free for a limited time on OpenCode (as of Nov 2026); standard API pricing TBD',
+    },
+    standardApiTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+    },
+    pricingBadge: 'free (limited time)',
+    pricingStatusNote:
+      'Billed $0.00 during OpenCode limited-time free access (Nov 2026); permanent API pricing TBD',
+  },
 };
 
 export interface NumericTokenBag {

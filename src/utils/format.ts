@@ -128,6 +128,7 @@ const PROVIDER_DISPLAY_MAP: Record<string, string> = {
   'openai-codex': 'OpenAI Codex',
   openrouter: 'OpenRouter',
   opencode: 'OpenCode',
+  tencent: 'Tencent',
   'thinking machines': 'Thinking Machines',
   'z.ai': 'Z.ai',
 };

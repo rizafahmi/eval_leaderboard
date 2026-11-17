@@ -1,0 +1,281 @@
+{
+  "timestamp": "2026-11-17T07:55:23+07:00",
+  "codingHarness": "OpenCode",
+  "model": "hy4-flash-free",
+  "effort": "High",
+  "provider": "Tencent",
+  "durationMinutes": 45,
+  "costUsd": 0,
+  "commits": 8,
+  "tests": {
+    "passed": 53,
+    "total": 53,
+    "durationSeconds": 110.5,
+    "details": "Finished in 110.5 seconds (0.08s async, 110.4s sync) — 53 passed (111.2s at Step 219 in JSONL; mix format --check-formatted clean; mix credo: 57 checks on 23 files, 134 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentSuitePassed": 53,
+    "agentSuiteTotal": 53
+  },
+  "interface": {
+    "type": "cli",
+    "command": "opencode run --standalone --format json --thinking --auto --archived --model opencode/hy4-flash-free#high < PROMPT.md",
+    "details": "Run window: 07:55:23–08:40:15 WIB (44m 51.5s / 2,691.5s CLI wall-clock in opencode.log, 44m 48.6s in events.jsonl; 07:55–08:40 / 44m51s in manual note; preceded by an interrupted 32m 31s run ses_e19633dd1ffej519q1toSMZtGa at 06:06:35–06:39:07 WIB) • Session ses_e18ffa0b4ffeuFr1B92qKpBMO2 (opencode / hy4-flash-free#high, canonical tencent/hy4-flash, OpenCode v2.2.7, 227 steps, 0 compactions)"
+  },
+  "tokens": {
+    "input": "369.2k",
+    "cachedInput": "19.46M",
+    "output": "116.1k",
+    "thinking": "68.0k",
+    "total": "19.95M",
+    "cacheHitRate": "98.14%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 369208,
+    "cachedInput": 19463936,
+    "output": 116108,
+    "thinking": 67997,
+    "total": 19949252,
+    "cacheHitRatePct": 98.14
+  },
+  "contextWindow": "157.7k peak (1,730 → 157,744 prompt tokens; 158,227 total; 15.04% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 1730,
+    "avgTokens": 87371,
+    "peakTokens": 157744,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 15.04
+  },
+  "calls": {
+    "llmCalls": 227,
+    "toolCalls": {
+      "total": 229,
+      "done": 226,
+      "error": 3,
+      "breakdown": [
+        {
+          "tool": "shell",
+          "total": 116,
+          "done": 116,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 67,
+          "done": 64,
+          "error": 3
+        },
+        {
+          "tool": "write",
+          "total": 32,
+          "done": 32,
+          "error": 0
+        },
+        {
+          "tool": "read",
+          "total": 14,
+          "done": 14,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "71aa11a",
+      "relativeTime": "30 seconds",
+      "author": "Riza Fahmi",
+      "message": "Record release verification results"
+    },
+    {
+      "hash": "2f2a9dd",
+      "relativeTime": "77 seconds",
+      "author": "Riza Fahmi",
+      "message": "S7: handle foreground Ctrl-C with partial summary and exit 130"
+    },
+    {
+      "hash": "0df8910",
+      "relativeTime": "8 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: elapsed time and completed-response percentiles"
+    },
+    {
+      "hash": "ae7938d",
+      "relativeTime": "12 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: outcome counts, status classes and exit codes"
+    },
+    {
+      "hash": "d3da644",
+      "relativeTime": "15 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: paced five-second loop with cancellation and reuse"
+    },
+    {
+      "hash": "dfaf9f8",
+      "relativeTime": "21 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: bounded single GET with TLS, timeouts and streaming"
+    },
+    {
+      "hash": "3d6947a",
+      "relativeTime": "37 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments before any network access"
+    },
+    {
+      "hash": "572666e",
+      "relativeTime": "40 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb escript with help/usage and dev commands"
+    },
+    {
+      "hash": "f9002b1",
+      "relativeTime": "45 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Input (uncached)",
+      "tokens": "369,208",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Cached (cacheRead)",
+      "tokens": "19,463,936",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Output (incl. 67,997 reasoning)",
+      "tokens": "116,108",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Total",
+      "tokens": "19,949,252",
+      "cost2026": "$0.00 (OpenCode limited-time free tier, Nov 2026)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation + S1: CLI help, foreground PTY Ctrl-C probes & Credo setup (572666e)",
+      "stepRange": "1–46",
+      "llmCalls": 46,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 18992,
+      "costUsd": 0
+    },
+    {
+      "slice": "S2: URL & argument validation before networking (3d6947a)",
+      "stepRange": "47–68",
+      "llmCalls": 22,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 5267,
+      "costUsd": 0
+    },
+    {
+      "slice": "S3: Bounded Mint HTTP/1.1 + TLS single GET, timeouts & streaming (dfaf9f8)",
+      "stepRange": "69–136",
+      "llmCalls": 68,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 18199,
+      "costUsd": 0
+    },
+    {
+      "slice": "S4: Paced 5s loop, post-stream Mint conn retention & reuse (d3da644)",
+      "stepRange": "137–161",
+      "llmCalls": 25,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 11491,
+      "costUsd": 0
+    },
+    {
+      "slice": "S5: HTTP status classes, transport failure counts & exit codes (ae7938d)",
+      "stepRange": "162–168",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1377,
+      "costUsd": 0
+    },
+    {
+      "slice": "S6: Elapsed time & completed-response p50/p95 latency (0df8910)",
+      "stepRange": "169–189",
+      "llmCalls": 21,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2223,
+      "costUsd": 0
+    },
+    {
+      "slice": "S7: stty -isig wrapper, raw 0x03 stdin watcher & PTY Ctrl-C tests (2f2a9dd)",
+      "stepRange": "190–221",
+      "llmCalls": 32,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 9154,
+      "costUsd": 0
+    },
+    {
+      "slice": "Release verification: prod escript build, HTTP/HTTPS & PTY sign-off (71aa11a)",
+      "stepRange": "222–227",
+      "llmCalls": 6,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1294,
+      "costUsd": 0
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 44m 51s Exact Match, hy4-flash-free Model ID, 8 Agent Commits & Accidental 5.02 MB erl_crash.dump in S2",
+    "Zero-Signal Terminal Mode (stty -isig + Raw 0x03 Stdin Watcher) Eliminating BEAM Boot Ctrl-C Races Across All PTY Holdout Probes",
+    "Mint HTTP/1.1 + OTP 28 :ssl Integration & Fixing a Subtle Post-Stream Connection Struct Reuse Bug in S4",
+    "58% Faster & 73% Fewer Tokens Than inkling-2-small-free on OpenCode's Limited-Time Free Tier (227 Steps, 98.14% Cache Hit Rate)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 44m 51s Exact Match, hy4-flash-free Model ID, 8 Agent Commits & Accidental 5.02 MB erl_crash.dump in S2",
+      "bullets": [
+        "Exact Wall-Clock Match (`07:55–08:40 (44m51s)`): Following the pre-run `init` commit (`f9002b1` at `07:55:17 WIB`), `opencode v2.2.7` started at `2026-11-17T00:55:23.300Z` (`07:55:23.300 WIB` in `opencode.log`), opened session `ses_e18ffa0b4ffeuFr1B92qKpBMO2` at `07:55:24.031 WIB`, dispatched Step 1 at `07:55:26.154 WIB` (`Line 1` of `20261117T005523Z.events.jsonl`), completed Step 227 at `08:40:14.711 WIB` (`Line 871`, `2,688.56s` / `44m 48.6s` transcript span), and exited at `08:40:14.802 WIB` for an exact CLI wall-clock of `44m 51.5s` (`2,691.50s` / `45m`). An earlier attempt in `opencode-hy4-flash-free-free-high_20261117060400` (`ses_e19633dd1ffej519q1toSMZtGa`, `06:06:35–06:39:07 WIB`) was manually interrupted during S4 after `32m 31s`.",
+        "Model Slug vs. Folder Name (`hy4-flash-free` vs. `opencode-hy4-flash-free-free-high`): While the workspace folder duplicated `-free-free`, `opencode.log` (`--model opencode/hy4-flash-free#high`) and `opencode.db` (`session_v2.model` + `models-dev:v2:catalog`) confirm the canonical model is `hy4-flash-free` (`canonical_id: \"tencent/hy4-flash\"`, released `2026-11-16`, `1,048,576` context window, `variant: \"high\"`).",
+        "8 Agent Commits + S1 Amend Recovery & Accidental 5.02 MB `erl_crash.dump` in S2 (`3d6947a`): All 8 agent commits (`572666e` → `71aa11a`) plus pre-run `f9002b1` (`init`), `53/53` passing tests (`110.5s` post-run / `111.2s` at Step 219, Line 839), and `0` Credo issues (`57 checks on 23 files, 134 mods/funs` at Step 218, Line 836) match the manual note. At Step 43 (`Line 177`), `git add -A` initially staged the compiled `cb` escript and `records/20261117T005523Z.*` into `7e6eab8`; the agent spotted this via `git show --stat` at Step 44 (`Line 180`), added `/cb` and `/records/` to `.gitignore` at Step 45, and amended `572666e` cleanly at Step 46 (`Line 189`). However, during S2 at Step 62 (`Line 250`, `08:02:56 WIB`), piping `mix test 2>&1 | head -20` closed the pipe while ERTS was writing `:test_load_filters` warnings to `:standard_error`, triggering an `epipe` boot crash that wrote a `5,021,257`-byte (`167,416`-line) `erl_crash.dump` into the working tree—which `git add -A` at Step 68 (`Line 275`) committed inside `3d6947a`."
+      ]
+    },
+    {
+      "title": "Zero-Signal Terminal Mode (stty -isig + Raw 0x03 Stdin Watcher) Eliminating BEAM Boot Ctrl-C Races Across All PTY Holdout Probes",
+      "bullets": [
+        "Empirical S1 PTY Reconnaissance (`Steps 11–29`, `Lines 47–123`): In S1, the agent tested `:os.set_signal(:sigint, :handle)` (Step 12, `ArgumentError`) and ran disposable Python `pty.fork()` probes (`/tmp/cbprobe/run.py`) showing that default BEAM escripts open the `BREAK: (a)bort` menu on `Ctrl-C` (Step 19) while `+Bi` / `-noshell` escripts still terminate or fail to open `/dev/tty` via `System.cmd(\"stty\", ...)` inside child processes (Step 28, `/dev/tty: Device not configured`).",
+        "Line-Discipline `stty -isig` Wrapper + `CapyBench.Terminal` (`2f2a9dd`): Instead of forwarding `SIGUSR1`/`SIGUSR2` asynchronously from a shell trap (which risks killing the BEAM during its ~150 ms startup window if `trap '' USR1` is omitted), `./cb` synchronously runs `stty -isig -icanon -echo 2>/dev/null` on the operator's controlling terminal before invoking `cb.escript`, then restores `stty isig icanon echo 2>/dev/null` on exit. Inside Elixir, `CapyBench.Terminal` spawns a reader (`IO.binread(:stdio, 1)`) that matches byte `<<3>>` (`0x03`) and calls `GenServer.cast(runner_pid, :interrupt)`.",
+        "5/5 Live PTY Holdout Verification (Including 50 ms Boot Window): Empirical foreground PTY probes against `./cb` passed every scenario with exit `130` and a valid partial summary: `50 ms` and `150 ms` BEAM boot-window `Ctrl-C` (`Started: 1, HTTP responses: 1, Elapsed: 0.02–0.03 s`—because kernel TTY input buffers `0x03` while `ISIG` is disabled until `CapyBench.Terminal` starts reading), `600 ms` pacing `Ctrl-C` (`Started: 4, HTTP responses: 4, Elapsed: 0.35 s`), `500 ms` `Ctrl-C` during an `800 ms` slow request (`Elapsed: 0.84 s, p50 834 ms`), and `500 ms` `Ctrl-C` during a `3,000 ms` stalled request (`settled at 2.02 s, Transport failures: 1`). On a full un-interrupted 5s local keep-alive run (`50` starts), `Scheduler.finished?/2` returns as soon as the 50th response completes at `Elapsed: 4.95 s` (`0.05 s` before the `5.00 s` window boundary)."
+      ]
+    },
+    {
+      "title": "Mint HTTP/1.1 + OTP 28 :ssl Integration & Fixing a Subtle Post-Stream Connection Struct Reuse Bug in S4",
+      "bullets": [
+        "Mint `~> 1.6` + OTP 28 `:ssl` Server Handshake Fixes (`Steps 69–136`, `Lines 277–526`): Rather than wrapping `:httpc` or raw sockets, the agent added `{:mint, \"~> 1.6\"}` (justified in `mix.exs` for redirect-free, retry-free streaming HTTP/1.1 with caller-owned connection state) and `{:credo, \"~> 1.7\"}`. While building `CapyBench.TestServer` and `CapyBench.TLSHelper` on Erlang/OTP 28 (`erts-16.4.0.7`) and LibreSSL `3.3.6`, it resolved three real compatibility issues: (1) `:ssl.sockname/1` vs. `:inet.sockname/1` on TLS listen sockets (Steps 87–89), (2) LibreSSL requiring explicit `basicConstraints = critical, CA:TRUE` + `keyUsage = critical, keyCertSign, cRLSign` X.509 v3 CA extensions (`Steps 105–112`), and (3) OTP 28 removing deprecated `:ssl.ssl_accept/2` in favor of `:ssl.handshake/2` (`Steps 117–119`).",
+        "Diagnosing & Fixing Every-Other-Request Timeouts on Reused Mint Connections (`Steps 149–156`, `Lines 573–606`): During S4 integration testing (`test/capy_bench/loop_integration_test.exs`), the agent observed `Started: 6 | HTTP responses: 3 (200: 3) | Transport failures: 3` with arrival intervals `[84, 2004, 99, 2003, 102] ms`—every second request on a keep-alive connection was timing out at `2,000 ms`. Tracing `CapyBench.Runner.handle_responses/3` with `/tmp/dbgsloop.exs` revealed that `{:done, ref}` called `complete_response(acc)` with the pre-`Mint.HTTP.stream/2` `acc.conn` struct (whose socket remained passive) instead of the updated `conn` returned by `Mint.HTTP.stream(conn, message)`. Passing `%{acc | conn: conn}` (`Line 605`) immediately restored 50/50 single-connection keep-alive reuse."
+      ]
+    },
+    {
+      "title": "58% Faster & 73% Fewer Tokens Than inkling-2-small-free on OpenCode's Limited-Time Free Tier (227 Steps, 98.14% Cache Hit Rate)",
+      "bullets": [
+        "Controlled OpenCode Harness Comparison (`hy4-flash-free` vs. `inkling-2-small-free`): Under the exact same `run_opencode.fish` harness configuration (`OpenCode v2.2.7`, tools restricted to `read, shell, edit, write`, billed `$0.00` during OpenCode's limited-time free access), `hy4-flash-free` finished all 7 stages in `44m 51s` and `227` steps (`19.95M` total tokens, `157.7k` peak context) compared to `inkling-2-small-free`'s `105m 58s` and `390` steps (`73.45M` total tokens, `378.4k` peak context)—cutting wall-clock time by `57.7%`, LLM turns by `41.8%`, and cumulative token volume by `72.8%`.",
+        "98.14% Prefix Cache Hit Rate & Single Step-199 Cache Eviction: Across `227` steps (`229` tool calls; Steps 1–3 batched 2 tools/turn and Steps 4–226 executed 1 tool/turn), `hy4-flash-free` read `19,463,936` cached tokens against `369,208` uncached input tokens (`98.14%` hit rate) and generated `116,108` output tokens (`67,997` reasoning + `48,111` visible/tool tokens). Prefix caching held steady across 225 of 226 post-initial steps, with only a single transient cache miss at Step 199 (`Line 763`: `142,927` uncached input, `256` cached) before immediately resuming `142,848` cached tokens at Step 200.",
+        "53.8% Inference vs. 46.2% Tool Wall-Clock & Only 3 `edit` Errors: From per-message timestamps in `opencode.db`, LLM inference took `24m 05.2s` (`1,445.2s`, avg `6.37s/step`) while tool execution took `20m 42.4s` (`1,242.4s`), dominated by full-suite `mix test` runs (`111.2s` at Step 219). Out of `229` tool calls (`116 shell`, `67 edit`, `32 write`, `14 read`), `shell` had `0` tool errors and `edit` had only `3` minor errors (`Line 345` `test_server.exs` vs `.ex` extension typo, `Line 421` `tls_helper.ex` `oldString` mismatch, and `Line 694` `target.ex` `oldString` mismatch), each fixed on the next step."
+      ]
+    }
+  ]
+}
