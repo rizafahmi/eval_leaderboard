@@ -56,12 +56,30 @@ test('All benchmark run JSONs satisfy token, slice, step-range, and cost conserv
         `${run.id}: cacheHitRatePct ${tc.cacheHitRatePct} diverges from computed ${expectedCacheHitPct.toFixed(2)}`
       );
 
-      // 3. Verification holdout summary must match planCompletion S1..S7
+      // 3. Verification holdout summary must match planCompletion S1..S7 and track agentPlanCompletion divergences
       assert.ok(data.verification, `${run.id}: missing verification block`);
       const sKeys = Object.keys(data.planCompletion);
       const passedCount = Object.values(data.planCompletion).filter(Boolean).length;
       assert.equal(data.verification!.holdoutPassed, passedCount);
       assert.equal(data.verification!.holdoutTotal, sKeys.length);
+      if (data.agentPlanCompletion) {
+        const claimedCount = Object.values(data.agentPlanCompletion).filter(Boolean).length;
+        assert.equal(data.verification!.agentClaimedPassed, claimedCount);
+        const expectedUnverified = sKeys.filter(
+          (k) => Boolean(data.agentPlanCompletion?.[k]) && !data.planCompletion[k]
+        );
+        assert.deepEqual(data.verification!.unverifiedSlices ?? [], expectedUnverified);
+      }
+      if (data.commitLog && data.commits !== undefined) {
+        const nonInitCommits = data.commitLog.filter(
+          (c, idx, arr) => !(idx === arr.length - 1 && /^init$/i.test(c.message.trim()))
+        ).length;
+        assert.equal(
+          data.commits,
+          nonInitCommits,
+          `${run.id}: commits (${data.commits}) !== non-init commitLog count (${nonInitCommits})`
+        );
+      }
 
       // 4. Pricing catalog consistency: billedCostUsd from pricing catalog matches recorded costUsd within $0.02
       const econ = computeCostEconometrics(tc, data.model, data.costUsd);
@@ -110,7 +128,9 @@ test('All benchmark run JSONs satisfy token, slice, step-range, and cost conserv
 
 test('Pareto frontier, stage bottleneck matrix, and ablation presets compute deterministically', () => {
   const rawRuns = loadAllRunRecords();
-  const analyzed = analyzeAndRankRuns(rawRuns);
+  const publishedRuns = rawRuns.filter((r) => r.data.published !== false);
+  const analyzed = analyzeAndRankRuns(publishedRuns);
+  const byId = new Map(analyzed.map((r) => [r.id, r]));
 
   const frontier = analyzed.filter((r) => r.isParetoFrontier);
   assert.ok(frontier.length >= 2, 'Expected at least 2 runs on the 7/7 Pareto frontier');
@@ -140,7 +160,26 @@ test('Pareto frontier, stage bottleneck matrix, and ablation presets compute det
   );
 
   const ablations = discoverAblationPresets(analyzed);
-  assert.ok(ablations.length >= 4, 'Expected at least 4 controlled ablation presets');
+  assert.ok(ablations.length >= 8, `Expected at least 8 published ablation presets, found ${ablations.length}`);
+
+  for (const preset of ablations) {
+    assert.ok(byId.has(preset.runAId), `Preset ${preset.id} references missing/unpublished runAId ${preset.runAId}`);
+    assert.ok(byId.has(preset.runBId), `Preset ${preset.id} references missing/unpublished runBId ${preset.runBId}`);
+  }
+
+  const musePreset = ablations.find((p) => p.id === 'harness-muse-spark-1-3-contrib');
+  assert.ok(musePreset, 'Missing harness-muse-spark-1-3-contrib preset');
+  assert.ok(
+    musePreset.findingHeadline.includes('57/57 tests') && musePreset.findingHeadline.includes('37.69M tokens'),
+    `Muse Spark preset headline must reflect actual Pi telemetry (57/57 tests, 37.69M tokens): ${musePreset.findingHeadline}`
+  );
+
+  const paretoPreset = ablations.find((p) => p.id === 'pareto-cost-vs-speed');
+  assert.ok(paretoPreset, 'Missing pareto-cost-vs-speed preset');
+  assert.ok(
+    frontierIds.has(paretoPreset.runAId) && frontierIds.has(paretoPreset.runBId),
+    `pareto-cost-vs-speed runs (${paretoPreset.runAId}, ${paretoPreset.runBId}) must both lie on the Pareto frontier`
+  );
 });
 
 test('Default ranking prioritizes completion, then time, with tests and cost breaking ties', () => {
