@@ -32,9 +32,13 @@ export async function getStaticPaths() {
 
   const durations = sorted.map((r) => r.data.durationMinutes);
   const costs = sorted.map((r) => r.data.costUsd);
+  const paidFullPassCosts = sorted
+    .filter((r) => r.plan.ratio === 1 && r.data.costUsd > 0)
+    .map((r) => r.data.costUsd);
   const fastestMin = durations.length > 0 ? Math.min(...durations) : 0;
   const slowestMin = durations.length > 0 ? Math.max(...durations) : 0;
   const lowestCost = costs.length > 0 ? Math.min(...costs) : 0;
+  const lowestPaidCost = paidFullPassCosts.length > 0 ? Math.min(...paidFullPassCosts) : 0;
   const highestCost = costs.length > 0 ? Math.max(...costs) : 0;
   const totalRuns = sorted.length;
 
@@ -82,6 +86,7 @@ export async function getStaticPaths() {
         fastestMin,
         slowestMin,
         lowestCost,
+        lowestPaidCost,
         highestCost,
         prevRun,
         nextRun,
@@ -99,6 +104,7 @@ const {
   fastestMin,
   slowestMin,
   lowestCost,
+  lowestPaidCost,
   highestCost,
   prevRun,
   nextRun,
@@ -217,7 +223,16 @@ const maxToolCalls =
     ? Math.max(...d.calls.toolCalls.breakdown.map((b) => b.total))
     : 1;
 
-const isCostLeader = plan.ratio === 1 && 1.0 >= d.costUsd;
+const isCostLeader =
+  plan.ratio === 1 && (d.costUsd === lowestCost || (d.costUsd > 0 && d.costUsd === lowestPaidCost));
+const isSubDollarPass = plan.ratio === 1 && 1.0 >= d.costUsd;
+const promptTokensExact = telemetry.tokens.uncachedInput + telemetry.tokens.cachedInput;
+const promptTokensCompact =
+  promptTokensExact >= 1_000_000
+    ? `${(promptTokensExact / 1_000_000).toFixed(2)}M`
+    : promptTokensExact >= 1_000
+      ? `${(promptTokensExact / 1_000).toFixed(1)}k`
+      : String(promptTokensExact);
 const hasTestFailures = Boolean(d.tests && d.tests.total > d.tests.passed);
 const rawMaxSliceCost =
   hasSliceBreakdown && d.sliceBreakdown!.length > 1
@@ -368,7 +383,7 @@ if (1 > plan.ratio) {
   const clauses: string[] = [];
   if (telemetry.costMetrics.cacheSavingsUsd > 0 && d.tokens?.cacheHitRate && d.tokens?.total) {
     clauses.push(
-      `Served ${d.tokens.cacheHitRate} of ${d.tokens.total} tokens from prefix cache — saving ${formatCost(telemetry.costMetrics.cacheSavingsUsd)} (${telemetry.costMetrics.cacheSavingsPct}%) vs. ${formatCost(telemetry.costMetrics.uncachedCounterfactualCostUsd)} uncached`
+      `Served ${d.tokens.cacheHitRate} of ${promptTokensCompact} prompt tokens from prefix cache — saving ${formatCost(telemetry.costMetrics.cacheSavingsUsd)} (${telemetry.costMetrics.cacheSavingsPct}%) vs. ${formatCost(telemetry.costMetrics.uncachedCounterfactualCostUsd)} uncached`
     );
   } else if (d.tokens?.total) {
     clauses.push(
@@ -562,9 +577,9 @@ const pageSections = [
           </dd>
           <dd class="kpi-sub">
             {hasTestFailures && d.tests
-              ? `${d.tests.total - d.tests.passed} test ${d.tests.total - d.tests.passed === 1 ? 'failure' : 'failures'} (${d.tests.passed}/${d.tests.total} passed)`
+              ? `${d.tests.total - d.tests.passed} test ${d.tests.total - d.tests.passed === 1 ? 'failure' : 'failures'} (${d.tests.passed}/${d.tests.total} passed)${d.verification?.unverifiedSlices?.length ? ` · Agent marked ${d.verification.agentClaimedPassed}/${d.verification.agentClaimedTotal} [x]` : ''}`
               : plan.ratio < 1
-                ? `${plan.total - plan.completed} spec ${plan.total - plan.completed === 1 ? 'slice' : 'slices'} missed${d.tests ? ` · ${d.tests.passed}/${d.tests.total} ExUnit tests passed` : ''}`
+                ? `${d.verification?.unverifiedSlices?.length ? `Agent marked ${d.verification.agentClaimedPassed}/${d.verification.agentClaimedTotal} [x] (${d.verification.unverifiedSlices.join(', ')} failed audit)` : `${plan.total - plan.completed} spec ${plan.total - plan.completed === 1 ? 'slice' : 'slices'} missed`}${d.tests ? ` · ${d.tests.passed}/${d.tests.total} ExUnit tests passed` : ''}`
                 : d.tests
                   ? `All 7 specification slices passed · ${d.tests.passed}/${d.tests.total} tests`
                   : 'All 7 specification slices passed'}
@@ -585,7 +600,7 @@ const pageSections = [
           <dt class="kpi-label">Estimated Cost</dt>
           <dd class="kpi-val">
             {
-              isCostLeader ? (
+              isSubDollarPass ? (
                 <span class="kpi-acid-underline">{formatCost(d.costUsd)}</span>
               ) : (
                 formatCost(d.costUsd)
@@ -596,8 +611,10 @@ const pageSections = [
             {telemetry.costMetrics.profile?.pricingBadge
               ? `${telemetry.costMetrics.profile.billedTier.label} (Nov 2026 · paid rate TBD)`
               : isCostLeader
-                ? `Sub-$1.00 7/7 leader · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
-                : `USD · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`}
+                ? `Lowest paid 7/7 leader · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
+                : isSubDollarPass
+                  ? `Sub-$1.00 7/7 pass · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
+                  : `USD · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`}
           </dd>
         </div>
       </dl>
@@ -617,9 +634,11 @@ const pageSections = [
           <p class="detail-test-callout-copy">
             {d.tests?.details ??
               `Completed ${plan.completed} of ${plan.total} specification slices in post-run live verification.`}
-            {!hasTestFailures && plan.ratio < 1 && d.tests
-              ? ` (Agent ExUnit suite passed ${d.tests.passed}/${d.tests.total}; post-run live verification missed ${plan.total - plan.completed} ${plan.total - plan.completed === 1 ? 'slice' : 'slices'}.)`
-              : ''}
+            {d.verification?.unverifiedSlices && d.verification.unverifiedSlices.length > 0
+              ? ` (Agent checked off ${d.verification.agentClaimedPassed}/${d.verification.agentClaimedTotal} in PLAN.md${!hasTestFailures && d.tests ? ` and passed ${d.tests.passed}/${d.tests.total} ExUnit tests` : ''}; post-run holdout audit rejected ${d.verification.unverifiedSlices.join(', ')}.)`
+              : !hasTestFailures && plan.ratio < 1 && d.tests
+                ? ` (Agent ExUnit suite passed ${d.tests.passed}/${d.tests.total}; post-run live verification missed ${plan.total - plan.completed} ${plan.total - plan.completed === 1 ? 'slice' : 'slices'}.)`
+                : ''}
           </p>
         </div>
       )}
@@ -804,12 +823,14 @@ const pageSections = [
                   </div>
                   <div class="plan-item-body">
                     <div class="plan-stage-links">
-                      {!completed && sliceStat && (
+                      {!completed && (sliceStat || d.agentPlanCompletion?.[stageId]) && (
                         <span class="plan-stage-telemetry is-discrepancy">
-                          {committedStageIds.has(stageId) ||
-                          (d.tests && d.tests.total > 0 && d.tests.passed === d.tests.total)
-                            ? 'Built · failed live check'
-                            : 'Attempted · incomplete'}
+                          {d.agentPlanCompletion?.[stageId]
+                            ? 'Marked [x] in PLAN.md · failed holdout audit'
+                            : committedStageIds.has(stageId) ||
+                                (d.tests && d.tests.total > 0 && d.tests.passed === d.tests.total)
+                              ? 'Built · failed live check'
+                              : 'Attempted · incomplete'}
                         </span>
                       )}
                       {sliceStat ? (
@@ -1269,9 +1290,9 @@ const pageSections = [
                       <dt class="tokens-meta-label">Cache Hit Rate</dt>
                       <dd class="mono">
                         <strong class="kpi-acid-underline">{d.tokens.cacheHitRate}</strong>
-                        {d.tokens.cachedInput && d.tokens.total ? (
+                        {d.tokens.cachedInput && promptTokensExact > 0 ? (
                           <span class="tokens-meta-sub">
-                            ({d.tokens.cachedInput} / {d.tokens.total})
+                            ({d.tokens.cachedInput} / {promptTokensCompact} prompt)
                           </span>
                         ) : null}
                       </dd>
@@ -1372,8 +1393,8 @@ const pageSections = [
                         <span class="kpi-acid-underline">{d.tokens.cacheHitRate}</span>
                       </dd>
                       <dd class="kpi-sub">
-                        {d.tokens.cachedInput && d.tokens.total
-                          ? `${d.tokens.cachedInput} cached of ${d.tokens.total} total tokens`
+                        {d.tokens.cachedInput && promptTokensExact > 0
+                          ? `${d.tokens.cachedInput} cached of ${promptTokensCompact} prompt tokens`
                           : 'Cached input share of total prompt tokens'}
                       </dd>
                     </div>

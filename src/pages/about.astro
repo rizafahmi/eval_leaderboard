@@ -344,8 +344,11 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
             <div class="judging-row">
               <dt class="judging-term">Cache Hit Rate Formula</dt>
               <dd class="judging-desc">
-                Calculated as <code>cacheRead / (input + cacheRead + cacheWrite)</code>. High prompt
-                cache reuse substantially lowers cost across long multi-step TDD runs.
+                Calculated over prompt tokens only as{' '}
+                <code>cachedInput / (uncachedInput + cachedInput)</code> (i.e.,{' '}
+                <code>cacheRead / (input + cacheWrite + cacheRead)</code>; completion output tokens
+                are excluded from the denominator). High prompt cache reuse substantially lowers cost
+                across long multi-step TDD runs.
               </dd>
             </div>
             <div class="judging-row">
