@@ -681,6 +681,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 1c. Harness Ablation: omp vs Antigravity CLI on gemini-4-carbon (High)
+  const ompCarbonHarness = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'gemini-4-carbon'
+  );
+  const agyCarbonHarness = runs.find(
+    (r) => r.displayHarness === 'Antigravity CLI' && r.data.model === 'gemini-4-carbon'
+  );
+  if (ompCarbonHarness && agyCarbonHarness) {
+    presets.push({
+      id: 'harness-gemini-4-carbon',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'omp vs. Antigravity CLI (gemini-4-carbon · High)',
+      subtitle: 'Minimal 4-tool omp harness (6.3k initial prompt) vs. 58-tool Antigravity CLI with reactive background tasks (13.1k initial prompt)',
+      runAId: ompCarbonHarness.id,
+      runBId: agyCarbonHarness.id,
+      findingHeadline: `Both achieved 7/7 full pass; Antigravity CLI used 7% fewer LLM turns (${agyCarbonHarness.llmCalls} vs ${ompCarbonHarness.llmCalls}) and 42/42 tests (plus a two-file CB_READY_FILE startup Ctrl-C handshake), while omp finished 25m faster (${ompCarbonHarness.data.durationMinutes}m vs ${agyCarbonHarness.data.durationMinutes}m) at 17% lower cost ($${ompCarbonHarness.data.costUsd.toFixed(2)} vs $${agyCarbonHarness.data.costUsd.toFixed(2)}) with fewer mid-run cache evictions.`,
+    });
+  }
+
   // 2. Effort Scaling: ZCode glm-5.3-flash High vs Low (and High vs Max)
   const flashHigh = runs.find(
     (r) => r.data.model === 'glm-5.3-flash' && r.data.effort?.toLowerCase() === 'high'

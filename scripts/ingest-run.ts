@@ -47,26 +47,37 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       continue;
     }
 
+    const stepUpdate = parsed.step_update as Record<string, unknown> | undefined;
+    if (parsed.event === 'init' || parsed.event === 'result') {
+      continue;
+    }
+    if (stepUpdate && stepUpdate.state === 'ACTIVE') {
+      continue;
+    }
+
+    const evObj = stepUpdate ?? parsed;
+
     stepCounter += 1;
     const stepIndex =
-      typeof parsed.step_index === 'number'
-        ? parsed.step_index
-        : typeof parsed.stepIndex === 'number'
-          ? parsed.stepIndex
+      typeof evObj.step_index === 'number'
+        ? evObj.step_index
+        : typeof evObj.stepIndex === 'number'
+          ? evObj.stepIndex
           : stepCounter;
 
-    const msg = parsed.message as Record<string, unknown> | undefined;
-    const resp = parsed.response as Record<string, unknown> | undefined;
-    const payload = parsed.payload as Record<string, unknown> | undefined;
+    const msg = evObj.message as Record<string, unknown> | undefined;
+    const resp = evObj.response as Record<string, unknown> | undefined;
+    const payload = evObj.payload as Record<string, unknown> | undefined;
     const payloadModels = Array.isArray(payload?.models)
       ? (payload.models[0] as Record<string, unknown> | undefined)
       : undefined;
-    const part = parsed.part as Record<string, unknown> | undefined;
+    const part = evObj.part as Record<string, unknown> | undefined;
     const partTokens = part?.tokens as Record<string, unknown> | undefined;
     const partCache = partTokens?.cache as Record<string, unknown> | undefined;
     const partState = part?.state as Record<string, unknown> | undefined;
+    const toolInfo = evObj.tool_info as Record<string, unknown> | undefined;
     const usage =
-      (parsed.usage as Record<string, unknown> | undefined) ??
+      (evObj.usage as Record<string, unknown> | undefined) ??
       (msg?.usage as Record<string, unknown> | undefined) ??
       (resp?.usage as Record<string, unknown> | undefined) ??
       payloadModels ??
@@ -79,8 +90,9 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         usage.cached_tokens ??
         usage.cacheReadTokens ??
         usage.cacheRead ??
+        usage.cache_read_tokens ??
         partCache?.read ??
-        parsed.cache_read_tokens ??
+        evObj.cache_read_tokens ??
         0
     );
 
@@ -124,14 +136,15 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     );
     // OpenCode step_finish reports visible output and reasoning tokens separately
     const outputTokens =
-      String(parsed.type ?? '') === 'step_finish' ? rawOutput + thinkingTokens : rawOutput;
+      String(evObj.type ?? '') === 'step_finish' ? rawOutput + thinkingTokens : rawOutput;
 
     let role: RawTurnEvent['role'] = 'system';
     const rawType = String(
-      msg?.role ?? parsed.payload_type ?? parsed.type ?? parsed.role ?? ''
+      msg?.role ?? evObj.payload_type ?? evObj.step_type ?? evObj.type ?? evObj.role ?? ''
     ).toLowerCase();
     if (
       rawType.includes('assistant') ||
+      rawType.includes('agent_response') ||
       rawType.includes('planner_response') ||
       rawType.includes('turn.completed') ||
       rawType.includes('run.usage') ||
@@ -147,25 +160,29 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     }
 
     const toolName =
-      typeof parsed.tool_name === 'string'
-        ? parsed.tool_name
-        : typeof parsed.tool === 'string'
-          ? parsed.tool
+      typeof evObj.tool_name === 'string'
+        ? evObj.tool_name
+        : typeof evObj.tool === 'string'
+          ? evObj.tool
           : typeof part?.tool === 'string'
             ? part.tool
             : typeof msg?.toolName === 'string'
               ? msg.toolName
               : undefined;
+    const toolOutput = typeof toolInfo?.output === 'string' ? toolInfo.output : '';
+    const toolExitMatch = toolOutput.match(/Command exited with code (\d+)/);
+    const hasNonZeroCommandExit = Boolean(toolExitMatch && toolExitMatch[1] !== '0');
     const toolError = Boolean(
-      parsed.isError === true ||
-        parsed.is_error === true ||
+      evObj.isError === true ||
+        evObj.is_error === true ||
         msg?.isError === true ||
-        String(parsed.status ?? '').toLowerCase() === 'error' ||
-        String(partState?.status ?? '').toLowerCase() === 'error'
+        String(evObj.status ?? '').toLowerCase() === 'error' ||
+        String(partState?.status ?? '').toLowerCase() === 'error' ||
+        hasNonZeroCommandExit
     );
     events.push({
       stepIndex,
-      timestamp: typeof parsed.timestamp === 'string' ? parsed.timestamp : undefined,
+      timestamp: typeof evObj.timestamp === 'string' ? evObj.timestamp : undefined,
       role,
       uncachedInputTokens,
       cachedInputTokens,
@@ -174,7 +191,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       toolName,
       toolError,
       commitMessage:
-        typeof parsed.commitMessage === 'string' ? parsed.commitMessage : undefined,
+        typeof evObj.commitMessage === 'string' ? evObj.commitMessage : undefined,
     });
   }
 
