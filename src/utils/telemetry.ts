@@ -701,6 +701,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 1d. Harness Ablation: Antigravity CLI vs omp on gemini-4-argon (High)
+  const ompArgonHarness = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'gemini-4-argon'
+  );
+  const agyArgonHarness = runs.find(
+    (r) => r.displayHarness === 'Antigravity CLI' && r.data.model === 'gemini-4-argon'
+  );
+  if (agyArgonHarness && ompArgonHarness) {
+    presets.push({
+      id: 'harness-gemini-4-argon',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'Antigravity CLI vs. omp (gemini-4-argon · High)',
+      subtitle: '58-tool Antigravity CLI with 0 manage_task polls vs. minimal 4-tool omp harness on identical $2/$0.10/$10 rates',
+      runAId: agyArgonHarness.id,
+      runBId: ompArgonHarness.id,
+      findingHeadline: `Both completed 7/7 in almost identical turns (${agyArgonHarness.llmCalls} vs ${ompArgonHarness.llmCalls}); Antigravity CLI used 30% fewer tokens (${agyArgonHarness.data.tokens?.total ?? '12.75M'} vs ${ompArgonHarness.data.tokens?.total ?? '18.29M'}) and cost 15% less ($${agyArgonHarness.data.costUsd.toFixed(2)} vs $${ompArgonHarness.data.costUsd.toFixed(2)}) with 0 manage_task polls, while omp finished 8m faster (${ompArgonHarness.data.durationMinutes}m vs ${agyArgonHarness.data.durationMinutes}m).`,
+    });
+  }
+
   // 2. Effort Scaling: ZCode glm-5.3-flash High vs Low (and High vs Max)
   const flashHigh = runs.find(
     (r) => r.data.model === 'glm-5.3-flash' && r.data.effort?.toLowerCase() === 'high'
@@ -767,6 +787,20 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       runAId: ompArgon.id,
       runBId: ompCarbon.id,
       findingHeadline: `gemini-4-argon cut 7/7 turns by 38% (${ompArgon.llmCalls} vs ${ompCarbon.llmCalls}), tokens by 33% (${ompArgon.data.tokens?.total ?? '18.29M'} vs ${ompCarbon.data.tokens?.total ?? '27.47M'}), time by 10m (${ompArgon.data.durationMinutes}m vs ${ompCarbon.data.durationMinutes}m), and cost by 33% ($${ompArgon.data.costUsd.toFixed(2)} vs $${ompCarbon.data.costUsd.toFixed(2)}).`,
+    });
+  }
+
+  // 3b2. Model Comparison: Antigravity CLI gemini-4-argon vs gemini-4-carbon (High)
+  if (agyArgonHarness && agyCarbonHarness) {
+    presets.push({
+      id: 'model-agy-argon-vs-carbon',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'Antigravity CLI: gemini-4-argon vs. gemini-4-carbon (High)',
+      subtitle: 'Same Antigravity CLI harness & $2/$0.10/$10 rate schedule — 1.53 vs 1.17 tools/turn & 0 vs 5 post-stall cache evictions',
+      runAId: agyArgonHarness.id,
+      runBId: agyCarbonHarness.id,
+      findingHeadline: `gemini-4-argon cut 7/7 turns by 34% (${agyArgonHarness.llmCalls} vs ${agyCarbonHarness.llmCalls}), tokens by 53% (${agyArgonHarness.data.tokens?.total ?? '12.75M'} vs ${agyCarbonHarness.data.tokens?.total ?? '26.88M'}), time by 27m (${agyArgonHarness.data.durationMinutes}m vs ${agyCarbonHarness.data.durationMinutes}m), and cost by 53% ($${agyArgonHarness.data.costUsd.toFixed(2)} vs $${agyCarbonHarness.data.costUsd.toFixed(2)}).`,
     });
   }
 

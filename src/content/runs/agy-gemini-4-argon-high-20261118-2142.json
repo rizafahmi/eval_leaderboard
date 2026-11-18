@@ -1,0 +1,292 @@
+{
+  "timestamp": "2026-11-18T21:42:40+07:00",
+  "codingHarness": "antigravity cli",
+  "model": "gemini-4-argon",
+  "effort": "High",
+  "provider": "Gemini",
+  "durationMinutes": 61,
+  "costUsd": 3.37,
+  "commits": 7,
+  "tests": {
+    "passed": 26,
+    "total": 26,
+    "durationSeconds": 13.6,
+    "details": "Finished in 13.6 seconds (13.6s async, 0.00s sync) — 26 passed (13.0s 26/26 in JSONL task-330 release check & 13.5s–13.7s 26/26 across 5 audit reruns; 25/26 in 1 post-run manual check due to concurrent async CLI spawn jitter; mix format --check-formatted clean; mix credo --strict: 69 checks on 14 files, 140 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "agentSuitePassed": 26,
+    "agentSuiteTotal": 26
+  },
+  "interface": {
+    "type": "cli",
+    "command": "agy --mode auto --dangerously-skip-permissions --model gemini-4-argon-high --effort high --output-format stream-json --print \"$(< PROMPT.md)\" > records/20261118T144240Z.events.jsonl 2> records/20261118T144240Z.stderr.log",
+    "details": "Run window: 21:42:40–22:43:39 WIB (1h 00m 59s / 3,659.2s wall-clock incl. 3m 15s S3 API timeout retry at step 145; 57m 44s / 3,464.2s active execution; placeholder 00:00-99:99 in manual note) • Session a4fd8525-5124-4642-88b7-476e0f2911cd (gemini-4-argon-high, permission_mode: always-proceed, 131 LLM turns, 344 steps)"
+  },
+  "tokens": {
+    "input": "410.5k",
+    "cachedInput": "12.20M",
+    "output": "133.3k",
+    "thinking": "52.2k",
+    "total": "12.75M",
+    "cacheHitRate": "96.75%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 410463,
+    "cachedInput": 12201809,
+    "output": 133296,
+    "thinking": 52223,
+    "total": 12745568,
+    "cacheHitRatePct": 96.75
+  },
+  "contextWindow": "203.8k peak (13,158 → 203,770 prompt tokens; 204,974 total; 19.43% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 13158,
+    "avgTokens": 96277,
+    "peakTokens": 203770,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 19.43
+  },
+  "calls": {
+    "llmCalls": 131,
+    "toolCalls": {
+      "total": 200,
+      "done": 173,
+      "error": 27,
+      "breakdown": [
+        {
+          "tool": "run_command",
+          "total": 102,
+          "done": 75,
+          "error": 27
+        },
+        {
+          "tool": "edit_file",
+          "total": 67,
+          "done": 67,
+          "error": 0
+        },
+        {
+          "tool": "write_file",
+          "total": 19,
+          "done": 19,
+          "error": 0
+        },
+        {
+          "tool": "read_file",
+          "total": 12,
+          "done": 12,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "e4b6b84",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S7: handle foreground Ctrl-C interruption with partial summary and exit 130"
+    },
+    {
+      "hash": "98585e0",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and p50/p95 latency percentiles"
+    },
+    {
+      "hash": "c8122ee",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S5: report HTTP status outcomes, transport failures, and exit codes"
+    },
+    {
+      "hash": "a7a17e2",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S4: implement paced five-second benchmark loop"
+    },
+    {
+      "hash": "4649b8e",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S3: implement bounded HTTP/HTTPS GET client with streaming and TLS verification"
+    },
+    {
+      "hash": "30f7776",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments and URLs"
+    },
+    {
+      "hash": "2f50a35",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI with help flags and lint setup"
+    },
+    {
+      "hash": "aea16f6",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "410,463",
+      "rate2026": "$2.00 / 1M",
+      "cost2026": "$0.8209",
+      "rate2027": "$4.00 / 1M",
+      "cost2027": "$1.6419"
+    },
+    {
+      "component": "Cached Input (cache_read_tokens)",
+      "tokens": "12,201,809",
+      "rate2026": "$0.10 / 1M (95% off)",
+      "cost2026": "$1.2202",
+      "rate2027": "$0.20 / 1M (95% off)",
+      "cost2027": "$2.4404"
+    },
+    {
+      "component": "Output (incl. 52,223 thinking)",
+      "tokens": "133,296",
+      "rate2026": "$10.00 / 1M",
+      "cost2026": "$1.3330",
+      "rate2027": "$20.00 / 1M",
+      "cost2027": "$2.6659"
+    },
+    {
+      "component": "Total",
+      "tokens": "12,745,568",
+      "cost2026": "$3.37 ($3.3741)",
+      "cost2027": "$6.75 ($6.7481)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation: Workspace audit & README contract migration",
+      "stepRange": "1–24",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 3999,
+      "costUsd": 0.14
+    },
+    {
+      "slice": "S1: CLI help, +Bi escript wrapper & SIGTERM PTY signal probe (2f50a35)",
+      "stepRange": "25–89",
+      "llmCalls": 29,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 9300,
+      "costUsd": 0.45
+    },
+    {
+      "slice": "S2: CLI argument & URL validation before network requests (30f7776)",
+      "stepRange": "90–138",
+      "llmCalls": 18,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 3424,
+      "costUsd": 0.29
+    },
+    {
+      "slice": "S3: Bounded :gen_tcp/:ssl GET client, TLS verify & streaming discard (4649b8e)",
+      "stepRange": "139–211",
+      "llmCalls": 29,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 16961,
+      "costUsd": 0.81
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & connection reuse (a7a17e2)",
+      "stepRange": "212–246",
+      "llmCalls": 13,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 6415,
+      "costUsd": 0.42
+    },
+    {
+      "slice": "S5: HTTP status outcomes, transport failures & exit codes (c8122ee)",
+      "stepRange": "247–276",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2353,
+      "costUsd": 0.4
+    },
+    {
+      "slice": "S6: Elapsed duration & completed-response p50/p95 latencies (98585e0)",
+      "stepRange": "277–308",
+      "llmCalls": 12,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4098,
+      "costUsd": 0.38
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (e4b6b84)",
+      "stepRange": "309–336",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 5168,
+      "costUsd": 0.33
+    },
+    {
+      "slice": "Release verification: HTTP/HTTPS local servers & stdout/stderr checks",
+      "stepRange": "337–344",
+      "llmCalls": 4,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 505,
+      "costUsd": 0.15
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 1h 00m 59s Wall-Clock (vs. Placeholder 00:00-99:99), 7 Agent Commits (+1 Pre-Run init) & 26/26 Async Tests in 13.6s",
+    "Zero manage_task Polling Overhead: 0 Polls Across 11 Backgrounded Commands via Pure Reactive system_message Waiting",
+    "SIGTERM + +Bi Escript Wrapper Passed All Post-Boot PTY Ctrl-C Probes While Leaving a ~250 ms Early-Boot SIGTERM Race",
+    "53% Lower Cost Than gemini-4-carbon ($3.37 vs. $7.16), 96.75% Cache Hit Rate ($23.18 Saved) & 100% File-Edit Precision (86/86)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 1h 00m 59s Wall-Clock (vs. Placeholder 00:00-99:99), 7 Agent Commits (+1 Pre-Run init) & 26/26 Async Tests in 13.6s",
+      "bullets": [
+        "Recovering Exact Duration (`61m` / `1h 00m 59s` in JSONL vs. `00:00-99:99` in Manual Note): Because the manual note contained a placeholder duration (`TIme 00:00-99:99`), exact timing was recovered from `records/20261118T144240Z.events.jsonl` and `transcript.jsonl`. Session `a4fd8525-5124-4642-88b7-476e0f2911cd` opened at `2026-11-18T14:42:40Z` (`21:42:40 WIB`), dispatched `USER_INPUT` at `21:42:42 WIB`, and completed final step `344` at `22:43:39 WIB` (`result.duration_seconds: 3659.24s` = `1h 00m 59.2s` / `61m`). One `3m 15s` (`195s`) upstream API read timeout occurred at Step `145` (`22:01:50` → `22:05:05 WIB`), leaving `57m 44s` (`3,464.2s`) of active execution.",
+        "Commit Count Audit (`7` Agent Commits vs. `8` Total Git Commits): The manual note recorded `Git commit: 8` alongside the 8-line `git log` output (`aea16f6 init` through `e4b6b84 S7`). Comparing commit timestamps against session start shows `aea16f6` (`init` at `21:42:28 WIB`) was created `12 seconds` before `agy` launched at `21:42:40 WIB`. Following the leaderboard's non-init conservation rule (`tests/audit-runs.test.ts`), `commits` records the `7` agent-authored slice commits (`2f50a35` `S1` through `e4b6b84` `S7`) while `commitLog` lists all `8` git commits.",
+        "Test Suite Audit (`26/26` in `task-330.log` & 5/5 Audit Reruns vs. `25/26` Post-Run Note): In `test/capy_bench_http_cli_test.exs` and `test/capy_bench_https_cli_test.exs`, the agent multiplexed 7 HTTP and 3 HTTPS 5-second `./cb` subprocess scenarios inside single ExUnit tests via `Task.async_stream(..., max_concurrency: 7)`, cutting full-suite runtime to `13.0s–13.6s` (`13.6s async, 0.00s sync`). In the agent's final in-session validation (`task-330.log` at Step `330`) and across 5/5 post-run verification runs, all `26/26` tests passed (while one post-run manual check saw `25/26` from concurrent BEAM escript spawn jitter)."
+      ]
+    },
+    {
+      "title": "Zero manage_task Polling Overhead: 0 Polls Across 11 Backgrounded Commands via Pure Reactive system_message Waiting",
+      "bullets": [
+        "0 `manage_task` Calls Across 344 Steps: Whenever a `run_command` exceeded the 10-second synchronous wait cap (`WaitMsBeforeAsync: 10000`), Antigravity CLI moved the task to the background (`11` times total: `task-60`, `task-75`, `task-193`, `task-205`, `task-239`, `task-269`, `task-290`, `task-295`, `task-303`, `task-330`, and `task-340`). On every single backgrounded command, `gemini-4-argon` output a one-line status update, ended its turn, and waited for the reactive `system_message` completion wakeup—making **`0` `manage_task` calls** across the entire run (compared to `7` on `gemini-4-carbon` and `105` on `gemini-3.8-flash-high`).",
+        "Aggressive Multi-Tool Batching (`1.53` Tools/Turn, 59 Multi-Tool Turns): Out of `131` LLM turns, `59` turns (`45.0%`) dispatched multiple parallel tool calls in a single response (up to `5` tools/turn, totaling `200` tool calls: `102` `run_command`, `67` `edit_file`, `19` `write_file`, `12` `read_file`).",
+        "Harness Comparison (`antigravity cli` vs. `omp` on `gemini-4-argon` High): Compared to `omp` running the same `gemini-4-argon` (`High`) model (`132` turns, `18.29M` tokens, `$3.97`, `53m`), `antigravity cli` matched the turn count almost identically (`131` vs. `132` turns) and cut total tokens by **`30.3%`** (`12.75M` vs. `18.29M`) and billed cost by **`15.1%`** (`$3.37` vs. `$3.97`) because its average prompt context stayed `24.6%` smaller (`96,277` vs. `127,667` tokens, peaking at `203,770` vs. `214,321`)."
+      ]
+    },
+    {
+      "title": "SIGTERM + +Bi Escript Wrapper Passed All Post-Boot PTY Ctrl-C Probes While Leaving a ~250 ms Early-Boot SIGTERM Race",
+      "bullets": [
+        "Diagnosing `SIGUSR1` Crash Dumps & Choosing `SIGTERM` in `S1` (Steps `30–78`): During `S1`, the agent probed `:os.set_signal/2` on OTP 28 and observed that `SIGUSR1` triggered ERTS's default `Received SIGUSR1 / Crash dump is being written to: erl_crash.dump` handler (Step `43`) before custom handlers were swapped in. It therefore configured `mix.exs` with `escript: [main_module: CapyBench.CLI, path: \"cb.escript\", emu_args: \"+Bi -noinput\"]` and wrote `./cb` to trap `INT TERM`, forward `kill -TERM \"$child\"`, and loop `wait \"$child\"` until the child PID exits while `CapyBench.SignalHandler` swaps `:erl_signal_handler` on `:erl_signal_server` for `:sigterm`.",
+        "Holdout PTY `Ctrl-C` Audit (Post-Boot Pass vs. `20 ms–250 ms` Boot-Window Race): Against both local HTTP servers (`10 ms` fast pacing, `800 ms` slow in-flight, `3,000 ms` stalled in-flight) and live HTTPS (`https://rizafahmi.com`), sending `\\x03` on a foreground PTY at `>= 350 ms` (`0.35s`, `0.40s`, `0.50s`, `0.55s`, `0.80s`) passed 100%—stopping new dispatches, printing a valid 6-line partial summary to `stdout` (`started == responses + failures`), emitting empty `stderr`, and exiting `130`. However, because `./cb` forwards `kill -TERM \"$child\"` immediately without a readiness handshake (`CB_READY_FILE`) or boot-time `SIG_IGN`, a `Ctrl-C` arriving during the first `~250 ms` of BEAM startup kills or interrupts the VM before `CapyBench.CLI.run_benchmark/2` calls `CapyBench.SignalHandler.install/1` (`20–50 ms` exits `143` via default `SIGTERM`; `100–250 ms` hits `{noproc, {gen_server, call, [elixir_config, ...]}}` or `:standard_io` EIO)."
+      ]
+    },
+    {
+      "title": "53% Lower Cost Than gemini-4-carbon ($3.37 vs. $7.16), 96.75% Cache Hit Rate ($23.18 Saved) & 100% File-Edit Precision (86/86)",
+      "bullets": [
+        "100% File-Edit Success & Decomposition of the 27 Non-Zero `run_command` Exits: Every single `edit_file` (`67/67`), `write_file` (`19/19`), and `read_file` (`12/12`) call succeeded on the first try (`0` file-tool errors). All `27` tool errors were non-zero `run_command` exits: `16` deliberate red-phase TDD `mix test` runs confirming new tests failed before writing implementation code (`S1` Step `21`; `S2` Steps `96`, `102`, `108`, `114`, `120`, `126`; `S3` Steps `160`, `170`, `183`; `S4` Steps `214`, `220`, `228`; `S5` Step `249`; `S6` Step `281`; `S7` Step `312`), `4` `mix credo --strict` readability/nesting catches (`S3` Step `202`, `S4` Step `236`, `S5` Step `266`, `S7` Step `327`), `4` disposable OTP/PTY/PKI one-liners (`Steps 43, 60, 142, 151`), `2` intermediate S6 TLS test timing adjustments (`Steps 290, 295`), and `1` S7 unused-variable `--warnings-as-errors` catch (`Step 320`).",
+        "Unit Economics & Single Post-Turn-1 Cache Miss (`96.75%` Cache Hit Rate): Across `131` turns, `gemini-4-argon` processed `12,612,272` prompt tokens (`410,463` uncached at `$2.00/1M` = `$0.8209` + `12,201,809` cached at `$0.10/1M` = `$1.2202`) and `133,296` output tokens (including `52,223` thinking tokens) at `$10.00/1M` (`$1.3330`), totaling `12,745,568` tokens and `$3.3741` (`$3.37` under 2026 rates; `$6.75` under 2027 rates; saving `$23.18` / `87.3%` via prefix caching). Only one turn after Turn 1 experienced `cache_read_tokens: 0` (Step `38` during `S1` at `28,650` tokens), and even after Step `145`'s `3m 15s` API timeout, Step `146` resumed with a `68,907`-token cache hit.",
+        "Model Ablation on Antigravity CLI (`gemini-4-argon` vs. `gemini-4-carbon` High): Running on the exact same `antigravity cli` harness and `$2.00/$0.10/$10.00` rate card, `gemini-4-argon` finished `27m` faster (`61m` vs. `88m` active), used `33.8%` fewer LLM turns (`131` vs. `198`), `52.6%` fewer total tokens (`12.75M` vs. `26.88M`), and cut total cost by **`52.9%`** (`$3.37` vs. `$7.16`)."
+      ]
+    }
+  ]
+}
