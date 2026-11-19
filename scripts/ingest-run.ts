@@ -208,6 +208,39 @@ function formatCompactTokens(n: number): string {
   return `${n}`;
 }
 
+export const MAX_COMMIT_LOG_ENTRIES = 25;
+
+export function countNonInitCommits(
+  commits: Array<{ hash: string; relativeTime?: string; author?: string; message: string }>
+): number {
+  return commits.filter(
+    (c, idx, arr) => !(idx === arr.length - 1 && /^init$/i.test(c.message.trim()))
+  ).length;
+}
+
+export function derivePlanCompletionFromCommits(
+  commits?: Array<{ hash: string; relativeTime?: string; author?: string; message: string }>
+): Record<string, boolean> {
+  const planCompletion: Record<string, boolean> = {
+    S1: false,
+    S2: false,
+    S3: false,
+    S4: false,
+    S5: false,
+    S6: false,
+    S7: false,
+  };
+  if (commits) {
+    for (const c of commits) {
+      const st = matchCommitStageId(c.message);
+      if (st && st in planCompletion) {
+        planCompletion[st] = true;
+      }
+    }
+  }
+  return planCompletion;
+}
+
 export function buildRunRecordFromEvents(opts: {
   events: RawTurnEvent[];
   codingHarness: string;
@@ -216,12 +249,13 @@ export function buildRunRecordFromEvents(opts: {
   provider: string;
   timestamp: string;
   durationMinutes: number;
-  planCompletion: Record<string, boolean>;
+  costUsd?: number;
+  planCompletion?: Record<string, boolean>;
   agentPlanCompletion?: Record<string, boolean>;
   commits?: Array<{ hash: string; relativeTime?: string; author?: string; message: string }>;
 }): RunRecordData {
-  const { events, codingHarness, model, effort, provider, timestamp, durationMinutes, planCompletion } =
-    opts;
+  const { events, codingHarness, model, effort, provider, timestamp, durationMinutes } = opts;
+  const planCompletion = opts.planCompletion ?? derivePlanCompletionFromCommits(opts.commits);
 
   let uncachedInput = 0;
   let cachedInput = 0;
@@ -258,12 +292,21 @@ export function buildRunRecordFromEvents(opts: {
   const cacheHitRatePct =
     totalPrompt > 0 ? Number(((cachedInput / totalPrompt) * 100).toFixed(2)) : 0;
 
+  if (opts.costUsd !== undefined && (!Number.isFinite(opts.costUsd) || opts.costUsd < 0)) {
+    throw new Error(`Invalid costUsd "${opts.costUsd}": expected a non-negative finite number.`);
+  }
+
   const econ = computeCostEconometrics(
     { uncachedInput, cachedInput, output, thinking, total },
     model,
-    0
+    opts.costUsd ?? 0
   );
-  const costUsd = Number(econ.billedCostUsd.toFixed(2));
+  if (!econ.profile && opts.costUsd === undefined) {
+    throw new Error(
+      `Model "${model}" is not in MODEL_PRICING_CATALOG. Add its pricing profile to src/data/pricing.ts or pass an explicit costUsd (CLI: --cost <usd>).`
+    );
+  }
+  const costUsd = Number((opts.costUsd ?? econ.billedCostUsd).toFixed(2));
   const plan = getPlanStats(planCompletion);
 
   const toolBreakdown = [...toolCounts.entries()]
@@ -273,11 +316,9 @@ export function buildRunRecordFromEvents(opts: {
   const toolDone = toolBreakdown.reduce((s, b) => s + b.done, 0);
   const toolError = toolBreakdown.reduce((s, b) => s + b.error, 0);
 
-  const agentCommitsCount = opts.commits
-    ? opts.commits.filter(
-        (c, idx, arr) =>
-          !(idx === arr.length - 1 && /^init$/i.test(c.message.trim()))
-      ).length
+  const agentCommitsCount = opts.commits ? countNonInitCommits(opts.commits) : undefined;
+  const storedCommitLog = opts.commits
+    ? opts.commits.slice(0, MAX_COMMIT_LOG_ENTRIES)
     : undefined;
   const claimedPlan = opts.agentPlanCompletion
     ? getPlanStats(opts.agentPlanCompletion)
@@ -338,7 +379,7 @@ export function buildRunRecordFromEvents(opts: {
         breakdown: toolBreakdown,
       },
     },
-    ...(opts.commits ? { commitLog: opts.commits } : {}),
+    ...(storedCommitLog ? { commitLog: storedCommitLog } : {}),
   };
 }
 
@@ -454,11 +495,11 @@ export function syncRunsDirectory(runsDir: string): { updated: number; files: st
   return { updated, files };
 }
 
-function readGitCommitsFromRepo(repoDir: string) {
+export function readGitCommitsFromRepo(repoDir: string) {
   try {
     const out = execFileSync(
       'git',
-      ['-C', repoDir, 'log', '--pretty=format:%h|%cr|%an|%s', '-n', '25'],
+      ['-C', repoDir, 'log', '--pretty=format:%h|%cr|%an|%s'],
       { encoding: 'utf8' }
     );
     return out
@@ -515,7 +556,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const transcriptPath = getArg('--transcript');
   if (!transcriptPath) {
     console.error(
-      'Usage: node --experimental-strip-types scripts/ingest-run.ts [--sync] | [--transcript <events.jsonl> --harness <name> --model <name> --provider <name> --duration <min> [--repo <dir>] [--out <file.json>]]'
+      'Usage: node --experimental-strip-types scripts/ingest-run.ts [--sync] | [--transcript <events.jsonl> --harness <name> --model <name> --provider <name> --duration <min> [--cost <usd>] [--repo <dir>] [--out <file.json>]]'
     );
     process.exit(2);
   }
@@ -527,24 +568,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const agentPlanCompletion = repoDir
     ? readPlanCheckboxesFromRepo(path.resolve(repoDir))
     : undefined;
-
-  const planCompletion: Record<string, boolean> = {
-    S1: false,
-    S2: false,
-    S3: false,
-    S4: false,
-    S5: false,
-    S6: false,
-    S7: false,
-  };
-  if (commits) {
-    for (const c of commits) {
-      const st = matchCommitStageId(c.message);
-      if (st && st in planCompletion) {
-        planCompletion[st] = true;
-      }
-    }
-  }
+  const planCompletion = derivePlanCompletionFromCommits(commits);
+  const costArg = getArg('--cost');
+  const costUsd = costArg !== undefined ? Number(costArg) : undefined;
 
   const record = buildRunRecordFromEvents({
     events,
@@ -554,6 +580,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     provider: getArg('--provider') ?? 'Unknown',
     timestamp: getArg('--timestamp') ?? new Date().toISOString(),
     durationMinutes: Number(getArg('--duration') ?? 0),
+    ...(costUsd !== undefined ? { costUsd } : {}),
     planCompletion,
     ...(agentPlanCompletion ? { agentPlanCompletion } : {}),
     commits,

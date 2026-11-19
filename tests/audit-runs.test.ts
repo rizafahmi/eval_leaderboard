@@ -9,9 +9,13 @@ import {
   type RunRecordData,
 } from '../src/utils/telemetry.ts';
 import { computeCostEconometrics } from '../src/data/pricing.ts';
+import { execFileSync } from 'node:child_process';
+import os from 'node:os';
 import {
+  MAX_COMMIT_LOG_ENTRIES,
   buildRunRecordFromEvents,
   parseRawTranscriptJsonl,
+  readGitCommitsFromRepo,
 } from '../scripts/ingest-run.ts';
 import {
   BENCHMARK_AGENTS_MD,
@@ -80,11 +84,18 @@ test('All benchmark run JSONs satisfy token, slice, step-range, and cost conserv
         const nonInitCommits = data.commitLog.filter(
           (c, idx, arr) => !(idx === arr.length - 1 && /^init$/i.test(c.message.trim()))
         ).length;
-        assert.equal(
-          data.commits,
-          nonInitCommits,
-          `${run.id}: commits (${data.commits}) !== non-init commitLog count (${nonInitCommits})`
-        );
+        if (data.commitLog.length < MAX_COMMIT_LOG_ENTRIES) {
+          assert.equal(
+            data.commits,
+            nonInitCommits,
+            `${run.id}: commits (${data.commits}) !== non-init commitLog count (${nonInitCommits})`
+          );
+        } else {
+          assert.ok(
+            data.commits >= nonInitCommits,
+            `${run.id}: commits (${data.commits}) < truncated non-init commitLog count (${nonInitCommits})`
+          );
+        }
       }
 
       // 4. Pricing catalog consistency: billedCostUsd from pricing catalog matches recorded costUsd within $0.02
@@ -292,6 +303,89 @@ test('Raw JSONL transcript ingestion parses turns and builds a valid RunRecordDa
   assert.equal(record.calls?.toolCalls?.total, 1);
   assert.equal(record.verification?.holdoutPassed, 2);
   assert.equal(record.verification?.holdoutVerdict, 'partial-pass');
+});
+
+test('buildRunRecordFromEvents rejects uncataloged models without explicit costUsd and accepts explicit costUsd override', () => {
+  const events = parseRawTranscriptJsonl(
+    JSON.stringify({
+      step_index: 1,
+      type: 'PLANNER_RESPONSE',
+      usage: {
+        uncached_input_tokens: 5000,
+        cache_read_input_tokens: 0,
+        output_tokens: 250,
+      },
+    })
+  );
+
+  assert.throws(
+    () =>
+      buildRunRecordFromEvents({
+        events,
+        codingHarness: 'Pi',
+        model: 'unknown-model',
+        provider: 'Unknown',
+        timestamp: '2026-11-18T00:00:00Z',
+        durationMinutes: 10,
+      }),
+    /not in MODEL_PRICING_CATALOG/
+  );
+
+  const pricedRecord = buildRunRecordFromEvents({
+    events,
+    codingHarness: 'Pi',
+    model: 'unknown-model',
+    provider: 'Unknown',
+    timestamp: '2026-11-18T00:00:00Z',
+    durationMinutes: 10,
+    costUsd: 1.75,
+  });
+  assert.equal(pricedRecord.costUsd, 1.75);
+});
+
+test('readGitCommitsFromRepo and buildRunRecordFromEvents preserve early slices and full commit count beyond 25 commits', () => {
+  const tmpRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'capybench-git-test-'));
+  try {
+    execFileSync('git', ['init'], { cwd: tmpRepo });
+    execFileSync('git', ['config', 'user.name', 'Test Agent'], { cwd: tmpRepo });
+    execFileSync('git', ['config', 'user.email', 'agent@example.com'], { cwd: tmpRepo });
+
+    const makeCommit = (message: string) => {
+      execFileSync('git', ['commit', '--allow-empty', '-m', message], { cwd: tmpRepo });
+    };
+
+    makeCommit('init');
+    makeCommit('S1: URL normalization and parsing');
+    makeCommit('S2: HTTP client and redirect handling');
+    for (let i = 1; i <= 28; i += 1) {
+      makeCommit(`chore: intermediate refactor step ${i}`);
+    }
+
+    const commits = readGitCommitsFromRepo(tmpRepo);
+    assert.ok(commits, 'Expected commits array from readGitCommitsFromRepo');
+    assert.equal(commits.length, 31, 'Expected all 31 commits (init + 30 agent commits)');
+
+    const record = buildRunRecordFromEvents({
+      events: [],
+      codingHarness: 'Codex CLI',
+      model: 'gpt-6-sol',
+      provider: 'OpenAI Codex',
+      timestamp: '2026-11-18T00:00:00Z',
+      durationMinutes: 30,
+      commits,
+    });
+
+    assert.equal(record.commits, 30, 'Full non-init agent commit count must be preserved');
+    assert.equal(record.planCompletion.S1, true, 'Early S1 commit beyond top 25 must be matched');
+    assert.equal(record.planCompletion.S2, true, 'Early S2 commit beyond top 25 must be matched');
+    assert.equal(
+      record.commitLog?.length,
+      MAX_COMMIT_LOG_ENTRIES,
+      `Stored commitLog must be truncated to ${MAX_COMMIT_LOG_ENTRIES} entries`
+    );
+  } finally {
+    fs.rmSync(tmpRepo, { recursive: true, force: true });
+  }
 });
 
 test('Benchmark specification constants match starter repository artifacts when present', () => {
