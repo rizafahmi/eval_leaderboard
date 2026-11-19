@@ -1,92 +1,102 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
 import {
-  formatDuration,
-  formatCost,
-  formatTimestamp,
-  formatCompactContextWindow,
-  formatHarnessName,
-  formatProviderName,
-} from '../utils/format';
+	formatDuration,
+	formatCost,
+	formatTimestamp,
+	formatCompactContextWindow,
+	formatHarnessName,
+	formatProviderName,
+} from "../utils/format";
 import {
-  analyzeAndRankRuns,
-  computeStageBottleneckMatrix,
-  discoverAblationPresets,
-} from '../utils/telemetry';
-import { BENCHMARK_STAGES } from '../data/benchmark';
+	analyzeAndRankRuns,
+	computeStageBottleneckMatrix,
+	discoverAblationPresets,
+} from "../utils/telemetry";
+import { BENCHMARK_STAGES } from "../data/benchmark";
 
 const stageTitleMap = new Map(BENCHMARK_STAGES.map((s) => [s.id, s.title]));
-const allRuns = await getCollection('runs', ({ data }) => data.published !== false);
+const allRuns = await getCollection(
+	"runs",
+	({ data }) => data.published !== false,
+);
 
 const analyzedRuns = analyzeAndRankRuns(
-  allRuns.map((entry) => ({ id: entry.id, data: entry.data }))
+	allRuns.map((entry) => ({ id: entry.id, data: entry.data })),
 );
 const stageMatrix = computeStageBottleneckMatrix(analyzedRuns);
 const ablationPresets = discoverAblationPresets(analyzedRuns).slice(0, 3);
 
 const enrichedRuns = analyzedRuns.map((run) => {
-  const d = run.data;
-  const compactContext = formatCompactContextWindow(d.contextWindow);
-  const toolsPerTurn =
-    run.llmCalls > 0 && run.toolTotalCalls > 0
-      ? (run.toolTotalCalls / run.llmCalls).toFixed(2)
-      : null;
-  const secPerTurn =
-    run.llmCalls > 0 && d.durationMinutes > 0
-      ? ((d.durationMinutes * 60) / run.llmCalls).toFixed(1)
-      : null;
-  const testsRatio =
-    d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
-  const testsPassed = d.tests?.passed ?? -1;
-  const timeMs = new Date(d.timestamp).getTime() || 0;
+	const d = run.data;
+	const compactContext = formatCompactContextWindow(d.contextWindow);
+	const toolsPerTurn =
+		run.llmCalls > 0 && run.toolTotalCalls > 0
+			? (run.toolTotalCalls / run.llmCalls).toFixed(2)
+			: null;
+	const secPerTurn =
+		run.llmCalls > 0 && d.durationMinutes > 0
+			? ((d.durationMinutes * 60) / run.llmCalls).toFixed(1)
+			: null;
+	const testsRatio =
+		d.tests && d.tests.total > 0 ? d.tests.passed / d.tests.total : -1;
+	const testsPassed = d.tests?.passed ?? -1;
+	const timeMs = new Date(d.timestamp).getTime() || 0;
 
-  return {
-    id: run.id,
-    data: d,
-    telemetry: run,
-    plan: run.plan,
-    inputTokens: run.tokens.uncachedInput,
-    cachedTokens: run.tokens.cachedInput,
-    outputTokens: run.tokens.output,
-    totalTokens: run.tokens.total,
-    compactContext,
-    toolsPerTurn,
-    secPerTurn,
-    testsRatio,
-    testsPassed,
-    timeMs,
-    leadNotes: [
-      ...(d.notes ?? []),
-      ...(d.notesDetails ?? []).flatMap((n) => n.bullets ?? []),
-    ]
-      .slice(0, 2)
-      .map((b) => (b.length > 220 ? `${b.slice(0, 217)}...` : b)),
-    shortDate: new Date(d.timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
-    }),
-    peakCtxCompact: run.context.peakTokens
-      ? `${Math.round(run.context.peakTokens / 1000)}k peak`
-      : compactContext,
-  };
+	return {
+		id: run.id,
+		data: d,
+		telemetry: run,
+		plan: run.plan,
+		inputTokens: run.tokens.uncachedInput,
+		cachedTokens: run.tokens.cachedInput,
+		outputTokens: run.tokens.output,
+		totalTokens: run.tokens.total,
+		compactContext,
+		toolsPerTurn,
+		secPerTurn,
+		testsRatio,
+		testsPassed,
+		timeMs,
+		leadNotes: [
+			...(d.notes ?? []),
+			...(d.notesDetails ?? []).flatMap((n) => n.bullets ?? []),
+		]
+			.slice(0, 2)
+			.map((b) => (b.length > 220 ? `${b.slice(0, 217)}...` : b)),
+		shortDate: new Date(d.timestamp).toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			timeZone: "UTC",
+		}),
+		peakCtxCompact: run.context.peakTokens
+			? `${Math.round(run.context.peakTokens / 1000)}k peak`
+			: compactContext,
+	};
 });
 
-
-const harnesses = [...new Set(enrichedRuns.map((r) => r.data.codingHarness))].sort((a, b) =>
-  formatHarnessName(a).localeCompare(formatHarnessName(b), undefined, { sensitivity: 'base' })
+const harnesses = [
+	...new Set(enrichedRuns.map((r) => r.data.codingHarness)),
+].sort((a, b) =>
+	formatHarnessName(a).localeCompare(formatHarnessName(b), undefined, {
+		sensitivity: "base",
+	}),
 );
-const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort((a, b) =>
-  formatProviderName(a).localeCompare(formatProviderName(b), undefined, { sensitivity: 'base' })
+const providers = [...new Set(enrichedRuns.map((r) => r.data.provider))].sort(
+	(a, b) =>
+		formatProviderName(a).localeCompare(formatProviderName(b), undefined, {
+			sensitivity: "base",
+		}),
 );
 
 const fullPassRuns = enrichedRuns.filter((r) => r.plan.ratio === 1);
 const fullPassCount = fullPassRuns.length;
 const paretoFrontierRuns = fullPassRuns
-  .filter((r) => r.telemetry.isParetoFrontier)
-  .sort((a, b) => (a.telemetry.paretoOrder ?? 99) - (b.telemetry.paretoOrder ?? 99));
-
+	.filter((r) => r.telemetry.isParetoFrontier)
+	.sort(
+		(a, b) => (a.telemetry.paretoOrder ?? 99) - (b.telemetry.paretoOrder ?? 99),
+	);
 
 // SVG coordinates for the 7/7 Speed x Cost Pareto Frontier Plot
 const chartW = 680;
@@ -98,24 +108,27 @@ const padB = 38;
 const plotW = chartW - padL - padR;
 const plotH = chartH - padT - padB;
 
-const maxPlotDur = Math.max(120, ...fullPassRuns.map((r) => r.data.durationMinutes));
+const maxPlotDur = Math.max(
+	120,
+	...fullPassRuns.map((r) => r.data.durationMinutes),
+);
 const maxPlotCost = Math.max(14, ...fullPassRuns.map((r) => r.data.costUsd));
 
 const toSvgX = (dur: number) => padL + (dur / maxPlotDur) * plotW;
 const toSvgY = (cost: number) => padT + plotH - (cost / maxPlotCost) * plotH;
 
-let paretoStepPath = '';
+let paretoStepPath = "";
 if (paretoFrontierRuns.length > 0) {
-  const pts = paretoFrontierRuns.map((r) => ({
-    x: Number(toSvgX(r.data.durationMinutes).toFixed(1)),
-    y: Number(toSvgY(r.data.costUsd).toFixed(1)),
-  }));
-  const segs: string[] = [`M ${pts[0].x} ${pts[0].y}`];
-  for (let i = 1; i < pts.length; i++) {
-    segs.push(`L ${pts[i].x} ${pts[i - 1].y}`);
-    segs.push(`L ${pts[i].x} ${pts[i].y}`);
-  }
-  paretoStepPath = segs.join(' ');
+	const pts = paretoFrontierRuns.map((r) => ({
+		x: Number(toSvgX(r.data.durationMinutes).toFixed(1)),
+		y: Number(toSvgY(r.data.costUsd).toFixed(1)),
+	}));
+	const segs: string[] = [`M ${pts[0].x} ${pts[0].y}`];
+	for (let i = 1; i < pts.length; i++) {
+		segs.push(`L ${pts[i].x} ${pts[i - 1].y}`);
+		segs.push(`L ${pts[i].x} ${pts[i].y}`);
+	}
+	paretoStepPath = segs.join(" ");
 }
 ---
 

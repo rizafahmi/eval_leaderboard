@@ -290,6 +290,30 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 20.0,
     },
   },
+  'gemini-4-neon': {
+    modelKey: 'gemini-4-neon',
+    displayName: 'gemini-4-neon',
+    provider: 'Gemini',
+    billedTier: {
+      label: '2026 Standard API (95% cache off)',
+      inputPerMillionUsd: 2.0,
+      cachedInputPerMillionUsd: 0.1,
+      outputPerMillionUsd: 10.0,
+      notes: '95% context caching discount',
+    },
+    standardApiTier: {
+      label: '2026 Standard API',
+      inputPerMillionUsd: 2.0,
+      cachedInputPerMillionUsd: 0.1,
+      outputPerMillionUsd: 10.0,
+    },
+    comparisonTier: {
+      label: '2027 Standard API',
+      inputPerMillionUsd: 4.0,
+      cachedInputPerMillionUsd: 0.2,
+      outputPerMillionUsd: 20.0,
+    },
+  },
   'hy4-flash-free': {
     modelKey: 'hy4-flash-free',
     displayName: 'hy4-flash-free',

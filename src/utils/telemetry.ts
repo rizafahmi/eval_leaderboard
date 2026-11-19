@@ -804,6 +804,23 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3b3. Model Comparison: Antigravity CLI gemini-4-neon vs gemini-4-argon (High)
+  const agyNeonHarness = runs.find(
+    (r) => r.displayHarness === 'Antigravity CLI' && r.data.model === 'gemini-4-neon'
+  );
+  if (agyNeonHarness && agyArgonHarness) {
+    presets.push({
+      id: 'model-agy-neon-vs-argon',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'Antigravity CLI: gemini-4-neon vs. gemini-4-argon (High)',
+      subtitle: 'Same Antigravity CLI harness, 0 manage_task polls & $2/$0.10/$10 rate schedule — Mint HTTP/1 (49 tests) vs. raw :gen_tcp/:ssl (26 tests)',
+      runAId: agyNeonHarness.id,
+      runBId: agyArgonHarness.id,
+      findingHeadline: `Both achieved 7/7 with 0 manage_task polls; gemini-4-neon finished 28% faster (${agyNeonHarness.data.durationMinutes}m vs ${agyArgonHarness.data.durationMinutes}m) with a 49-test suite and lower peak context (174.5k vs 203.8k) at $${agyNeonHarness.data.costUsd.toFixed(2)}, while gemini-4-argon used fewer turns (${agyArgonHarness.llmCalls} vs ${agyNeonHarness.llmCalls}) at $${agyArgonHarness.data.costUsd.toFixed(2)}.`,
+    });
+  }
+
   // 3c. Model Comparison: OpenCode hy4-flash-free vs inkling-2-small-free (High)
   const ocHy4 = runs.find(
     (r) => r.displayHarness === 'OpenCode' && r.data.model === 'hy4-flash-free'
