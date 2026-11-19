@@ -1,0 +1,295 @@
+{
+  "timestamp": "2026-11-19T20:12:42+07:00",
+  "codingHarness": "omp",
+  "model": "deepseek-v4-flash",
+  "effort": "High",
+  "provider": "DeepSeek",
+  "durationMinutes": 22,
+  "costUsd": 0.13,
+  "commits": 8,
+  "tests": {
+    "passed": 45,
+    "total": 45,
+    "durationSeconds": 38.1,
+    "details": "Finished in 38.1 seconds (5.3s async, 32.8s sync) — 45 passed (38.7s in JSONL at Line 469; mix format --check-formatted clean; mix credo: 57 checks / mix credo --strict: 69 checks on 21 files, 176 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": false
+  },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 6,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "unverifiedSlices": [
+      "S7"
+    ],
+    "agentSuitePassed": 45,
+    "agentSuiteTotal": 45
+  },
+  "interface": {
+    "type": "cli",
+    "command": "omp -p --mode json --model deepseek/deepseek-v4-flash --thinking high --tools read,bash,edit,write --no-extensions --no-skills --no-rules --no-lsp --no-pty --no-title --no-prewalk --auto-approve --no-context-files --config <bench-config.yml> --session-dir ./records @PROMPT.md",
+    "details": "Run window: 20:12:42–20:34:50 WIB (22m 7.5s / 1,327.5s wall-clock in JSONL; 22m7s in manual note, 20:11:34 git init) • Session 01a1f3f0-1dac-706d-b6cc-9421294eacd2 (deepseek / deepseek-v4-flash, thinking: high, omp v19.0.0, 133 LLM turns, 0 compactions)"
+  },
+  "tokens": {
+    "input": "73.0k",
+    "cachedInput": "12.35M",
+    "output": "130.4k",
+    "thinking": "78.6k",
+    "total": "12.55M",
+    "cacheHitRate": "99.41%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 72998,
+    "cachedInput": 12351232,
+    "output": 130356,
+    "thinking": 78579,
+    "total": 12554586,
+    "cacheHitRatePct": 99.41
+  },
+  "contextWindow": "169.8k peak (5,585 → 169,783 prompt tokens; 170,323 total)",
+  "contextMetrics": {
+    "minTokens": 5585,
+    "avgTokens": 93415,
+    "peakTokens": 169783
+  },
+  "calls": {
+    "llmCalls": 133,
+    "toolCalls": {
+      "total": 166,
+      "done": 165,
+      "error": 1,
+      "breakdown": [
+        {
+          "tool": "bash",
+          "total": 118,
+          "done": 117,
+          "error": 1
+        },
+        {
+          "tool": "write",
+          "total": 29,
+          "done": 29,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 19,
+          "done": 19,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "8bef753",
+      "relativeTime": "15 minutes",
+      "author": "Riza Fahmi",
+      "message": "Add CLI HTTPS coverage for release verification"
+    },
+    {
+      "hash": "3ce7b56",
+      "relativeTime": "16 minutes",
+      "author": "Riza Fahmi",
+      "message": "S7: handle Ctrl-C with a partial summary and exit 130"
+    },
+    {
+      "hash": "cee46b4",
+      "relativeTime": "20 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and completed-response percentiles"
+    },
+    {
+      "hash": "98bd536",
+      "relativeTime": "23 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: summarize outcomes and set exit codes"
+    },
+    {
+      "hash": "8d3210f",
+      "relativeTime": "24 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: pace dispatches across a five-second run window"
+    },
+    {
+      "hash": "78a8693",
+      "relativeTime": "29 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: send one bounded GET with timeouts and TLS verification"
+    },
+    {
+      "hash": "0e4aaa9",
+      "relativeTime": "33 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate URL arguments before requesting"
+    },
+    {
+      "hash": "3b52444",
+      "relativeTime": "34 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch CLI with help and Ctrl-C forwarding"
+    },
+    {
+      "hash": "9e7830c",
+      "relativeTime": "38 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "72,998",
+      "rate2026": "$0.15 / 1M",
+      "cost2026": "$0.010950"
+    },
+    {
+      "component": "Cached Input (cacheRead)",
+      "tokens": "12,351,232",
+      "rate2026": "$0.003 / 1M (98% off)",
+      "cost2026": "$0.037054"
+    },
+    {
+      "component": "Output (incl. 78,579 reasoning)",
+      "tokens": "130,356",
+      "rate2026": "$0.60 / 1M",
+      "cost2026": "$0.078214"
+    },
+    {
+      "component": "Total",
+      "tokens": "12,554,586",
+      "cost2026": "$0.13 ($0.126217)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation & OTP 28 SIGINT reconnaissance",
+      "stepRange": "1–54",
+      "llmCalls": 9,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 8508,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S1: CLI help, +B i escript & SIGTERM launcher (3b52444)",
+      "stepRange": "55–103",
+      "llmCalls": 11,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 7190,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S2: Argument & URL validation before requesting (0e4aaa9)",
+      "stepRange": "104–143",
+      "llmCalls": 12,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4304,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S3: Bounded :gen_tcp/:ssl GET, timeouts & TLS verify (78a8693)",
+      "stepRange": "144–247",
+      "llmCalls": 32,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 17218,
+      "costUsd": 0.03
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & pacer tests (8d3210f)",
+      "stepRange": "248–321",
+      "llmCalls": 24,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 15166,
+      "costUsd": 0.02
+    },
+    {
+      "slice": "S5: HTTP status summary, transport failures & exit codes (98bd536)",
+      "stepRange": "322–346",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2794,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S6: Elapsed time & completed-response p50/p95 latencies (cee46b4)",
+      "stepRange": "347–387",
+      "llmCalls": 11,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 6096,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (3ce7b56)",
+      "stepRange": "388–462",
+      "llmCalls": 23,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 16020,
+      "costUsd": 0.03
+    },
+    {
+      "slice": "Release verification: CLI HTTPS test coverage (8bef753)",
+      "stepRange": "463–475",
+      "llmCalls": 4,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1283,
+      "costUsd": 0
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 22m 7.5s Wall-Clock, deepseek-v4-flash Alias (DeepSeek-V4.1-Flash-1017), 8 Organic Commits & 45/45 Clean Credo Suite",
+    "Why S7 Failed Holdout (6/7 vs. 7/7 Claimed): System.trap_signal(:sigterm, ...) Left OTP's :erl_signal_handler Active, Killing >1s In-Flight Requests With Exit 0 & No Summary",
+    "Live HTTPS Fixed vs. Pi deepseek-flash (13/13 HTTP 200 on https://rizafahmi.com), 29 Inline Python File Patches & Pipeline-Masked Bash Telemetry",
+    "Record 99.41% Prefix Cache Hit Rate (¥0.84 / $0.13 Off-Peak vs. $0.25 Peak), 5.69s/Turn Inference & Controlled omp Comparison vs. gemini-4-argon"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 22m 7.5s Wall-Clock, deepseek-v4-flash Alias (DeepSeek-V4.1-Flash-1017), 8 Organic Commits & 45/45 Clean Credo Suite",
+      "bullets": [
+        "Exact Wall-Clock Alignment (`22m7s` Note vs. `22m 7.5s` JSONL): Following the pre-run `init` commit (`9e7830c` at `20:11:34 WIB`), session `01a1f3f0-1dac-706d-b6cc-9421294eacd2` opened at `2026-11-19T13:12:42.156Z` (`20:12:42.156 WIB`), dispatched Turn 1 at `20:12:42.645 WIB`, finished Turn 133 at `20:34:49.644 WIB`, and logged `session_exit` (`kind: \"normal\"`) at `20:34:49.700 WIB` for an exact active duration of `22m 7.54s` (`1,327.54s` / `22m`).",
+        "Model Alias & Off-Peak Window (`deepseek-v4-flash` → `DeepSeek-V4.1-Flash-1017`): `model_change` (Line 3) and all `133` assistant turns logged `omp v19.0.0` calling `deepseek/deepseek-v4-flash` (`api: \"openai-completions\"`, `thinkingLevel: \"high\"`)—DeepSeek's legacy compatibility alias that routes to the same `DeepSeek-V4.1-Flash-1017` checkpoint as `deepseek-flash`. Because this run executed on Thu `13:12–13:34 UTC` (outside DeepSeek's Mon–Fri `01:00–04:00` / `06:00–10:00 UTC` Peak windows, whereas `pi-deepseek-flash-high` ran Fri `01:18–01:36 UTC` Peak), it was billed at 50%-off Off-Peak rates (`$0.15 / $0.003 / $0.60` USD = `¥1.00 / ¥0.02 / ¥4.00` CNY per 1M). One internal `omp v19.0.0` harness sidecar call (`type: \"model_usage\"`, `purpose: \"sharpshooter:extract\"`, `google-vertex/gemini-3.8-flash`, `994` in / `103` out, `$0.001132`) appeared at Line 19 and is excluded from the `133` agent turns.",
+        "8 Agent Commits, 45/45 Tests & Clean Credo: Starting from `9e7830c` (`init`), the agent produced `8` clean commits (`3b52444` S1 through `3ce7b56` S7 plus `8bef753` release verification CLI HTTPS coverage), `867` production LoC across 7 modules (`lib/capy_bench/*.ex`), and `1,398` test LoC across 15 files. Manual `mix test` matched JSONL (`45/45` passed in `38.1s` [`5.3s async, 32.8s sync`] vs. `38.7s` at Line 469), `mix format --check-formatted` exited `0`, and Credo passed with `0` issues (`57` default checks / `69` `--strict` checks across `21` files, `176 mods/funs`)."
+      ]
+    },
+    {
+      "title": "Why S7 Failed Holdout (6/7 vs. 7/7 Claimed): System.trap_signal(:sigterm, ...) Left OTP's :erl_signal_handler Active, Killing >1s In-Flight Requests With Exit 0 & No Summary",
+      "bullets": [
+        "Root Cause at Line 406 (`:erl_signal_handler` Left Installed Alongside `System.trap_signal(:sigterm, ...)`): The `./cb` launcher runs `cb.escript` with `emu_args: \"+B i\"` and forwards terminal `Ctrl-C` via `trap 'kill -TERM \"$pid\" 2>/dev/null' INT TERM`. Inside `CapyBench.Runner.run/1`, `System.trap_signal(:sigterm, :capy_bench, ...)` adds `{System.SignalHandler, {:sigterm, :capy_bench}}` to `:erl_signal_server` **without** removing OTP's default `:erl_signal_handler`. When `SIGTERM` arrives, `:erl_signal_handler` still fires `:init.stop()` in the background, shutting down the VM ~1.0s later with exit code `0`. At Line 405–406, the agent saw `\"SIGTERM received - shutting down\"` on stderr and raised `:logger` level to `:warning` in `lib/capy_bench/cli.ex` to silence the notice rather than removing `:erl_signal_handler` or switching to `:sigusr2`.",
+        "Empirical Holdout PTY Probes Confirm Post-Boot S7 Failure on 1.0s–2.0s In-Flight Requests: Because fast targets (`~300ms` live `https://rizafahmi.com`, `500ms` pacing, and the agent's own `800ms` server in `test/capy_bench/interrupt_test.exs`) settle in `< 1.0s`, they beat `:init.stop()` and cleanly print a partial summary with exit `130`. However, any in-flight request taking `1.0s–2.0s` (still within the 2s timeout contract) loses the race to `:init.stop()`: foreground PTY `Ctrl-C` at `0.4s` against a `1.5s` server exited `0` at `1.44s` with empty stdout, and `Ctrl-C` at `0.8s` and `1.2s` against a `3.5s` stalled server exited `0` at `1.82s` and `2.25s` with no summary (`1.5s` `Ctrl-C` only succeeded with exit `130` at `2.26s` because the 2s HTTP timeout fired `0.76s < 1.0s` later). Like other unguarded shell wrappers, pressing `Ctrl-C` during the initial ~200 ms BEAM boot window also fails (`50ms` → exit `143`; `150ms` → exit `127` with `escript: exception exit: terminating`)."
+      ]
+    },
+    {
+      "title": "Live HTTPS Fixed vs. Pi deepseek-flash (13/13 HTTP 200 on https://rizafahmi.com), 29 Inline Python File Patches & Pipeline-Masked Bash Telemetry",
+      "bullets": [
+        "Clean Live HTTPS & System CA Verification (Fixing Pi `deepseek-flash`'s Bug): Unlike `pi-deepseek-flash-high` (which accidentally wiped all 160 macOS system CA certs via `normalize_cacerts/1`), `lib/capy_bench/http.ex` (439 LoC over raw `:gen_tcp`/`:ssl`) properly extracts DER binaries from OTP 28's `:public_key.cacerts_get()` and verifies hostnames via `:public_key.pkix_verify_hostname_match_fun(:https)`. Live `./cb https://rizafahmi.com` passed cleanly (`rc=0`, empty stderr, `13/13` HTTP `200`, `0` transport failures, `p50 309 ms, p95 754 ms`, fresh TCP/TLS connection per request), and `./cb http://rizafahmi.com` passed with `46/46` HTTP `301` (`p50 96 ms, p95 148 ms`).",
+        "Zero `read` Tool Calls & 29 Inline `python3` File Patches: Despite having `read` available, the agent issued `0` `read` calls (relying on `omp`'s initial `@AGENTS.md`/`@PLAN.md` file mentions plus `cat`/`sed`/`nl` in `bash`) and used `29` inline `python3 - <<'PY'` `open().read().replace()` scripts in `bash` (Lines 165–473) alongside `29` `write` and `19` `edit` calls (`0` edit errors).",
+        "Audit of `1` Reported `isError` vs. `23` Pipeline-Masked Non-Zero Subcommands: `omp` recorded only `1` tool error (`isError: true` at Line 39, probing `os:set_signal(sigint, handle)` / `default` which raised `badarg` and wrote `erl_crash.dump`, cleaned at Line 96). However, because the agent piped `mix test` and `mix credo` through `2>&1 | tail -N` without `pipefail`, `tail` returned exit `0` and masked `23` additional non-zero subcommands captured in `omp v19.0.0`'s `details.trace`: `13` failing `mix test` runs (`S3` Lines 188, 191, 212; `S4` Lines 264, 270, 300; `S6` Lines 370, 373; `S7` Lines 402, 405, 408, 417, 420 including a Python double-escaped `\\\\d` regex bug in `interrupt_test.exs`), `4` `mix credo --strict` catches (`Lines 131, 223, 309, 437`), and `6` benign reconnaissance probes (`Lines 33, 44, 49, 95, 155, 279`)."
+      ]
+    },
+    {
+      "title": "Record 99.41% Prefix Cache Hit Rate (¥0.84 / $0.13 Off-Peak vs. $0.25 Peak), 5.69s/Turn Inference & Controlled omp Comparison vs. gemini-4-argon",
+      "bullets": [
+        "DeepSeek Dashboard (`¥0.84` Exact) & Unit Economics: Across `133` turns, `deepseek-v4-flash` consumed `12,424,230` prompt tokens (`72,998` uncached at `$0.15/1M` = `$0.0110` [`¥0.0730` at `¥1.00/1M`] + `12,351,232` cached at `$0.003/1M` = `$0.0371` [`¥0.2470` at `¥0.02/1M`]; `99.41%` cache hit rate—highest on the leaderboard with `132/132` post-Turn-1 cache hits and zero evictions as prompt context grew monotonically from `5,585` to `169,783` tokens) and `130,356` output tokens including `78,579` reasoning tokens (`60.3%` of output) at `$0.60/1M` (`$0.0782` [`¥0.5214` at `¥4.00/1M`], `62.0%` of total spend). Exact totals match both ledgers to the cent/fen: `¥0.8414` (`¥0.84` on the DeepSeek CNY dashboard) and `$0.126217` (`$0.13` USD Off-Peak; `$0.25` / `¥1.68` at Peak rates; saving `$1.82` / `93.5%` vs. the `$1.94` uncached Off-Peak counterfactual).",
+        "57.0% Inference vs. 43.0% Tool Wall-Clock Split: Fast `5.69s/turn` average inference (`1.06s` avg TTFT; `757.0s` total, peaking at `58.9s` / `10,009` output / `8,581` reasoning tokens on Turn 65 synthesizing `pacer.ex` + `runner.ex`, and `42.3s` / `6,629` reasoning tokens on Turn 107 writing `pty_driver.py`) left `570.5s` (`43.0%`) for tool execution (`581.6s` aggregate bash wall-time across `30` multi-tool turns, `1.25` tools/turn).",
+        "Controlled `omp` Ablation (`deepseek-v4-flash` vs. `gemini-4-argon`): At virtually identical turn count (`133` vs. `132` turns), `deepseek-v4-flash` completed the workflow `2.4×` faster (`22m` vs. `53m`) and `30.5×` cheaper (`$0.13` Off-Peak / `15.9×` cheaper even at `$0.25` Peak vs. `$3.97`) with a `55%` larger test suite (`45` vs. `29` tests), trading away `7/7` full pass on the single `:erl_signal_handler` `SIGTERM` oversight where `gemini-4-argon`'s upfront bytecode audit led it to choose `:sigusr2`."
+      ]
+    }
+  ]
+}

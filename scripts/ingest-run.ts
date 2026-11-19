@@ -48,7 +48,11 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     }
 
     const stepUpdate = parsed.step_update as Record<string, unknown> | undefined;
-    if (parsed.event === 'init' || parsed.event === 'result') {
+    if (
+      parsed.event === 'init' ||
+      parsed.event === 'result' ||
+      parsed.type === 'model_usage'
+    ) {
       continue;
     }
     if (stepUpdate && stepUpdate.state === 'ACTIVE') {

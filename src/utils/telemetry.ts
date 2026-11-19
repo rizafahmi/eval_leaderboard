@@ -790,6 +790,40 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3b1. Model Comparison: omp deepseek-v4-flash vs gemini-4-argon (High)
+  const ompDeepseekV4Flash = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'deepseek-v4-flash'
+  );
+  if (ompDeepseekV4Flash && ompArgon) {
+    presets.push({
+      id: 'model-omp-deepseek-v4-flash-vs-argon',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'omp: deepseek-v4-flash vs. gemini-4-argon (High)',
+      subtitle: 'Same omp harness & High effort at nearly identical turn count (133 vs 132) — 2.4x faster & 30.5x cheaper vs. S7 SIGTERM trap bug',
+      runAId: ompDeepseekV4Flash.id,
+      runBId: ompArgon.id,
+      findingHeadline: `In virtually identical turns (${ompDeepseekV4Flash.llmCalls} vs ${ompArgon.llmCalls}), deepseek-v4-flash ran 2.4x faster (${ompDeepseekV4Flash.data.durationMinutes}m vs ${ompArgon.data.durationMinutes}m) and 30.5x cheaper ($${ompDeepseekV4Flash.data.costUsd.toFixed(2)} vs $${ompArgon.data.costUsd.toFixed(2)}, 99.41% cache hit), but missed S7 (${ompDeepseekV4Flash.plan.completed}/${ompDeepseekV4Flash.plan.total}) on OTP's :erl_signal_handler SIGTERM shutdown race where gemini-4-argon cleared 7/7 via SIGUSR2.`,
+    });
+  }
+
+  // 3b1b. Harness Ablation: omp vs Pi on deepseek-flash (DeepSeek-V4.1-Flash-1017 · High)
+  const piDeepseekFlash = runs.find(
+    (r) => r.displayHarness === 'Pi' && r.data.model === 'deepseek-flash'
+  );
+  if (ompDeepseekV4Flash && piDeepseekFlash) {
+    presets.push({
+      id: 'harness-deepseek-flash',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'omp vs. Pi (deepseek-flash · High)',
+      subtitle: 'Same DeepSeek-V4.1-Flash-1017 checkpoint (deepseek-v4-flash alias) — omp Off-Peak ($0.13 / ¥0.84; $0.25 Peak eq.) vs. Pi Peak ($0.19)',
+      runAId: ompDeepseekV4Flash.id,
+      runBId: piDeepseekFlash.id,
+      findingHeadline: `On the same DeepSeek-V4.1-Flash-1017 model, omp improved holdout completion from ${piDeepseekFlash.plan.completed}/${piDeepseekFlash.plan.total} to ${ompDeepseekV4Flash.plan.completed}/${ompDeepseekV4Flash.plan.total} (fixing live HTTPS system CA verification & adding 0-issue Credo --strict) at $${ompDeepseekV4Flash.data.costUsd.toFixed(2)} Off-Peak (¥0.84; $0.25 at Peak vs. Pi's $${piDeepseekFlash.data.costUsd.toFixed(2)} Peak), failing only S7 on >1s in-flight SIGTERM teardown.`,
+    });
+  }
+
   // 3b2. Model Comparison: Antigravity CLI gemini-4-argon vs gemini-4-carbon (High)
   if (agyArgonHarness && agyCarbonHarness) {
     presets.push({

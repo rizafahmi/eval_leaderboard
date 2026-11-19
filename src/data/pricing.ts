@@ -209,17 +209,51 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
     displayName: 'deepseek-flash',
     provider: 'DeepSeek',
     billedTier: {
-      label: '2026 DeepSeek Flash API (98% cache off)',
+      label: '2026 DeepSeek Flash API — Peak (98% cache off)',
       inputPerMillionUsd: 0.3,
       cachedInputPerMillionUsd: 0.006,
       outputPerMillionUsd: 1.2,
+      notes: 'Peak window (01:00–04:00 & 06:00–10:00 UTC Mon–Fri)',
     },
     standardApiTier: {
-      label: '2026 DeepSeek Flash API',
+      label: '2026 DeepSeek Flash API — Peak',
       inputPerMillionUsd: 0.3,
       cachedInputPerMillionUsd: 0.006,
       outputPerMillionUsd: 1.2,
     },
+    comparisonTier: {
+      label: '2026 DeepSeek Flash API — Off-Peak (50% off)',
+      inputPerMillionUsd: 0.15,
+      cachedInputPerMillionUsd: 0.003,
+      outputPerMillionUsd: 0.6,
+    },
+  },
+  'deepseek-v4-flash': {
+    modelKey: 'deepseek-v4-flash',
+    displayName: 'deepseek-v4-flash',
+    provider: 'DeepSeek',
+    billedTier: {
+      label: '2026 DeepSeek Flash API — Off-Peak (98% cache off)',
+      inputPerMillionUsd: 0.15,
+      cachedInputPerMillionUsd: 0.003,
+      outputPerMillionUsd: 0.6,
+      notes: 'Legacy alias routing to DeepSeek-V4.1-Flash-1017; billed Off-Peak (¥1.00/¥0.02/¥4.00 per 1M)',
+    },
+    standardApiTier: {
+      label: '2026 DeepSeek Flash API — Off-Peak',
+      inputPerMillionUsd: 0.15,
+      cachedInputPerMillionUsd: 0.003,
+      outputPerMillionUsd: 0.6,
+    },
+    comparisonTier: {
+      label: '2026 DeepSeek Flash API — Peak',
+      inputPerMillionUsd: 0.3,
+      cachedInputPerMillionUsd: 0.006,
+      outputPerMillionUsd: 1.2,
+    },
+    pricingBadge: 'off-peak (50% off)',
+    pricingStatusNote:
+      'Legacy alias for deepseek-flash (DeepSeek-V4.1-Flash-1017), billed at Off-Peak rates (50% off Peak; ¥0.84 on CNY dashboard)',
   },
   'inkling-2-small-free': {
     modelKey: 'inkling-2-small-free',
