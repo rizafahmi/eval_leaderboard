@@ -821,6 +821,23 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3b4. Model Comparison: Antigravity CLI gemini-4-hydrogen vs gemini-4-neon (High)
+  const agyHydrogenHarness = runs.find(
+    (r) => r.displayHarness === 'Antigravity CLI' && r.data.model === 'gemini-4-hydrogen'
+  );
+  if (agyHydrogenHarness && agyNeonHarness) {
+    presets.push({
+      id: 'model-agy-hydrogen-vs-neon',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'Antigravity CLI: gemini-4-hydrogen vs. gemini-4-neon (High)',
+      subtitle: 'Same Antigravity CLI harness & Mint HTTP/1 + SIGUSR2 architecture — $1.50/$0.075/$7.50 (7.0s/turn) vs. $2.00/$0.10/$10.00 (13.4s/turn)',
+      runAId: agyHydrogenHarness.id,
+      runBId: agyNeonHarness.id,
+      findingHeadline: `Both achieved 7/7 using Mint.HTTP + +Bi escript + SIGUSR2; gemini-4-hydrogen finished 23% faster (${agyHydrogenHarness.data.durationMinutes}m vs ${agyNeonHarness.data.durationMinutes}m — fastest Gemini 4 run) and 7% cheaper ($${agyHydrogenHarness.data.costUsd.toFixed(2)} vs $${agyNeonHarness.data.costUsd.toFixed(2)}) via 7.0s/turn inference and 25% lower token rates, while gemini-4-neon avoided all 11 manage_task polls and ran a faster all-async 49-test suite (29.7s vs 113.0s).`,
+    });
+  }
+
   // 3c. Model Comparison: OpenCode hy4-flash-free vs inkling-2-small-free (High)
   const ocHy4 = runs.find(
     (r) => r.displayHarness === 'OpenCode' && r.data.model === 'hy4-flash-free'

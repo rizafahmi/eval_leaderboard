@@ -314,6 +314,30 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
       outputPerMillionUsd: 20.0,
     },
   },
+  'gemini-4-hydrogen': {
+    modelKey: 'gemini-4-hydrogen',
+    displayName: 'gemini-4-hydrogen',
+    provider: 'Gemini',
+    billedTier: {
+      label: '2026 Standard API (95% cache off)',
+      inputPerMillionUsd: 1.5,
+      cachedInputPerMillionUsd: 0.075,
+      outputPerMillionUsd: 7.5,
+      notes: '95% implicit context caching discount',
+    },
+    standardApiTier: {
+      label: '2026 Standard API',
+      inputPerMillionUsd: 1.5,
+      cachedInputPerMillionUsd: 0.075,
+      outputPerMillionUsd: 7.5,
+    },
+    comparisonTier: {
+      label: '2027 Standard API',
+      inputPerMillionUsd: 3.0,
+      cachedInputPerMillionUsd: 0.15,
+      outputPerMillionUsd: 15.0,
+    },
+  },
   'hy4-flash-free': {
     modelKey: 'hy4-flash-free',
     displayName: 'hy4-flash-free',

@@ -177,6 +177,8 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         evObj.is_error === true ||
         msg?.isError === true ||
         String(evObj.status ?? '').toLowerCase() === 'error' ||
+        String(evObj.state ?? '').toLowerCase() === 'error' ||
+        Boolean(toolInfo?.error) ||
         String(partState?.status ?? '').toLowerCase() === 'error' ||
         hasNonZeroCommandExit
     );
