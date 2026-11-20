@@ -10,22 +10,22 @@ const insights = (await getCollection('insight'))
 
 <BaseLayout
   title="Insight"
-  description="Ringkasan visual catatan eksperimen personal benchmark coding agent."
+  description="Visual slide breakdowns from personal coding-agent benchmark runs."
   activeNav="insight"
-  lang="id"
+  lang="en"
 >
   <section class="c-index-header">
     <span class="section-kicker">PERSONAL EVAL · VISUAL DECKS</span>
     <h1 class="headline-two-tone">
       Insight.
-      <span class="muted">Ringkasan visual catatan eksperimen per seri.</span>
+      <span class="muted">Visual field notes from each run.</span>
     </h1>
     <p>
-      Versi ringkas berbentuk slide yang bisa digeser langsung di browser — cocok untuk baca cepat sebelum masuk ke log lengkap di halaman detail run.
+      Quick slide breakdowns you can swipe right in the browser before diving into the full logs on each run page.
     </p>
   </section>
 
-  <section class="c-index-grid" aria-label="Daftar insight">
+  <section class="c-index-grid" aria-label="Insight decks">
     {insights.map((entry) => {
       const { part, date, title, subtitle, slides, tags } = entry.data;
       return (
@@ -33,7 +33,7 @@ const insights = (await getCollection('insight'))
           <div>
             <div class="c-deck-meta">
               <span class="hl hl-acid">{part}</span>
-              <span>{slides.length} SLIDE · {date}</span>
+              <span>{slides.length} SLIDES · {date}</span>
             </div>
 
             <h2 class="c-deck-title" style="margin-top: 1rem;">{title}</h2>
@@ -50,7 +50,7 @@ const insights = (await getCollection('insight'))
             )}
 
             <div class="c-deck-foot">
-              <span class="c-deck-cta">Lihat Slide</span>
+              <span class="c-deck-cta">View Deck</span>
               <span aria-hidden="true">→</span>
             </div>
           </div>

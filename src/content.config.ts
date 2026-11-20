@@ -261,7 +261,7 @@ const insight = defineCollection({
     order: z.number(),
     part: z.string(),
     date: z.string(),
-    lang: z.enum(['id', 'en']).default('id'),
+    lang: z.enum(['en', 'id']).default('en'),
     title: z.string(),
     subtitle: z.string(),
     description: z.string(),

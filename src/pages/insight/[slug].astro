@@ -57,16 +57,16 @@ const relatedRuns = insight.relatedRunIds
     hidden={!isDev}
   >
     <div class="c-studio-controls">
-      <div class="btn-group" role="group" aria-label="Mode tampilan">
+      <div class="btn-group" role="group" aria-label="View mode">
         <button type="button" class="btn btn-sm is-active" data-view-btn="viewer">
-          Mode Baca
+          Reader
         </button>
         <button type="button" class="btn btn-sm" data-view-btn="sheet">
-          Semua Slide
+          All Slides
         </button>
       </div>
 
-      <div class="btn-group" role="group" aria-label="Rasio slide">
+      <div class="btn-group" role="group" aria-label="Slide aspect ratio">
         <button
           type="button"
           class:list={['btn btn-sm', { 'is-active': insight.defaultRatio === '4:5' }]}
@@ -89,16 +89,16 @@ const relatedRuns = insight.relatedRunIds
         Export PDF (Print)
       </button>
       <button type="button" class="btn btn-sm c-btn-mint" id="c-btn-export-all">
-        Download Semua PNG
+        Download All PNGs
       </button>
     </div>
 
     <div class="c-studio-status">
       <span>
-        Tips PDF: pilih <strong>Save as PDF</strong>, aktifkan <strong>Background graphics</strong>, Margin: <strong>None</strong>.
+        PDF tip: choose <strong>Save as PDF</strong>, enable <strong>Background graphics</strong>, Margin: <strong>None</strong>.
       </span>
       <span id="c-export-status">
-        Siap export ({insight.slides.length} slide · {insight.defaultRatio === '1:1' ? '1080×1080' : '1080×1350'} px)
+        Ready to export ({insight.slides.length} slides · {insight.defaultRatio === '1:1' ? '1080×1080' : '1080×1350'} px)
       </span>
     </div>
   </section>
@@ -121,10 +121,10 @@ const relatedRuns = insight.relatedRunIds
           type="button"
           class="btn btn-sm btn-secondary"
           data-direction="previous"
-          aria-label="Slide sebelumnya"
+          aria-label="Previous slide"
           disabled
         >
-          ← Sebelumnya
+          ← Prev
         </button>
       </div>
 
@@ -137,9 +137,9 @@ const relatedRuns = insight.relatedRunIds
           type="button"
           class="btn btn-sm"
           data-direction="next"
-          aria-label="Slide berikutnya"
+          aria-label="Next slide"
         >
-          Berikutnya →
+          Next →
         </button>
       </div>
     </div>
@@ -150,7 +150,7 @@ const relatedRuns = insight.relatedRunIds
         id="c-carousel-track"
         tabindex="0"
         role="group"
-        aria-label="Daftar slide"
+        aria-label="Slides"
       >
         {insight.slides.map((slide, idx) => (
           <InsightSlide
@@ -169,13 +169,13 @@ const relatedRuns = insight.relatedRunIds
     <p class="visually-hidden" role="status" aria-live="polite" id="c-live-status"></p>
 
     <!-- Slide marker buttons (direct jump) -->
-    <nav class="c-markers" id="c-markers" aria-label="Pilih slide">
+    <nav class="c-markers" id="c-markers" aria-label="Choose a slide">
       {insight.slides.map((slide, idx) => (
         <button
           type="button"
           class="c-marker-btn"
           data-marker-index={idx}
-          aria-label={`Buka slide ${idx + 1}: ${slide.label}`}
+          aria-label={`Go to slide ${idx + 1}: ${slide.label}`}
           aria-current={idx === 0 ? 'true' : undefined}
         >
           {String(idx + 1).padStart(2, '0')}
@@ -185,9 +185,9 @@ const relatedRuns = insight.relatedRunIds
   </section>
 
   <!-- Related Run Data Links + Print Fallback -->
-  <aside class="c-related-bar" aria-label="Tautan terkait">
+  <aside class="c-related-bar" aria-label="Related links">
     <div class="c-related-links">
-      <span class="subnav-meta">DATA &amp; LOG LENGKAP:</span>
+      <span class="subnav-meta">FULL DATA &amp; LOGS:</span>
       {relatedRuns.map((run) => (
         <a href={`/runs/${run.id}`} class="action-link">
           {run.data.model} ({run.data.codingHarness}) →
@@ -200,7 +200,7 @@ const relatedRuns = insight.relatedRunIds
         Print / Save PDF
       </button>
       <a href="/insight" class="btn btn-sm btn-secondary">
-        ← Semua Insight
+        ← Back to Insight
       </a>
     </div>
   </aside>
@@ -328,7 +328,7 @@ const relatedRuns = insight.relatedRunIds
       }
 
       if (hasUserInteracted && index !== settledIndex && liveStatus) {
-        liveStatus.textContent = `Slide ${index + 1} dari ${total}`;
+        liveStatus.textContent = `Slide ${index + 1} of ${total}`;
       }
       settledIndex = index;
     }
@@ -449,7 +449,7 @@ const relatedRuns = insight.relatedRunIds
         btn.classList.toggle('is-active', btn.dataset.ratioBtn === ratio);
       });
       if (exportStatus) {
-        exportStatus.textContent = `Siap export (${total} slide · ${isSquare ? '1080×1080' : '1080×1350'} px)`;
+        exportStatus.textContent = `Ready to export (${total} slides · ${isSquare ? '1080×1080' : '1080×1350'} px)`;
       }
       requestAnimationFrame(syncSlideScale);
     }
@@ -561,18 +561,18 @@ const relatedRuns = insight.relatedRunIds
       try {
         for (let i = 0; i < slides.length; i++) {
           if (exportStatus) {
-            exportStatus.textContent = `Mengunduh slide ${i + 1} / ${slides.length}...`;
+            exportStatus.textContent = `Downloading slide ${i + 1} / ${slides.length}...`;
           }
           await exportSlideAsPng(slides[i]);
           await new Promise((r) => window.setTimeout(r, 320));
         }
         if (exportStatus) {
-          exportStatus.textContent = `Selesai! ${slides.length} PNG berhasil diunduh.`;
+          exportStatus.textContent = `Done! Downloaded ${slides.length} PNGs.`;
         }
       } catch (err) {
         console.error(err);
         if (exportStatus) {
-          exportStatus.textContent = 'Gagal export PNG — gunakan Export PDF (Print).';
+          exportStatus.textContent = 'PNG export failed — use Export PDF (Print) instead.';
         }
       } finally {
         exportAllBtn.disabled = false;
