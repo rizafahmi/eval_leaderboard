@@ -1038,33 +1038,28 @@
             <div class="badge-row">
               <span class="hl hl-acid">PERSONAL EVAL</span>
               <span class="hl hl-sky">OPENCODE v2.2.7</span>
-              <span class="tag-outline">EFFORT: HIGH</span>
             </div>
 
             <h1 class="headline-two-tone is-cover">
               Menjajal hy4-flash-free di personal benchmark.
-              <span class="muted">Catatan eksperimen membangun CLI Elixir/OTP dari nol.</span>
+              <span class="muted">Membangun aplikasi CLI dari nol.</span>
             </h1>
-
-            <p class="lead">
-              Diuji hanya dengan 4 tool dasar (<span class="mono-inline">read</span>, <span class="mono-inline">shell</span>, <span class="mono-inline">edit</span>, <span class="mono-inline">write</span>) untuk menyelesaikan 7 tahap proyek CLI HTTP benchmark.
-            </p>
 
             <div class="stat-grid-3">
               <div class="stat-card is-accent">
                 <span class="stat-label">Verifikasi</span>
                 <span class="stat-value">7/7</span>
-                <span class="stat-sub">Holdout stage lolos</span>
+                <span class="stat-sub">Semua tahap lolos</span>
               </div>
               <div class="stat-card">
                 <span class="stat-label">Durasi</span>
                 <span class="stat-value">44m51s</span>
-                <span class="stat-sub">53.8% LLM · 46.2% tool</span>
+                <span class="stat-sub">53.8% model · 46.2% tes</span>
               </div>
               <div class="stat-card">
                 <span class="stat-label">Total Turn</span>
                 <span class="stat-value">227</span>
-                <span class="stat-sub">0 context compaction</span>
+                <span class="stat-sub">0 compaction</span>
               </div>
             </div>
           </div>
@@ -1080,7 +1075,7 @@
     <!-- ==================== SLIDE 02: PEMBAGIAN KERJA ==================== -->
     <section class="slide-shell" data-filename="02-hy4-flash-metrics.png">
       <div class="slide-actions">
-        <span>SLIDE 02 · PEMBAGIAN WAKTU &amp; DATA SESI</span>
+        <span>SLIDE 02 · PEMBAGIAN WAKTU</span>
         <button type="button" class="btn btn-save-one">Save PNG</button>
       </div>
       <div class="slide-viewport">
@@ -1093,49 +1088,49 @@
             <span class="slide-counter">02 / 07</span>
           </div>
 
-          <div class="slide-body is-tight">
+          <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-mint">CATATAN SESI</span>
-              <span class="tag-outline">227 TURN · 0 COMPACTION</span>
+              <span class="tag-outline">227 TURN</span>
             </div>
 
             <h2 class="headline-two-tone">
-              44 menit bukan cuma waktu AI berpikir.
-              <span class="muted">Hampir separuhnya habis untuk menjalankan tes.</span>
+              Durasi total 44 menit.
+              <span class="muted">Hampir separuhnya untuk menjalankan tes.</span>
             </h2>
 
             <div class="split-bar-box">
-              <span class="stat-label">Pembagian Waktu Kerja (Total 44m51s)</span>
+              <span class="stat-label">Pembagian Waktu (44m51s)</span>
               <div class="split-bar-track">
                 <div class="split-seg-a"></div>
                 <div class="split-seg-b"></div>
               </div>
               <div class="split-legend">
-                <span>■ AI BERPIKIR: 24m05s (53.8%)</span>
-                <span>■ JALANKAN TES &amp; TOOL: 20m42s (46.2%)</span>
+                <span>■ PROSES MODEL: 24m05s (53.8%)</span>
+                <span>■ TES &amp; TOOL: 20m42s (46.2%)</span>
               </div>
             </div>
 
             <div class="stat-grid-2">
               <div class="stat-card">
-                <span class="stat-label">Total Token Terpakai</span>
+                <span class="stat-label">Total Token</span>
                 <span class="stat-value">19.95M</span>
-                <span class="stat-sub">Akumulasi lintas 227 turn, dengan 98.14% terbantu cache (369k baru + 116k output)</span>
+                <span class="stat-sub">98.14% dari cache · 369k baru · 116k output</span>
               </div>
               <div class="stat-card">
-                <span class="stat-label">Puncak Konteks</span>
+                <span class="stat-label">Peak Context</span>
                 <span class="stat-value">157.7k</span>
-                <span class="stat-sub">Puncak isi percakapan (15% dari batas 1.05M), tuntas tanpa perlu diringkas</span>
+                <span class="stat-sub">15% dari batas 1.05M · 0 compaction</span>
               </div>
               <div class="stat-card">
                 <span class="stat-label">Tes Buatan Model</span>
                 <span class="stat-value">53 / 53</span>
-                <span class="stat-sub">Semua tes unit lolos (0 isu Credo), ditambah lulus 7/7 tes uji terpisah</span>
+                <span class="stat-sub">Lolos semua + lulus 7/7 tes terpisah</span>
               </div>
               <div class="stat-card">
-                <span class="stat-label">Pemanggilan Tool</span>
+                <span class="stat-label">Tool Calls</span>
                 <span class="stat-value">226/229</span>
-                <span class="stat-sub">116 perintah terminal tanpa error · 3 salah edit langsung diperbaiki di turn berikut</span>
+                <span class="stat-sub">116 perintah terminal mulus · 3 salah edit</span>
               </div>
             </div>
           </div>
@@ -1167,12 +1162,12 @@
           <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-sky">PERBANDINGAN</span>
-              <span class="tag-outline">OPENCODE v2.2.7 · #HIGH · 4 TOOLS</span>
+              <span class="tag-outline">OPENCODE v2.2.7 · #HIGH</span>
             </div>
 
             <h2 class="headline-two-tone">
-              Perbandingan di setup yang sama.
-              <span class="muted">Melihat selisih efisiensi hy4-flash-free vs inkling-2-small-free.</span>
+              Di setup yang sama.
+              <span class="muted">hy4-flash-free vs inkling-2-small-free.</span>
             </h2>
 
             <table class="comp-table">
@@ -1198,7 +1193,7 @@
                   <td><span class="hl hl-mint">-41.8%</span></td>
                 </tr>
                 <tr>
-                  <td class="comp-metric">Token Kumulatif</td>
+                  <td class="comp-metric">Total Token</td>
                   <td class="comp-val-win">19.95M</td>
                   <td class="comp-val-base">73.45M</td>
                   <td><span class="hl hl-acid">-72.8%</span></td>
@@ -1213,7 +1208,7 @@
             </table>
 
             <div class="bar-compare">
-              <span class="stat-label">Volume Token Kumulatif</span>
+              <span class="stat-label">Total Token</span>
               <div class="bar-row">
                 <span>hy4-flash-free</span>
                 <div class="bar-track"><div class="bar-fill-acid" style="width: 27.2%;"></div></div>
@@ -1227,7 +1222,7 @@
             </div>
 
             <p class="footnote">
-              * Observasi dari dua run pada setup OpenCode v2.2.7 (#high) ini — bukan kesimpulan mutlak untuk semua kasus.
+              * 2 sesi di setup OpenCode v2.2.7 (#high) — bukan kesimpulan mutlak.
             </p>
           </div>
 
@@ -1255,47 +1250,47 @@
             <span class="slide-counter">04 / 07</span>
           </div>
 
-          <div class="slide-body is-tight">
+          <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-violet">STUDI KASUS #1</span>
-              <span class="tag-outline">PENANGANAN CTRL-C</span>
+              <span class="tag-outline">CTRL-C</span>
             </div>
 
             <h2 class="headline-two-tone">
               Menangani Ctrl-C dengan mulus.
-              <span class="muted">Bahkan ketika ditekan sepersekian detik setelah jalan.</span>
+              <span class="muted">Termasuk saat aplikasi baru mulai jalan.</span>
             </h2>
 
             <div class="flow-stack">
               <div class="flow-step">
                 <div class="step-num">01</div>
                 <div>
-                  <p class="step-title">Tantangan bawaan Elixir</p>
-                  <p class="step-desc">Secara default, menekan <span class="mono-inline">Ctrl-C</span> langsung memutus proses atau memunculkan menu darurat, sehingga ringkasan hasil gagal tercetak.</p>
+                  <p class="step-title">Kendala awal</p>
+                  <p class="step-desc">Secara default, <span class="mono-inline">Ctrl-C</span> langsung memutus program sehinga ringkasan hasil gagal tercetak.</p>
                 </div>
               </div>
 
               <div class="flow-step">
                 <div class="step-num">02</div>
                 <div>
-                  <p class="step-title">Cara berbeda menangkap Ctrl-C</p>
-                  <p class="step-desc">Bukannya mengandalkan sinyal sistem yang rawan terlewat saat program baru menyala, model mengatur terminal agar tombol <span class="mono-inline">Ctrl-C</span> terbaca langsung sebagai input biasa.</p>
+                  <p class="step-title">Solusi model</p>
+                  <p class="step-desc">Terminal diatur agar <span class="mono-inline">Ctrl-C</span> terbaca sebagai input biasa, bukan sinyal sistem.</p>
                 </div>
               </div>
 
               <div class="flow-step">
                 <div class="step-num">03</div>
                 <div>
-                  <p class="step-title">Tetap aman di momen kritis</p>
-                  <p class="step-desc">Begitu <span class="mono-inline">Ctrl-C</span> masuk, request baru berhenti, proses aktif diselesaikan, ringkasan tetap tercetak, lalu terminal dikembalikan seperti semula.</p>
+                  <p class="step-title">Alur berhenti</p>
+                  <p class="step-desc">Request baru dihentikan, proses aktif diselesaikan, ringkasan tercetak, terminal kembali normal.</p>
                 </div>
               </div>
             </div>
 
             <div class="callout">
-              <p class="callout-title">Hasil Uji Langsung: 5 / 5 Lolos</p>
+              <p class="callout-title">Hasil Uji: 5 / 5 Lolos</p>
               <p class="callout-body">
-                Diuji di berbagai momen — termasuk <strong>50 ms pertama</strong> saat program baru mulai — semuanya tetap mencetak ringkasan parsial dan keluar dengan kode <span class="mono-inline">130</span>.
+                Termasuk di <strong>50 ms awal</strong> saat aplikasi mulai — semua tetap mencetak ringkasan &amp; keluar dengan kode <span class="mono-inline">130</span>.
               </p>
             </div>
           </div>
@@ -1308,8 +1303,8 @@
       </div>
     </section>
 
-    <!-- ==================== SLIDE 05: STUDI KASUS #2 MINT DEBUG ==================== -->
-    <section class="slide-shell" data-filename="05-hy4-flash-mint-debug.png">
+    <!-- ==================== SLIDE 05: STUDI KASUS #2 DEBUGGING ==================== -->
+    <section class="slide-shell" data-filename="05-hy4-flash-debugging.png">
       <div class="slide-actions">
         <span>SLIDE 05 · STUDI KASUS #2 DEBUGGING</span>
         <button type="button" class="btn btn-save-one">Save PNG</button>
@@ -1324,45 +1319,47 @@
             <span class="slide-counter">05 / 07</span>
           </div>
 
-          <div class="slide-body is-tight">
+          <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-violet">STUDI KASUS #2</span>
-              <span class="tag-outline">DEBUGGING MANDIRI</span>
+              <span class="tag-outline">DEBUGGING</span>
             </div>
 
             <h2 class="headline-two-tone">
               Menemukan penyebab bug timeout yang cukup rumit.
-              <span class="muted">Saat tiap request kedua mendadak gagal setelah 2 detik.</span>
+              <span class="muted">Diperbaiki dengan satu baris kode.</span>
             </h2>
 
-            <p class="lead">
-              Di tahap 4, model memilih library HTTP <span class="mono-inline">Mint</span>. Saat pengujian, muncul pola aneh: request ganjil sukses, sementara request genap selalu timeout 2.000 ms.
-            </p>
-
-            <div class="code-panel">
-              <div class="code-bar">
-                <span>POLA GEJALA · JARAK ANTAR REQUEST</span>
-                <span class="hl hl-magenta">3 OK · 3 FAIL</span>
+            <div class="flow-stack">
+              <div class="flow-step">
+                <div class="step-num">01</div>
+                <div>
+                  <p class="step-title">Gejala</p>
+                  <p class="step-desc">Saat memakai ulang koneksi HTTP, sebagian request terus gagal karena timeout.</p>
+                </div>
               </div>
-              <pre class="code-body">Started: 6 | HTTP responses: 3 (200: 3) | Failures: 3
-Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
-            </div>
 
-            <div class="code-panel">
-              <div class="code-bar">
-                <span>PERBAIKAN 1 BARIS · handle_responses/3</span>
-                <span class="hl hl-mint">1-LINE FIX</span>
+              <div class="flow-step">
+                <div class="step-num">02</div>
+                <div>
+                  <p class="step-title">Analisa mandiri</p>
+                  <p class="step-desc">Model melacak sendiri penyebabnya: state koneksi terbaru lupa disimpan kembali.</p>
+                </div>
               </div>
-              <div class="diff-body">
-                <span class="diff-del">- {:done, ref} -&gt; complete_response(acc) # pakai state lama</span>
-                <span class="diff-add">+ {:done, ref} -&gt; complete_response(%{acc | conn: conn})</span>
+
+              <div class="flow-step">
+                <div class="step-num">03</div>
+                <div>
+                  <p class="step-title">Perbaikan</p>
+                  <p class="step-desc">Cukup ubah 1 baris kode, seluruh <strong>50/50 request</strong> langsung berjalan normal.</p>
+                </div>
               </div>
             </div>
 
             <div class="callout callout-acid">
-              <p class="callout-title">Akar Masalah &amp; Perbaikannya</p>
+              <p class="callout-title">Detail Teknis di Halaman Web</p>
               <p class="callout-body">
-                Ternyata state koneksi terbaru dari <span class="mono-inline">Mint</span> lupa disimpan kembali ke accumulator. Begitu diperbaiki 1 baris, <strong>50/50 request</strong> berjalan normal di satu koneksi.
+                Potongan kode, log jarak antar request, dan diff perbaikannya tersimpan lengkap di catatan sesi.
               </p>
             </div>
           </div>
@@ -1394,12 +1391,12 @@ Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
           <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-magenta">CATATAN LAPANGAN</span>
-              <span class="tag-outline">HAL YANG PERLU DIPERHATIKAN</span>
+              <span class="tag-outline">4 HAL PENTING</span>
             </div>
 
             <h2 class="headline-two-tone">
               Lolos semua tahap, tapi belum sempurna.
-              <span class="muted">Ada 4 catatan penting di balik hasilnya.</span>
+              <span class="muted">4 catatan di balik hasilnya.</span>
             </h2>
 
             <div class="caveat-list">
@@ -1407,15 +1404,15 @@ Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
                 <div class="caveat-idx">01</div>
                 <div>
                   <p class="caveat-head">Bukan percobaan pertama</p>
-                  <p class="caveat-text">Sesi sebelumnya sempat dihentikan manual di tahap 4 setelah berjalan <strong>32m31s</strong>.</p>
+                  <p class="caveat-text">Sesi sebelunya dihentikan manual di tahap 4 (<strong>32m31s</strong>).</p>
                 </div>
               </div>
 
               <div class="caveat-row">
                 <div class="caveat-idx">02</div>
                 <div>
-                  <p class="caveat-head">Berhenti sedikit lebih awal (4,95 detik)</p>
-                  <p class="caveat-text">Begitu batas 50 request tercapai, program langsung selesai — <strong>0,05 detik lebih cepat</strong> dari durasi penuh 5,00 detik di spesifikasi.</p>
+                  <p class="caveat-head">Berhenti 0,05 detik lebih awal</p>
+                  <p class="caveat-text">Selesai di <strong>4,95 detik</strong> begitu 50 request tercapai (spek: 5,00 detik).</p>
                 </div>
               </div>
 
@@ -1423,7 +1420,7 @@ Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
                 <div class="caveat-idx">03</div>
                 <div>
                   <p class="caveat-head">File crash dump 5,02 MB ikut ter-commit</p>
-                  <p class="caveat-text">Saat menjalankan perintah uji di tahap 2, file <span class="mono-inline">erl_crash.dump</span> sempat terbentuk lalu ikut masuk ke riwayat git.</p>
+                  <p class="caveat-text">File <span class="mono-inline">erl_crash.dump</span> dari tahap 2 sempat masuk ke git.</p>
                 </div>
               </div>
 
@@ -1431,7 +1428,7 @@ Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
                 <div class="caveat-idx">04</div>
                 <div>
                   <p class="caveat-head">$0 bukan harga API permanen</p>
-                  <p class="caveat-text">Sesi ini berjalan di <strong>akses gratis sementara OpenCode</strong> (Nov 2026), jadi biaya $0 tidak mencerminkan tarif API permanen.</p>
+                  <p class="caveat-text">Ini <strong>akses gratis sementara OpenCode</strong> (Nov 2026).</p>
                 </div>
               </div>
             </div>
@@ -1461,47 +1458,47 @@ Arrival gaps: [84, 2004, 99, 2003, 102] ms</pre>
             <span class="slide-counter">07 / 07</span>
           </div>
 
-          <div class="slide-body is-tight">
+          <div class="slide-body">
             <div class="badge-row">
               <span class="hl hl-mint">RINGKASAN</span>
-              <span class="tag-outline">PELAJARAN UTAMA</span>
+              <span class="tag-outline">3 PELAJARAN</span>
             </div>
 
             <h2 class="headline-two-tone">
-              3 hal yang bisa dipetik dari eksperimen ini.
-              <span class="muted">Menilai coding agent bukan cuma soal lolos tes.</span>
+              3 pelajaran dari eksperimen ini.
+              <span class="muted">Menilai agent bukan cuma soal lolos tes.</span>
             </h2>
 
             <div class="caveat-list">
               <div class="caveat-row">
                 <div class="caveat-idx is-mint">01</div>
                 <div>
-                  <p class="caveat-head">Bedakan token kumulatif vs peak context</p>
-                  <p class="caveat-text">Total <strong>19.95M</strong> terdengar besar, padahal puncak konteksnya <strong>157.7k</strong> karena 98.14% terbantu cache.</p>
+                  <p class="caveat-head">Jangan cuma lihat angka total token</p>
+                  <p class="caveat-text"><strong>19.95M</strong> itu akumulasi 227 turn — pemakaian context terbesarnya cuma <strong>157.7k</strong>.</p>
                 </div>
               </div>
 
               <div class="caveat-row">
                 <div class="caveat-idx is-mint">02</div>
                 <div>
-                  <p class="caveat-head">Uji edge-case nyata seperti Ctrl-C</p>
-                  <p class="caveat-text">Di skenario non-standar seperti sinyal terminal dan state koneksi inilah kualitas solusi antar model paling terlihat.</p>
+                  <p class="caveat-head">Uji skenario yang jarang terpikir</p>
+                  <p class="caveat-text">Kasus seperti <span class="mono-inline">Ctrl-C</span> mendadak dan pengelolaan koneksi paling menunjukkan kualitas model.</p>
                 </div>
               </div>
 
               <div class="caveat-row">
                 <div class="caveat-idx is-mint">03</div>
                 <div>
-                  <p class="caveat-head">Tetap tinjau diff dan riwayat git</p>
-                  <p class="caveat-text">Model yang lolos semua tes pun tetap bisa tanpa sadar menyelipkan file besar seperti <span class="mono-inline">erl_crash.dump</span>.</p>
+                  <p class="caveat-head">Tetap periksa riwayat git</p>
+                  <p class="caveat-text">Lolos semua tes bukan jaminan repo bersih dari file tambahan seperti <span class="mono-inline">erl_crash.dump</span>.</p>
                 </div>
               </div>
             </div>
 
             <div class="archive-note">
-              <span class="archive-label">ARSIP CATATAN &amp; LOG LENGKAP</span>
+              <span class="archive-label">ARSIP LOG &amp; CATATAN LANJUTAN</span>
               <p class="archive-body">
-                Jika ingin menelusuri log turn, commit, dan catatan eksperimen lanjutan (<span class="mono-inline">inkling-2-small</span> &amp; seri <strong>Gemini 4</strong>), semuanya terdokumentasi terbuka di:
+                Log lengkap, commit, serta catatan <span class="mono-inline">inkling-2-small</span> &amp; seri <strong>Gemini 4</strong>:
               </p>
               <span class="archive-url">eval.rizafahmi.com</span>
             </div>
