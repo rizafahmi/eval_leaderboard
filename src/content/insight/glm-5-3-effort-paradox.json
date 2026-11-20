@@ -1,0 +1,307 @@
+{
+  "published": true,
+  "order": 4,
+  "part": "Part 4",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "The Effort Paradox: testing GLM-5.3 across Low, High & Max",
+  "subtitle": "High beat both Low and Max on every metric.",
+  "description": "A 7-slide controlled effort ablation of GLM-5.3-Flash (Low vs High vs Max) and flagship GLM-5.3 on ZCode: why High was faster, cheaper, and the only Flash tier to pass 7/7 — plus chunked-301 failures and a 22.6-minute sleep hang.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["GLM-5.3", "Effort Ablation", "ZCode"],
+  "relatedRunIds": [
+    "zcode-glm-5-3-flash-high-20261025-0555",
+    "zcode-glm-5-3-flash-low-20261024-1852",
+    "zcode-glm-5-3-flash-max-20261025-0739",
+    "zcode-glm-5-3-high-20261024-1237"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-glm-53-effort-paradox-cover.png",
+      "badges": [
+        { "text": "PERSONAL EVAL", "tone": "acid" },
+        { "text": "ZCODE · GLM-5.3", "tone": "sky" }
+      ],
+      "headlinePrimary": "The Effort Paradox: GLM-5.3 on Low, High & Max.",
+      "headlineMuted": "High beat both Low and Max on every metric.",
+      "lead": "Cranking reasoning effort to **Max** doubled tokens and cost — and still dropped back to **6/7**.",
+      "stats": [
+        {
+          "label": "Flash High",
+          "value": "7/7",
+          "sub": "71m · $0.87 · only Flash full pass",
+          "accent": true
+        },
+        {
+          "label": "Flash Low / Max",
+          "value": "6/7",
+          "sub": "111m ($1.10) · 110m ($1.70)"
+        },
+        {
+          "label": "Flagship High",
+          "value": "$12.90",
+          "sub": "7/7 · 96m · 14.8× Flash High"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "u-curve-metrics",
+      "kind": "metrics",
+      "label": "THE EFFORT U-CURVE",
+      "filename": "02-glm-53-u-curve.png",
+      "badges": [
+        { "text": "EFFORT ABLATION", "tone": "mint" },
+        { "text": "ZCODE HARNESS", "tone": "outline" }
+      ],
+      "headlinePrimary": "High effort wasn't just better — it was cheaper.",
+      "headlineMuted": "Half the tokens of Max, 36% faster than Low.",
+      "splitBar": {
+        "label": "Total Token Volume: Flash High (25.80M) vs Flash Max (51.95M)",
+        "primaryLabel": "FLASH HIGH: 25.80M (49.7%)",
+        "primaryPct": 49.7,
+        "secondaryLabel": "EXTRA TOKENS ON MAX: +26.15M (50.3%)",
+        "secondaryPct": 50.3
+      },
+      "stats": [
+        {
+          "label": "Total Turns",
+          "value": "190",
+          "sub": "vs 344 on Low · 294 on Max"
+        },
+        {
+          "label": "Thinking Tokens",
+          "value": "91.0k",
+          "sub": "vs 42.2k Low · 137.2k Max"
+        },
+        {
+          "label": "Parallel Batching",
+          "value": "1.17×",
+          "sub": "High batched tools · Max fell to 1.00×"
+        },
+        {
+          "label": "Cache Hit Rate",
+          "value": "99.1–99.5%",
+          "sub": "All 3 Flash runs held steady"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "HIGH VS MAX & FLAGSHIP",
+      "filename": "03-glm-53-high-vs-max.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "ZCODE · GLM-5.3", "tone": "outline" }
+      ],
+      "headlinePrimary": "Paying 2× more for Max bought a worse result.",
+      "headlineMuted": "glm-5.3-flash High vs Max on ZCode.",
+      "columns": ["Metric", "Flash High", "Flash Max", "Delta"],
+      "rows": [
+        {
+          "metric": "Holdouts",
+          "primary": "7/7",
+          "baseline": "6/7",
+          "delta": "PASS",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Duration",
+          "primary": "71m",
+          "baseline": "110m",
+          "delta": "-35%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost",
+          "primary": "$0.87",
+          "baseline": "$1.70",
+          "delta": "-49%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "25.80M",
+          "baseline": "51.95M",
+          "delta": "-50%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Cost Across Published GLM-5.3 Runs (ZCode)",
+        "items": [
+          {
+            "name": "glm-5.3-flash High",
+            "value": "$0.87",
+            "widthPct": 6.7,
+            "accent": true
+          },
+          {
+            "name": "glm-5.3-flash Low",
+            "value": "$1.10",
+            "widthPct": 8.5
+          },
+          {
+            "name": "glm-5.3-flash Max",
+            "value": "$1.70",
+            "widthPct": 13.2
+          },
+          {
+            "name": "glm-5.3 Flagship",
+            "value": "$12.90",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* Flagship glm-5.3 High passed 7/7 (80/80 tests, 96m) at 14.8× Flash High's cost. Unpublished Flagship Low scored 2/7 ($9.74).",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "s5-chunked-301",
+      "kind": "steps",
+      "label": "CASE STUDY #1 LIVE CHUNKED 301",
+      "filename": "04-glm-53-chunked-301.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "S5 FAILURE MODE", "tone": "outline" }
+      ],
+      "headlinePrimary": "Synthetic tests passed. Real HTTP broke them.",
+      "headlineMuted": "Both Low and Max tripped on live chunked 301s.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Low: dropped chunk tail bytes",
+          "desc": "Passed `42/42` local tests, but `read_chunk/5` discarded trailing buffer bytes — failing `40/41` live requests with `:closed`."
+        },
+        {
+          "num": "02",
+          "title": "Max: CaseClauseError crash",
+          "desc": "Passed `63/63` local tests, yet its hand-rolled chunked-body parser crashed on live Cloudflare `301` responses with `CaseClauseError: [\"\"]`."
+        },
+        {
+          "num": "03",
+          "title": "High: adopted :mint (v1.11.0)",
+          "desc": "Instead of hand-rolling chunked framing, Flash High pulled in `:mint` in S3 — clearing live chunked `301` and HTTPS cleanly."
+        }
+      ],
+      "callout": {
+        "title": "Architecture Beat Brute-Force Thinking",
+        "body": "Spending **137.2k** thinking tokens on Max didn't save a fragile custom parser; picking `:mint` solved S5 cleanly.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "reasoning-dynamics",
+      "kind": "steps",
+      "label": "CASE STUDY #2 OVERTHINKING SPIRAL",
+      "filename": "05-glm-53-overthinking.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "REASONING DYNAMICS", "tone": "outline" }
+      ],
+      "headlinePrimary": "One deep plan beat 110 minutes of spirals.",
+      "headlineMuted": "How High and Max spent their thinking budgets.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "High's Turn-3 monolith",
+          "desc": "Spent **10.8 minutes** on Turn 3 (`30,440` output tokens) designing the architecture upfront — then cruised S1–S7 in `190` turns."
+        },
+        {
+          "num": "02",
+          "title": "Max's 22.6-minute sleep hang",
+          "desc": "In S4, a negative BEAM monotonic-time bug (`-576460751513`) triggered `Process.sleep(576 billion ms)` and hung tests for **22.6m**."
+        },
+        {
+          "num": "03",
+          "title": "Max's 48-turn signal spiral",
+          "desc": "Spent 48 turns in S1 on a PTY signal odyssey plus **5.8m** stuck in an `until wait` busy-loop in S2."
+        }
+      ],
+      "callout": {
+        "title": "More Effort ≠ Better Recovery",
+        "body": "Once **Max** entered a debugging rabbit hole, extra reasoning tokens amplified the loop instead of escaping it.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-glm-53-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Even the winner had rough edges.",
+      "headlineMuted": "4 caveats across the ZCode GLM-5.3 runs.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Flash High took a linting shortcut",
+          "text": "Used `mix compile --warnings-as-errors` instead of installing Credo (while `Max` enforced Credo properly)."
+        },
+        {
+          "num": "02",
+          "head": "Every Flash run committed erl_crash.dump",
+          "text": "Broken-pipe Mix commands + `git add -A` committed `2.89 MB` (High), `4.74 MB` (Max), and `5.5 MB` × 4 (Low)."
+        },
+        {
+          "num": "03",
+          "head": "ZCode guard friction sparked Python hacks",
+          "text": "`mix format` tripped ZCode's modified-since-read guard, triggering **18–29 inline Python/sed patches** per run."
+        },
+        {
+          "num": "04",
+          "head": "Upstream noise & commit fingerprint",
+          "text": "`Low` lost **~21m** to 29 mid-stream `TypeError: terminated` aborts; Flagship `glm-5.3` signed every commit as **Claude Fable 5**."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-glm-53-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from the Effort Paradox.",
+      "headlineMuted": "Why 'High' is the sweet spot.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Don't default to Max effort",
+          "text": "Extra reasoning budget inflated turns (`+55%`) and cost (`+95%`) while still missing edge cases — benchmark the middle tier first."
+        },
+        {
+          "num": "02",
+          "head": "Flash High can rival a 14.8× pricier flagship",
+          "text": "At **`$0.87`** vs **`$12.90`**, `glm-5.3-flash High` matched Flagship `glm-5.3` on 7/7 completion and finished `25m` faster."
+        },
+        {
+          "num": "03",
+          "head": "Always test against live targets",
+          "text": "Synthetic local servers masked chunked-encoding bugs on both `Low` and `Max` until real HTTP traffic hit `./cb`."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & EFFORT ABLATION",
+        "body": "Inspect all 4 published **GLM-5.3** runs, slice timelines, and compare Flash vs Flagship side-by-side:",
+        "url": "eval.rizafahmi.com/compare"
+      },
+      "footerRight": "COMPARE ON THE WEB →"
+    }
+  ]
+}
