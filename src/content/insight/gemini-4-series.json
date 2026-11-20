@@ -1,0 +1,309 @@
+{
+  "published": true,
+  "order": 3,
+  "part": "Part 3",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "Testing the Gemini 4 series on my personal benchmark",
+  "subtitle": "Four variants, two harnesses, six 7/7 passes.",
+  "description": "A 7-slide visual breakdown of all 6 Gemini 4 runs (Hydrogen, Neon, Argon, Carbon across Antigravity CLI and OMP): generational leap over 3.8 Flash, 4-variant trade-offs, harness ablation, cold-boot Ctrl-C depth, and field notes.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["Gemini 4", "Antigravity CLI", "OMP"],
+  "relatedRunIds": [
+    "agy-gemini-4-hydrogen-high-20261119-1110",
+    "agy-gemini-4-neon-high-20261119-0842",
+    "agy-gemini-4-argon-high-20261118-2142",
+    "agy-gemini-4-carbon-high-20261118-1244",
+    "omp-gemini-4-argon-high-20261112-1212",
+    "omp-gemini-4-carbon-high-20261112-0530"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-gemini-4-series-cover.png",
+      "badges": [
+        { "text": "PERSONAL EVAL", "tone": "acid" },
+        { "text": "GEMINI 4 SERIES", "tone": "sky" }
+      ],
+      "headlinePrimary": "Testing the Gemini 4 series on my personal benchmark.",
+      "headlineMuted": "Four variants, two harnesses, six 7/7 passes.",
+      "lead": "Hydrogen, Neon, Argon, and Carbon all swept **7/7** — with a **2.6×** spread in speed and **2.1×** spread in cost.",
+      "stats": [
+        {
+          "label": "Series Sweep",
+          "value": "6 / 6",
+          "sub": "All 7/7 holdouts · 0 strict Credo",
+          "accent": true
+        },
+        {
+          "label": "Fastest Run",
+          "value": "34m",
+          "sub": "Hydrogen · $3.42 · 7.0s/turn"
+        },
+        {
+          "label": "Lowest Cost",
+          "value": "$3.37",
+          "sub": "Argon · 131 turns · 12.75M tok"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "generation-leap",
+      "kind": "metrics",
+      "label": "GENERATIONAL LEAP",
+      "filename": "02-gemini-4-vs-38-flash.png",
+      "badges": [
+        { "text": "GENERATION LEAP", "tone": "mint" },
+        { "text": "ANTIGRAVITY CLI", "tone": "outline" }
+      ],
+      "headlinePrimary": "Same harness, huge efficiency jump.",
+      "headlineMuted": "Gemini 4 cut turns by up to 66% vs 3.8 Flash.",
+      "splitBar": {
+        "label": "Turns Needed on Antigravity CLI (Argon 131 vs 3.8 Flash 388)",
+        "primaryLabel": "GEMINI 4 ARGON: 131 turns (33.8%)",
+        "primaryPct": 33.8,
+        "secondaryLabel": "TURNS SAVED VS 3.8 FLASH: 257 (66.2%)",
+        "secondaryPct": 66.2
+      },
+      "stats": [
+        {
+          "label": "Reactive Waiting",
+          "value": "0–11",
+          "sub": "manage_task polls vs 105 on 3.8 Flash"
+        },
+        {
+          "label": "Parallel Batching",
+          "value": "1.86×",
+          "sub": "Argon OMP tools/turn — #1 on board"
+        },
+        {
+          "label": "Edit Precision",
+          "value": "100%",
+          "sub": "86/86 Argon · 88/88 Neon · 99/99 Carbon"
+        },
+        {
+          "label": "Cache Savings",
+          "value": "94–98%",
+          "sub": "$20.70–$33.67 saved per run"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "4-VARIANT SHOWDOWN",
+      "filename": "03-gemini-4-variants.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "ANTIGRAVITY CLI · #HIGH", "tone": "outline" }
+      ],
+      "headlinePrimary": "Four variants, four different trade-offs.",
+      "headlineMuted": "Hydrogen vs Carbon on the exact same harness.",
+      "columns": ["Metric", "Hydrogen", "Carbon", "Delta"],
+      "rows": [
+        {
+          "metric": "Duration",
+          "primary": "34m",
+          "baseline": "88m",
+          "delta": "-61%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost (2026)",
+          "primary": "$3.42",
+          "baseline": "$7.16",
+          "delta": "-52%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "15.55M",
+          "baseline": "26.88M",
+          "delta": "-42%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Turns",
+          "primary": "144",
+          "baseline": "198",
+          "delta": "-27%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Duration Across All 4 Variants (Antigravity CLI)",
+        "items": [
+          {
+            "name": "gemini-4-hydrogen",
+            "value": "34m",
+            "widthPct": 38.6,
+            "accent": true
+          },
+          {
+            "name": "gemini-4-neon",
+            "value": "44m",
+            "widthPct": 50
+          },
+          {
+            "name": "gemini-4-argon",
+            "value": "61m",
+            "widthPct": 69.3
+          },
+          {
+            "name": "gemini-4-carbon",
+            "value": "88m",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* Neon wrote the most tests (49/49 in 29.7s); Argon had the lowest cost ($3.37) and fewest turns (131).",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "harness-ablation",
+      "kind": "steps",
+      "label": "CASE STUDY #1 HARNESS ABLATION",
+      "filename": "04-gemini-4-agy-vs-omp.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "AGY VS OMP", "tone": "outline" }
+      ],
+      "headlinePrimary": "Same models, two different harnesses.",
+      "headlineMuted": "Switching to OMP sped up both Argon and Carbon.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Carbon: -28% time, -17% cost",
+          "desc": "Dropped from `88m / $7.16` on Antigravity CLI to `63m / $5.91` on OMP with fewer cache evictions (`2` vs `5`)."
+        },
+        {
+          "num": "02",
+          "title": "Argon: faster, more parallel",
+          "desc": "Cut duration `61m → 53m` (`-13%`) as batching hit **1.86 tools/turn** — though larger context (`294k`) bumped cost `$3.37 → $3.97`."
+        },
+        {
+          "num": "03",
+          "title": "Different HTTP architecture",
+          "desc": "On OMP, both audited OTP 28 internals and built zero-dep `:gen_tcp`/`:ssl` clients; on AGY, Hydrogen & Neon reached for `Mint`."
+        }
+      ],
+      "callout": {
+        "title": "Harness Shapes Architecture & Cost",
+        "body": "Even with identical weights and `#high` effort, harness tooling shifted wall-clock time by up to **25 minutes**.",
+        "tone": "sky"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "boot-window-race",
+      "kind": "steps",
+      "label": "CASE STUDY #2 COLD-BOOT CTRL-C",
+      "filename": "05-gemini-4-carbon-boot-race.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "BOOT-WINDOW RACE", "tone": "outline" }
+      ],
+      "headlinePrimary": "Only Carbon closed the cold-boot race.",
+      "headlineMuted": "Where the slowest variant earned its keep.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "The shared 200–350 ms gap",
+          "desc": "`Hydrogen`, `Neon`, and `Argon` all passed post-boot PTY `Ctrl-C` probes, but left a `~200–350 ms` BEAM startup window open."
+        },
+        {
+          "num": "02",
+          "title": "Carbon's AGY handshake fix",
+          "desc": "Caught the `20–220 ms` boot race during release verification and added a two-file `CB_INTR_FILE` + `CB_READY_FILE` handshake."
+        },
+        {
+          "num": "03",
+          "title": "Carbon's OMP upfront fix",
+          "desc": "Audited OTP 28 source during preparation and solved boot-window `Ctrl-C` cleanly via `SIGUSR2` before writing S1."
+        }
+      ],
+      "callout": {
+        "title": "Speed vs. Edge-Case Depth",
+        "body": "**Hydrogen** (`34m`) and **Neon** (`44m`) are the daily-driver sweet spot; **Carbon** (`$5.91–$7.16`) caught the hardest boot-window race.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-gemini-4-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "6/6 full passes, not without friction.",
+      "headlineMuted": "4 caveats behind the Gemini 4 numbers.",
+      "items": [
+        {
+          "num": "01",
+          "head": "High 'tool error' rates are mostly TDD",
+          "text": "`11%–15%` error rates look noisy, yet file edits were **100% clean** on AGY — most errors were intentional red-phase test runs (`17–18` on Carbon)."
+        },
+        {
+          "num": "02",
+          "head": "Mid-run API stalls & retries",
+          "text": "Carbon hit a **19m57s** stream stall on AGY, Argon hit a **3m15s** S3 timeout, and Hydrogen weathered **6 transient 503s**."
+        },
+        {
+          "num": "03",
+          "head": "Cache evictions cost real money",
+          "text": "Five mid-run prefix cache evictions added **$1.65** to Carbon's AGY bill (`94.68%` cache hit vs `97.57%` on Argon OMP)."
+        },
+        {
+          "num": "04",
+          "head": "2027 rates double the bill",
+          "text": "At 2027 standard API pricing (`2×` 2026 rates), these `$3.37–$7.16` runs become **$6.74–$14.32**."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-gemini-4-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from the Gemini 4 series.",
+      "headlineMuted": "Picking the right variant matters.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Default to Hydrogen or Neon",
+          "text": "**Hydrogen** (`34m`, `$3.42`) wins on speed; **Neon** (`44m`, `$3.69`, `49/49` tests) wins on test depth and stability (`0` stalls)."
+        },
+        {
+          "num": "02",
+          "head": "Argon is the parallel-batching king",
+          "text": "**1.53–1.86 tools/turn** cut turns to `131` and delivered the lowest cost in the family (**`$3.37`**)."
+        },
+        {
+          "num": "03",
+          "head": "Save Carbon for gnarly edge cases",
+          "text": "Paying `2×` more only pays off when you need deep upfront audits like closing a `20–220 ms` cold-boot signal race."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & COMPARE WORKBENCH",
+        "body": "Compare all 6 **Gemini 4** runs side-by-side across speed, Pareto frontier, and harness ablations:",
+        "url": "eval.rizafahmi.com/compare"
+      },
+      "footerRight": "COMPARE ON THE WEB →"
+    }
+  ]
+}
