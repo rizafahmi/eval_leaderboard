@@ -88,12 +88,12 @@ export interface FrontierPlotModel {
   quadrant: FrontierQuadrantOverlay;
 }
 
-const CHART_W = 760;
-const CHART_H = 360;
-const PAD_L = 62;
-const PAD_R = 26;
-const PAD_T = 28;
-const PAD_B = 46;
+const CHART_W = 960;
+const CHART_H = 460;
+const PAD_L = 74;
+const PAD_R = 32;
+const PAD_T = 36;
+const PAD_B = 56;
 
 const LOG_COST_TICKS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
 
@@ -106,19 +106,12 @@ export function formatShortCostTick(val: number): string {
 export function formatShortModelLabel(harness: string, model: string): string {
   const compactModel = model
     .replace('-contributor', '')
-    .replace('gemini-3.8-flash-high', 'gem-3.8-flash')
-    .replace('gemini-4-', 'gem-4-')
-    .replace('inkling-2-small-free', 'inkling-2-sm')
-    .replace('deepseek-v4-flash', 'ds-v4-flash')
-    .replace('deepseek-flash', 'ds-flash')
-    .replace('subq-savant-1.4', 'savant-1.4');
+    .replace('gemini-3.8-flash-high', 'gemini-3.8-flash')
+    .replace('inkling-2-small-free', 'inkling-2-small');
   const compactHarness = harness
-    .replace('Antigravity CLI', 'AGY')
-    .replace('Codex CLI', 'Codex')
-    .replace('DeepSeek Harness', 'DSH')
-    .replace('Muse Code', 'Muse')
-    .replace('OpenCode', 'OC');
-  return `${compactHarness}/${compactModel}`;
+    .replace('Antigravity CLI', 'Antigravity')
+    .replace('DeepSeek Harness', 'DSH');
+  return `${compactHarness} · ${compactModel}`;
 }
 
 export function buildFrontierPlotModel(
@@ -128,6 +121,7 @@ export function buildFrontierPlotModel(
     mode: FrontierViewMode;
     includeZeroCostPromos?: boolean;
     highlightedIds?: ReadonlySet<string>;
+    labelAllPoints?: boolean;
   }
 ): FrontierPlotModel {
   const {
@@ -135,6 +129,7 @@ export function buildFrontierPlotModel(
     mode,
     includeZeroCostPromos = false,
     highlightedIds = new Set<string>(),
+    labelAllPoints = false,
   } = options;
 
   const frontier = computeLensFrontier(runs, { lens, includeZeroCostPromos });
@@ -251,22 +246,29 @@ export function buildFrontierPlotModel(
     frontierStepPath = segs.join(' ');
   }
 
-  // Deterministic non-overlapping labels
-  const labelInputs: ScatterLabelInput[] = points.map((p) => {
+  // Deterministic non-overlapping labels: by default label only frontier, highlighted,
+  // promo-gutter, and the most expensive/budget anchor points so the chart stays calm and readable.
+  const maxPaidCost = paidCosts.length > 0 ? Math.max(...paidCosts) : 0;
+  const labelCandidates = labelAllPoints
+    ? points
+    : points.filter(
+        (p) =>
+          highlightedIds.has(p.id) ||
+          p.isFrontier ||
+          p.inPromoGutter ||
+          (p.isFullPass && p.lensCostUsd === maxPaidCost)
+      );
+
+  const labelInputs: ScatterLabelInput[] = labelCandidates.map((p) => {
     const isHl = highlightedIds.has(p.id);
-    let priority = 10;
+    let priority = 20;
     if (isHl) priority = 100;
     else if (p.isFrontier) priority = 80 - (p.frontierOrder ?? 0);
     else if (p.inPromoGutter) priority = 65;
-    else if (p.isFullPass && p.lensCostUsd === Math.max(...paidCosts)) priority = 50;
-    else if (p.isFullPass && p.lensCostUsd <= 1.0) priority = 55;
-    else if (!p.isFullPass && p.durationMinutes <= 22) priority = 45;
-    else if (p.isFullPass) priority = 25;
+    else if (p.isFullPass && p.lensCostUsd === maxPaidCost) priority = 40;
 
     const costTag = p.isZeroCostPromo ? '$0' : formatShortCostTick(p.lensCostUsd);
-    const text = p.isFrontier
-      ? `F${p.frontierOrder} ${p.shortLabel} (${costTag})`
-      : `${p.shortLabel} (${costTag})`;
+    const text = `${p.shortLabel} (${costTag})`;
 
     return {
       id: p.id,
@@ -281,12 +283,12 @@ export function buildFrontierPlotModel(
   const labels = placeScatterLabels(
     labelInputs,
     {
-      xMin: PAD_L + 4,
-      xMax: CHART_W - PAD_R - 2,
-      yMin: PAD_T + 8,
-      yMax: CHART_H - PAD_B - 4,
+      xMin: PAD_L + 8,
+      xMax: CHART_W - PAD_R - 4,
+      yMin: PAD_T + 14,
+      yMax: CHART_H - PAD_B - 8,
     },
-    points.map((p) => ({ cx: p.cx, cy: p.cy, r: p.isFrontier ? 7 : 5 }))
+    points.map((p) => ({ cx: p.cx, cy: p.cy, r: p.isFrontier ? 9 : 7 }))
   );
 
   // Axis ticks

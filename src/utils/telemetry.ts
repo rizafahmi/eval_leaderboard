@@ -1420,8 +1420,8 @@ export function placeScatterLabels(
     (a, b) => b.priority - a.priority || a.id.localeCompare(b.id)
   );
   const placed: PlacedScatterLabel[] = [];
-  const charW = 6.3;
-  const labelH = 14;
+  const charW = 7.6;
+  const labelH = 18;
 
   const candidates: Array<{
     dx: number;
@@ -1429,18 +1429,18 @@ export function placeScatterLabels(
     anchor: 'start' | 'end' | 'middle';
     leader: boolean;
   }> = [
-    { dx: 10, dy: -8, anchor: 'start', leader: false },
-    { dx: 10, dy: 12, anchor: 'start', leader: false },
-    { dx: -10, dy: -8, anchor: 'end', leader: false },
-    { dx: -10, dy: 12, anchor: 'end', leader: false },
-    { dx: 0, dy: -13, anchor: 'middle', leader: false },
-    { dx: 0, dy: 20, anchor: 'middle', leader: false },
-    { dx: 16, dy: -20, anchor: 'start', leader: true },
-    { dx: -16, dy: -20, anchor: 'end', leader: true },
-    { dx: 16, dy: 24, anchor: 'start', leader: true },
-    { dx: -16, dy: 24, anchor: 'end', leader: true },
-    { dx: 0, dy: -28, anchor: 'middle', leader: true },
-    { dx: 0, dy: 34, anchor: 'middle', leader: true },
+    { dx: 14, dy: -10, anchor: 'start', leader: false },
+    { dx: 14, dy: 14, anchor: 'start', leader: false },
+    { dx: -14, dy: -10, anchor: 'end', leader: false },
+    { dx: -14, dy: 14, anchor: 'end', leader: false },
+    { dx: 0, dy: -16, anchor: 'middle', leader: false },
+    { dx: 0, dy: 24, anchor: 'middle', leader: false },
+    { dx: 20, dy: -24, anchor: 'start', leader: true },
+    { dx: -20, dy: -24, anchor: 'end', leader: true },
+    { dx: 20, dy: 28, anchor: 'start', leader: true },
+    { dx: -20, dy: 28, anchor: 'end', leader: true },
+    { dx: 0, dy: -32, anchor: 'middle', leader: true },
+    { dx: 0, dy: 38, anchor: 'middle', leader: true },
   ];
 
   for (const item of sorted) {

@@ -10,7 +10,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  activeNav?: 'leaderboard' | 'compare' | 'insight' | 'about';
+  activeNav?: 'leaderboard' | 'frontier' | 'compare' | 'insight' | 'about';
   lang?: 'en' | 'id';
   ogType?: 'website' | 'article';
   ogImage?: string;
@@ -189,6 +189,15 @@ const jsonLd = {
                 aria-current={activeNav === 'leaderboard' ? (pathname ? 'true' : 'page') : undefined}
               >
                 Leaderboard
+              </a>
+            </li>
+            <li>
+              <a
+                href="/frontier"
+                class:list={['app-nav-item', { 'is-active': activeNav === 'frontier' }]}
+                aria-current={activeNav === 'frontier' ? 'page' : undefined}
+              >
+                Frontier
               </a>
             </li>
             <li>

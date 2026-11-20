@@ -1,0 +1,2090 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { formatDuration, formatCost } from "../utils/format";
+import {
+	analyzeAndRankRuns,
+	computeGroupSampleStats,
+	computePairedValueBars,
+	type AnalyzedRun,
+} from "../utils/telemetry";
+import {
+	buildFrontierPlotModel,
+	formatShortCostTick,
+} from "../utils/frontier-chart";
+
+const allRuns = await getCollection(
+	"runs",
+	({ data }) => data.published !== false,
+);
+const analyzedRuns = analyzeAndRankRuns(
+	allRuns.map((entry) => ({ id: entry.id, data: entry.data })),
+);
+
+const initialPlotModel = buildFrontierPlotModel(analyzedRuns, {
+	lens: "billed",
+	mode: "speed-7-of-7",
+	includeZeroCostPromos: false,
+});
+const initialPairedBars = computePairedValueBars(analyzedRuns, "billed");
+const groupSampleStats = computeGroupSampleStats(analyzedRuns);
+
+const paid7of7Exec = initialPairedBars.executionRows.filter(
+	(r) => r.isFullPass && !r.isZeroCostPromo,
+);
+const paid7of7Value = initialPairedBars.paidValueRows.filter(
+	(r) => r.isFullPass,
+);
+const partialRows = initialPairedBars.executionRows.filter((r) => !r.isFullPass);
+
+const frontierIds = initialPlotModel.frontier.frontierIds;
+const cheapestId = frontierIds[0];
+const fastestId = frontierIds[frontierIds.length - 1];
+const balancedId =
+	frontierIds.length >= 3
+		? frontierIds[Math.floor(frontierIds.length / 2)]
+		: frontierIds[1] ?? cheapestId;
+
+const fastestPt = initialPlotModel.points.find((p) => p.id === fastestId);
+const dominatedCount =
+	initialPlotModel.points.length - initialPlotModel.frontier.frontierIds.length;
+
+const pickSpecs = [
+	{
+		key: "budget",
+		badge: "Cheapest 7/7",
+		headline: "Lowest paid cost for a full pass",
+		runId: cheapestId,
+	},
+	{
+		key: "balanced",
+		badge: "Balanced Pick",
+		headline: "Fast and under $2",
+		runId: balancedId,
+	},
+	{
+		key: "fastest",
+		badge: "Fastest 7/7",
+		headline: "Shortest wall-clock time",
+		runId: fastestId,
+	},
+]
+	.map((spec) => {
+		const pt = initialPlotModel.points.find((p) => p.id === spec.runId);
+		if (!pt) return null;
+		const hStat = groupSampleStats.byHarness[pt.harnessSlug];
+		return {
+			...spec,
+			pt,
+			caveat: hStat?.singlePeerCaveat
+				? `n=${hStat.n} (single-model harness)`
+				: `n=${hStat?.n ?? 1} on ${pt.harness}`,
+		};
+	})
+	.filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+const firstPt =
+	initialPlotModel.points.find((p) => p.id === balancedId) ??
+	initialPlotModel.points[0];
+const firstModelStat = firstPt ? groupSampleStats.byModel[firstPt.model] : null;
+const firstHarnessStat = firstPt
+	? groupSampleStats.byHarness[firstPt.harnessSlug]
+	: null;
+
+const clientAnalyzedRunsPayload = analyzedRuns.map((r: AnalyzedRun) => ({
+	id: r.id,
+	data: {
+		timestamp: r.data.timestamp,
+		codingHarness: r.data.codingHarness,
+		model: r.data.model,
+		effort: r.data.effort,
+		provider: r.data.provider,
+		durationMinutes: r.data.durationMinutes,
+		costUsd: r.data.costUsd,
+		tests: r.data.tests
+			? { passed: r.data.tests.passed, total: r.data.tests.total }
+			: undefined,
+		planCompletion: r.data.planCompletion,
+		tokens: r.data.tokens
+			? { total: r.data.tokens.total, cacheHitRate: r.data.tokens.cacheHitRate }
+			: undefined,
+	},
+	displayHarness: r.displayHarness,
+	displayProvider: r.displayProvider,
+	plan: r.plan,
+	tokens: r.tokens,
+	costMetrics: {
+		billedCostUsd: r.costMetrics.billedCostUsd,
+		standardApiCostUsd: r.costMetrics.standardApiCostUsd,
+		uncachedCounterfactualCostUsd: r.costMetrics.uncachedCounterfactualCostUsd,
+		cacheSavingsUsd: r.costMetrics.cacheSavingsUsd,
+		cacheSavingsPct: r.costMetrics.cacheSavingsPct,
+		comparisonCostUsd: r.costMetrics.comparisonCostUsd,
+		comparisonLabel: r.costMetrics.comparisonLabel,
+		profile: r.costMetrics.profile
+			? {
+					pricingBadge: r.costMetrics.profile.pricingBadge,
+					pricingStatusNote: r.costMetrics.profile.pricingStatusNote,
+				}
+			: null,
+	},
+}));
+---
+
+<BaseLayout
+  title="Which Model Fits Your Workflow?"
+  description="Decluttered, story-first view of Capy Bench speed, cost, and value tradeoffs across all published runs."
+  activeNav="frontier"
+>
+  <div class="swd-page" id="frontier-workspace">
+    <!-- ACTION-TITLE HEADER (SWD: lead with the takeaway) -->
+    <header class="swd-header">
+      <p class="swd-kicker">
+        <a href="/">← Leaderboard</a>
+        <span aria-hidden="true">·</span>
+        <span>{analyzedRuns.length} published runs</span>
+      </p>
+      <h1 class="headline-two-tone" id="swd-action-title">
+        Only {frontierIds.length} paid runs set the pace.<br />
+        <span class="muted">
+          Spending past {fastestPt ? formatCost(fastestPt.lensCostUsd) : '$3.14'} never bought more speed.
+        </span>
+      </h1>
+      <p class="swd-lead" id="swd-lead">
+        Out of {initialPlotModel.points.length} paid runs that passed all 7 stages, {frontierIds.length} define the real speed-vs-cost choices. The other {dominatedCount} cost more, took longer, or both.
+      </p>
+    </header>
+
+    <!-- 3 SIMPLE PICKS (Answers "Which model is suitable for me?") -->
+    <section class="swd-picks" aria-label="Three frontier picks by priority">
+      <div class="picks-grid" id="vf-picks-grid">
+        {pickSpecs.map((pick) => (
+          <button
+            type="button"
+            class="pick-card"
+            data-vf-run={pick.pt.id}
+            data-pick-key={pick.key}
+            aria-pressed="false"
+          >
+            <div class="pick-card-top">
+              <span class="hl hl-acid">{pick.badge}</span>
+              <span class="mono pick-card-caveat">{pick.caveat}</span>
+            </div>
+            <strong class="pick-card-name">{pick.pt.model}</strong>
+            <span class="pick-card-harness">via {pick.pt.harness}</span>
+            <div class="mono pick-card-metrics">
+              <span class="pick-metric-big">{formatCost(pick.pt.lensCostUsd)}</span>
+              <span aria-hidden="true">·</span>
+              <span>{formatDuration(pick.pt.durationMinutes)}</span>
+            </div>
+            <p class="pick-card-why">{pick.headline}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- ACTIVE FOCUS STRIP -->
+    <div
+      id="highlight-banner"
+      class="highlight-banner"
+      role="region"
+      aria-label="Focused run"
+      hidden
+    >
+      <div class="highlight-banner-main">
+        <span class="hl hl-acid">Focused</span>
+        <strong id="hb-title" class="highlight-banner-title"></strong>
+        <span id="hb-caveat" class="mono highlight-banner-caveat"></span>
+      </div>
+      <div class="highlight-banner-actions">
+        <button type="button" id="hb-scope-model" class="btn btn-sm btn-secondary" hidden></button>
+        <button type="button" id="hb-scope-harness" class="btn btn-sm btn-secondary" hidden></button>
+        <a id="hb-dossier-link" href="/" class="btn btn-sm btn-secondary" hidden>Read dossier →</a>
+        <button type="button" id="hb-clear-btn" class="btn btn-sm btn-secondary">Clear (Esc)</button>
+      </div>
+    </div>
+
+    <!-- DECLUTTERED SCATTER STORY (SWD: gray baseline + 1 accent + direct labels, no gridlines, no box, no staircase) -->
+    <section class="swd-chart-section" aria-labelledby="swd-action-title">
+      <div class="swd-controls-row">
+        <div
+          class="vf-toolbar"
+          role="toolbar"
+          focusgroup="toolbar wrap"
+          aria-label="Chart view and pricing lens"
+          aria-controls="vf-svg vf-paired-bars"
+        >
+          <div class="vf-toolbar-group" role="group" aria-label="Runs shown">
+            <button type="button" class="vf-ctrl-btn" data-vf-mode="speed-7-of-7" aria-pressed="true">
+              7/7 Full Passes ({initialPlotModel.frontier.thresholds.paidFullPassCount})
+            </button>
+            <button type="button" class="vf-ctrl-btn" data-vf-mode="all-outcomes" aria-pressed="false">
+              All {analyzedRuns.length} Runs
+            </button>
+          </div>
+
+          <span class="vf-toolbar-sep" role="separator" aria-orientation="vertical"></span>
+
+          <div class="vf-toolbar-group" role="group" aria-label="Pricing lens">
+            <button type="button" class="vf-ctrl-btn" data-vf-lens="billed" aria-pressed="true">
+              Billed
+            </button>
+            <button type="button" class="vf-ctrl-btn" data-vf-lens="standard" aria-pressed="false">
+              Standard API
+            </button>
+            <button type="button" class="vf-ctrl-btn" data-vf-lens="uncached" aria-pressed="false">
+              Uncached
+            </button>
+          </div>
+        </div>
+
+        <label class="swd-check">
+          <input type="checkbox" id="vf-toggle-promos" />
+          <span>Show 2 limited-time $0 promos</span>
+        </label>
+      </div>
+
+      <div id="frontier-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <figure class="vf-figure">
+        <svg
+          id="vf-svg"
+          viewBox={`0 0 ${initialPlotModel.width} ${initialPlotModel.height}`}
+          class="vf-svg"
+          role="img"
+          aria-labelledby="vf-svg-title vf-svg-desc"
+        >
+          <title id="vf-svg-title">Capy Bench Paid 7/7 Speed vs. Cost</title>
+          <desc id="vf-svg-desc">
+            Decluttered scatter plot highlighting the 3 paid 7/7 frontier leaders in accent color while keeping the remaining slower and pricier runs in quiet gray.
+          </desc>
+
+          <!-- Minimal axes only (zero gridline clutter) -->
+          <g id="vf-layer-grid"></g>
+          <g id="vf-layer-quadrants"></g>
+
+          <g id="vf-layer-axes">
+            <line
+              x1={initialPlotModel.padL}
+              y1={initialPlotModel.padT}
+              x2={initialPlotModel.padL}
+              y2={initialPlotModel.height - initialPlotModel.padB}
+              class="vf-axis-line"
+            />
+            <line
+              x1={initialPlotModel.padL}
+              y1={initialPlotModel.height - initialPlotModel.padB}
+              x2={initialPlotModel.width - initialPlotModel.padR}
+              y2={initialPlotModel.height - initialPlotModel.padB}
+              class="vf-axis-line"
+            />
+            <text
+              x={initialPlotModel.paidXStart + 12}
+              y={initialPlotModel.padT + 14}
+              text-anchor="start"
+              class="vf-ideal-hint"
+              id="vf-ideal-hint"
+            >
+              ↖ Faster &amp; cheaper
+            </text>
+            <text
+              x={(initialPlotModel.paidXStart + initialPlotModel.width - initialPlotModel.padR) / 2}
+              y={initialPlotModel.height - 8}
+              text-anchor="middle"
+              class="vf-axis-title"
+              id="vf-x-axis-title"
+            >
+              Cost per run (USD, log scale · Billed)
+            </text>
+            <text
+              x={16}
+              y={initialPlotModel.padT + (initialPlotModel.height - initialPlotModel.padT - initialPlotModel.padB) / 2}
+              text-anchor="middle"
+              transform={`rotate(-90 16 ${initialPlotModel.padT + (initialPlotModel.height - initialPlotModel.padT - initialPlotModel.padB) / 2})`}
+              class="vf-axis-title"
+              id="vf-y-axis-title"
+            >
+              Time (faster ↑)
+            </text>
+          </g>
+
+          <g id="vf-layer-annotations"></g>
+          <g id="vf-layer-labels"></g>
+          <g id="vf-layer-points"></g>
+        </svg>
+
+        <!-- QUIET 1-ROW INSPECTOR STRIP -->
+        {firstPt && (
+          <div class="vf-inspector-bar" id="vf-inspector" aria-live="polite">
+            <div class="vf-inspector-left">
+              <div class="vf-inspector-top">
+                <span class="hl hl-acid vf-inspector-badge" id="vf-ins-badge">
+                  Balanced Pick
+                </span>
+                <strong class="vf-inspector-title" id="vf-ins-title">
+                  {firstPt.harness} / {firstPt.model} ({firstPt.effort})
+                </strong>
+              </div>
+              <div class="mono vf-inspector-stats" id="vf-ins-stats">
+                {firstPt.completed}/{firstPt.total} stages · {formatDuration(firstPt.durationMinutes)} · {formatCost(firstPt.lensCostUsd)} ({formatCost(firstPt.lensCostUsd / Math.max(1, firstPt.completed))}/stage) · {firstPt.tokensTotal} tokens ({firstPt.cacheHitRatePct}% cache)
+              </div>
+              <div class="vf-inspector-note" id="vf-ins-note">
+                {firstModelStat && firstHarnessStat
+                  ? `Model n=${firstModelStat.n} · Harness ${firstPt.harness} n=${firstHarnessStat.n}${firstHarnessStat.singlePeerCaveat ? ' (single-model harness — harness & model effects are confounded)' : ''}.`
+                  : ''}
+              </div>
+            </div>
+            <div class="vf-inspector-actions">
+              <a href={`/runs/${firstPt.id}`} class="btn btn-sm" id="vf-ins-link">
+                Read dossier →
+              </a>
+            </div>
+          </div>
+        )}
+      </figure>
+    </section>
+
+    <!-- CLEAN PAID 7/7 COMPARISON BARS (SWD: gray baseline, accent ONLY on winners / focus) -->
+    <section class="vf-paired-section" id="vf-paired-bars" aria-labelledby="vf-paired-heading">
+      <div class="vf-paired-header">
+        <div>
+          <h2 id="vf-paired-heading" class="vf-paired-title">
+            The ranking flips when you care about cost
+          </h2>
+          <p class="vf-paired-sub">
+            Only the {paid7of7Exec.length} paid runs that passed all 7 stages. Highlighted bars are the 3 frontier picks; everything else sits in gray. Click any row to locate it on the chart.
+          </p>
+        </div>
+        <span class="mono vf-paired-lens-pill" id="vf-paired-lens-pill">Lens: Billed</span>
+      </div>
+
+      <div class="vf-paired-grid">
+        <div class="vf-bar-col">
+          <div class="vf-bar-col-head">
+            <span class="vf-bar-col-title">By Speed (fastest first)</span>
+          </div>
+          <div class="vf-bar-list" id="vf-exec-bars">
+            {paid7of7Exec.map((item) => (
+              <button
+                type="button"
+                class:list={['vf-bar-row', { 'is-frontier': item.isPaidFrontier }]}
+                data-bar-run={item.id}
+                aria-pressed="false"
+              >
+                <div class="vf-bar-meta">
+                  <span class="vf-bar-label">
+                    <strong>{item.model}</strong>
+                    <span class="vf-bar-harness">{item.harness}</span>
+                  </span>
+                  <span class="mono vf-bar-val">{formatDuration(item.durationMinutes)}</span>
+                </div>
+                <div class="vf-bar-track" aria-hidden="true">
+                  <span
+                    class:list={['vf-bar-fill', { 'is-accent': item.isPaidFrontier }]}
+                    style={`inline-size: ${item.executionBarPct}%`}
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div class="vf-bar-col">
+          <div class="vf-bar-col-head">
+            <span class="vf-bar-col-title">By Cost (cheapest first)</span>
+          </div>
+          <div class="vf-bar-list" id="vf-value-bars">
+            {paid7of7Value.map((item, idx) => {
+              const speedIdx = paid7of7Exec.findIndex((r) => r.id === item.id);
+              const shift = speedIdx !== -1 ? speedIdx - idx : 0;
+              return (
+                <button
+                  type="button"
+                  class:list={['vf-bar-row', { 'is-frontier': item.isPaidFrontier }]}
+                  data-bar-run={item.id}
+                  aria-pressed="false"
+                >
+                  <div class="vf-bar-meta">
+                    <span class="vf-bar-label">
+                      <strong>{item.model}</strong>
+                      <span class="vf-bar-harness">{item.harness}</span>
+                    </span>
+                    <span class="mono vf-bar-val">
+                      {formatCost(item.lensCostUsd)}
+                      {shift >= 3 && <span class="vf-delta is-up">↑+{shift}</span>}
+                    </span>
+                  </div>
+                  <div class="vf-bar-track" aria-hidden="true">
+                    <span
+                      class:list={['vf-bar-fill', { 'is-accent': item.isPaidFrontier }]}
+                      style={`inline-size: ${item.valueBarPct ?? 14}%`}
+                    />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <details class="reading-disclosure vf-extra-disclosure" id="vf-extra-runs">
+        <summary>
+          See the {partialRows.length} partial runs (&lt;7/7) and {initialPairedBars.promoRows.length} limited-time $0 promos
+        </summary>
+        <div class="disclosure-body vf-extra-grid">
+          <div>
+            <div class="vf-bar-col-head">
+              <span class="vf-bar-col-title">Partial Runs (&lt;7/7)</span>
+            </div>
+            <div class="vf-bar-list" id="vf-partial-bars">
+              {partialRows.map((item) => (
+                <button type="button" class="vf-bar-row" data-bar-run={item.id} aria-pressed="false">
+                  <div class="vf-bar-meta">
+                    <span class="vf-bar-label">
+                      <span class="mono vf-stage-tag">{item.completed}/7</span>
+                      <strong>{item.model}</strong>
+                      <span class="vf-bar-harness">{item.harness}</span>
+                      {item.isOffPeak && <span class="mono vf-tag-offpeak">off-peak</span>}
+                    </span>
+                    <span class="mono vf-bar-val">
+                      {formatDuration(item.durationMinutes)} · {formatCost(item.lensCostUsd)}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div class="vf-bar-col-head">
+              <span class="vf-bar-col-title">$0 Limited-Time Promos</span>
+            </div>
+            <div class="vf-bar-list" id="vf-promo-bars">
+              {initialPairedBars.promoRows.map((item) => (
+                <button type="button" class="vf-bar-row" data-bar-run={item.id} aria-pressed="false">
+                  <div class="vf-bar-meta">
+                    <span class="vf-bar-label">
+                      <span class="mono vf-stage-tag">{item.completed}/7</span>
+                      <strong>{item.model}</strong>
+                      <span class="vf-bar-harness">{item.harness}</span>
+                      <span class="mono vf-tag-promo">free (limited time)</span>
+                    </span>
+                    <span class="mono vf-bar-val">
+                      {formatDuration(item.durationMinutes)} · $0.00
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <script
+      id="frontier-runs-data"
+      type="application/json"
+      set:html={JSON.stringify(clientAnalyzedRunsPayload)}
+    />
+  </div>
+</BaseLayout>
+
+<style>
+  .swd-page {
+    padding-block-start: 2.75rem;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .swd-kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.85rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .swd-kicker a {
+    color: var(--text-secondary);
+    text-underline-offset: 0.25em;
+  }
+
+  .swd-header .headline-two-tone {
+    font-size: clamp(1.75rem, 3.2vw, 2.45rem);
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+
+  .swd-lead {
+    max-inline-size: 62ch;
+    margin-block: 1rem 0;
+    color: var(--text-secondary);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+
+  /* 3 picks */
+  .picks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  #frontier-workspace :global(.pick-card) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 1.15rem 1.25rem;
+    border: var(--border-row);
+    border-block-start: 3px solid var(--hl-acid);
+    border-radius: var(--radius-none);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.pick-card) {
+    border-block-start-color: var(--accent-cobalt);
+  }
+
+  @media (hover: hover) {
+    #frontier-workspace :global(.pick-card:hover) {
+      border-color: var(--border-strong-color);
+      border-block-start-color: var(--hl-acid);
+    }
+
+    :global([data-theme="light"]) #frontier-workspace :global(.pick-card:hover) {
+      border-block-start-color: var(--accent-cobalt);
+    }
+  }
+
+  #frontier-workspace :global(.pick-card[aria-pressed="true"]) {
+    outline: 2px solid var(--hl-acid);
+    outline-offset: -2px;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.pick-card[aria-pressed="true"]) {
+    outline-color: var(--accent-cobalt);
+  }
+
+  #frontier-workspace :global(.pick-card-top) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    inline-size: 100%;
+    margin-block-end: 0.25rem;
+  }
+
+  #frontier-workspace :global(.pick-card-caveat) {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  #frontier-workspace :global(.pick-card-name) {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.0625rem;
+    line-height: 1.25;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  #frontier-workspace :global(.pick-card-harness) {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  #frontier-workspace :global(.pick-card-metrics) {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin-block: 0.3rem 0.15rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  #frontier-workspace :global(.pick-metric-big) {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  #frontier-workspace :global(.pick-card-why) {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  /* Focus banner */
+  .highlight-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    padding: 0.85rem 1rem;
+    border: var(--border-frame);
+    background: var(--bg-surface);
+  }
+
+  .highlight-banner-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .highlight-banner-title {
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+  }
+
+  .highlight-banner-caveat {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .highlight-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Controls row */
+  .swd-chart-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .swd-controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+  }
+
+  #frontier-workspace .vf-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  #frontier-workspace .vf-toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  #frontier-workspace .vf-toolbar-sep {
+    inline-size: 1px;
+    block-size: 1.25rem;
+    background: var(--border-subtle-color);
+  }
+
+  #frontier-workspace .vf-ctrl-btn {
+    min-block-size: 2.75rem;
+    min-inline-size: 2.75rem;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--border-subtle-color);
+    border-radius: var(--radius-none);
+    background: transparent;
+    color: var(--text-muted);
+    font: 0.875rem/1.3 var(--font-body);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    #frontier-workspace .vf-ctrl-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong-color);
+    }
+  }
+
+  #frontier-workspace .vf-ctrl-btn[aria-pressed="true"] {
+    background: var(--hl-acid);
+    color: var(--hl-ink);
+    border-color: var(--raw-ebony);
+    font-weight: 700;
+  }
+
+  .swd-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .swd-check input {
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+  }
+
+  /* Open, frameless SVG canvas (SWD: remove chart borders & gridlines) */
+  #frontier-workspace .vf-figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  #frontier-workspace .vf-svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    font-family: var(--font-body);
+    overflow: visible;
+  }
+
+  #frontier-workspace :global(.vf-axis-line) {
+    stroke: var(--border-subtle-color);
+    stroke-width: 1.25;
+  }
+
+  #frontier-workspace :global(.vf-tick-mark) {
+    stroke: var(--border-subtle-color);
+    stroke-width: 1;
+  }
+
+  #frontier-workspace :global(.vf-pass-gate-line) {
+    stroke: var(--border-strong-color);
+    stroke-width: 1.25;
+    stroke-dasharray: 5 5;
+  }
+
+  #frontier-workspace :global(.vf-promo-break) {
+    stroke: var(--border-strong-color);
+    stroke-width: 1.25;
+    stroke-dasharray: 4 4;
+  }
+
+  #frontier-workspace :global(.vf-axis-label) {
+    fill: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  #frontier-workspace :global(.vf-axis-title) {
+    fill: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  #frontier-workspace :global(.vf-ideal-hint) {
+    fill: var(--hl-acid);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-ideal-hint) {
+    fill: var(--accent-cobalt);
+  }
+
+  #frontier-workspace :global(.vf-gray-callout) {
+    fill: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  #frontier-workspace :global(.vf-leader) {
+    stroke: var(--border-strong-color);
+    stroke-width: 1;
+  }
+
+  #frontier-workspace :global(.vf-node-label) {
+    fill: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  #frontier-workspace :global(.vf-node-label.is-frontier) {
+    fill: var(--text-primary);
+    font-weight: 700;
+  }
+
+  #frontier-workspace :global(.vf-label-sub) {
+    fill: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  #frontier-workspace :global(.vf-label-group.is-dimmed) {
+    opacity: 0.2;
+  }
+
+  #frontier-workspace :global(.vf-point) {
+    cursor: pointer;
+    outline: none;
+  }
+
+  #frontier-workspace :global(.vf-hit-target) {
+    fill: transparent;
+  }
+
+  /* SWD preattentive hierarchy: accent ONLY on frontier winners, quiet gray on everything else */
+  #frontier-workspace :global(.vf-marker-frontier) {
+    fill: var(--hl-acid);
+    stroke: var(--raw-ebony);
+    stroke-width: 2;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-marker-frontier) {
+    fill: var(--accent-cobalt);
+    stroke: var(--raw-ebony);
+  }
+
+  #frontier-workspace :global(.vf-marker-peer) {
+    fill: var(--text-muted);
+    opacity: 0.45;
+  }
+
+  #frontier-workspace :global(.vf-point:hover .vf-marker-peer),
+  #frontier-workspace :global(.vf-point:focus-visible .vf-marker-peer) {
+    opacity: 1;
+    fill: var(--text-primary);
+  }
+
+  #frontier-workspace :global(.vf-marker-partial) {
+    fill: transparent;
+    stroke: var(--text-muted);
+    stroke-width: 1.75;
+    opacity: 0.55;
+  }
+
+  #frontier-workspace :global(.vf-marker-promo) {
+    fill: var(--hl-mint);
+    stroke: var(--raw-ebony);
+    stroke-width: 1.75;
+  }
+
+  #frontier-workspace :global(.vf-point.is-dimmed) {
+    opacity: 0.16;
+  }
+
+  #frontier-workspace :global(.vf-point.is-highlighted .vf-marker-peer),
+  #frontier-workspace :global(.vf-point.is-highlighted .vf-marker-partial) {
+    opacity: 1;
+    fill: var(--hl-acid);
+    stroke: var(--raw-ebony);
+    stroke-width: 2;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-point.is-highlighted .vf-marker-peer),
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-point.is-highlighted .vf-marker-partial) {
+    fill: var(--accent-cobalt);
+  }
+
+  #frontier-workspace :global(.vf-point:focus-visible .vf-hit-target) {
+    stroke: var(--hl-acid);
+    stroke-width: 2;
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-point:focus-visible .vf-hit-target) {
+    stroke: var(--accent-cobalt);
+  }
+
+  /* Quiet inspector strip */
+  .vf-inspector-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem 1.5rem;
+    padding: 0.9rem 1.15rem;
+    border-block: var(--border-row);
+    background: var(--bg-surface);
+  }
+
+  .vf-inspector-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .vf-inspector-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .vf-inspector-badge {
+    font-size: 0.75rem;
+  }
+
+  .vf-inspector-title {
+    font-size: 1rem;
+    color: var(--text-primary);
+  }
+
+  .vf-inspector-stats {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  .vf-inspector-note {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  /* Paired bars (SWD: zero row cages, gray baseline, accent ONLY on winners) */
+  #frontier-workspace .vf-paired-section {
+    padding-block-start: 1.5rem;
+    border-block-start: var(--border-row);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  #frontier-workspace .vf-paired-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  #frontier-workspace .vf-paired-title {
+    font-size: 1.25rem;
+    margin: 0 0 0.35rem;
+  }
+
+  #frontier-workspace .vf-paired-sub {
+    margin: 0;
+    max-inline-size: 64ch;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  #frontier-workspace .vf-paired-lens-pill {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  #frontier-workspace .vf-paired-grid,
+  #frontier-workspace .vf-extra-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  #frontier-workspace .vf-bar-col {
+    min-inline-size: 0;
+  }
+
+  #frontier-workspace .vf-bar-col-head {
+    padding-block-end: 0.5rem;
+    margin-block-end: 0.65rem;
+    border-block-end: var(--border-row);
+  }
+
+  #frontier-workspace .vf-bar-col-title {
+    font: 700 0.9375rem var(--font-body);
+    color: var(--text-primary);
+  }
+
+  #frontier-workspace .vf-bar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  #frontier-workspace :global(.vf-bar-row) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    inline-size: 100%;
+    min-block-size: 2.75rem;
+    padding: 0.45rem 0.5rem;
+    border: none;
+    border-inline-start: 3px solid transparent;
+    border-radius: var(--radius-none);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    #frontier-workspace :global(.vf-bar-row:hover) {
+      background: var(--bg-surface);
+    }
+  }
+
+  #frontier-workspace :global(.vf-bar-row.is-dimmed) {
+    opacity: 0.25;
+  }
+
+  #frontier-workspace :global(.vf-bar-row.is-highlighted),
+  #frontier-workspace :global(.vf-bar-row[aria-pressed="true"]) {
+    background: var(--bg-surface);
+    border-inline-start-color: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-bar-row.is-highlighted),
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-bar-row[aria-pressed="true"]) {
+    border-inline-start-color: var(--accent-cobalt);
+  }
+
+  #frontier-workspace :global(.vf-bar-meta) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+  }
+
+  #frontier-workspace :global(.vf-bar-label) {
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  #frontier-workspace :global(.vf-bar-row.is-frontier .vf-bar-label),
+  #frontier-workspace :global(.vf-bar-row.is-highlighted .vf-bar-label) {
+    color: var(--text-primary);
+  }
+
+  #frontier-workspace :global(.vf-bar-harness),
+  #frontier-workspace :global(.vf-stage-tag) {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  #frontier-workspace :global(.vf-bar-val) {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  #frontier-workspace :global(.vf-bar-row.is-frontier .vf-bar-val) {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  #frontier-workspace :global(.vf-delta.is-up) {
+    margin-inline-start: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--hl-mint);
+    color: var(--hl-ink);
+    padding: 0.05rem 0.3rem;
+  }
+
+  #frontier-workspace :global(.vf-tag-offpeak),
+  #frontier-workspace :global(.vf-tag-promo) {
+    font-size: 0.6875rem;
+    padding: 0.05rem 0.3rem;
+    background: var(--hl-sky);
+    color: var(--hl-ink);
+  }
+
+  #frontier-workspace :global(.vf-tag-promo) {
+    background: var(--hl-mint);
+  }
+
+  #frontier-workspace :global(.vf-bar-track) {
+    inline-size: 100%;
+    block-size: 0.5rem;
+    background: transparent;
+  }
+
+  #frontier-workspace :global(.vf-bar-fill) {
+    display: block;
+    block-size: 100%;
+    background: var(--border-strong-color);
+  }
+
+  #frontier-workspace :global(.vf-bar-fill.is-accent) {
+    background: var(--hl-acid);
+  }
+
+  :global([data-theme="light"]) #frontier-workspace :global(.vf-bar-fill.is-accent) {
+    background: var(--accent-cobalt);
+  }
+
+  .vf-extra-disclosure {
+    margin-block-start: 0.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .picks-grid,
+    #frontier-workspace .vf-paired-grid,
+    #frontier-workspace .vf-extra-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #frontier-workspace .vf-toolbar-sep {
+      opacity: 0;
+      inline-size: 0;
+      block-size: 0;
+    }
+  }
+</style>
+
+<script>
+  import {
+    buildFrontierPlotModel,
+    type FrontierPlotPoint,
+  } from '../utils/frontier-chart';
+  import {
+    computeGroupSampleStats,
+    computePairedValueBars,
+    type AnalyzedRun,
+    type FrontierViewMode,
+    type PricingLens,
+  } from '../utils/telemetry';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const usdFmt = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const dataEl = document.getElementById('frontier-runs-data');
+  const runs: AnalyzedRun[] = dataEl?.textContent
+    ? (JSON.parse(dataEl.textContent) as AnalyzedRun[])
+    : [];
+  const runById = new Map(runs.map((r) => [r.id, r]));
+  const groupStats = computeGroupSampleStats(runs);
+
+  let activeLens: PricingLens = 'billed';
+  let activeMode: FrontierViewMode = 'speed-7-of-7';
+  let includePromos = false;
+  let activeHighlight = '';
+  let inspectedRunId: string | null = null;
+
+  const workspace = document.getElementById('frontier-workspace');
+  const actionTitle = document.getElementById('swd-action-title');
+  const leadCopy = document.getElementById('swd-lead');
+  const vfPicksGrid = document.getElementById('vf-picks-grid');
+  const vfSvg = document.getElementById('vf-svg') as SVGSVGElement | null;
+  const vfPairedLensPill = document.getElementById('vf-paired-lens-pill');
+  const vfExecBars = document.getElementById('vf-exec-bars');
+  const vfValueBars = document.getElementById('vf-value-bars');
+  const vfPartialBars = document.getElementById('vf-partial-bars');
+  const vfPromoBars = document.getElementById('vf-promo-bars');
+  const vfInsBadge = document.getElementById('vf-ins-badge');
+  const vfInsTitle = document.getElementById('vf-ins-title');
+  const vfInsStats = document.getElementById('vf-ins-stats');
+  const vfInsNote = document.getElementById('vf-ins-note');
+  const vfInsLink = document.getElementById('vf-ins-link') as HTMLAnchorElement | null;
+  const vfModeBtns = document.querySelectorAll<HTMLButtonElement>('[data-vf-mode]');
+  const vfLensBtns = document.querySelectorAll<HTMLButtonElement>('[data-vf-lens]');
+  const vfTogglePromos = document.getElementById('vf-toggle-promos') as HTMLInputElement | null;
+  const statusRegion = document.getElementById('frontier-status');
+
+  const highlightBanner = document.getElementById('highlight-banner');
+  const hbTitle = document.getElementById('hb-title');
+  const hbCaveat = document.getElementById('hb-caveat');
+  const hbScopeModel = document.getElementById('hb-scope-model') as HTMLButtonElement | null;
+  const hbScopeHarness = document.getElementById('hb-scope-harness') as HTMLButtonElement | null;
+  const hbDossierLink = document.getElementById('hb-dossier-link') as HTMLAnchorElement | null;
+  const hbClearBtn = document.getElementById('hb-clear-btn') as HTMLButtonElement | null;
+
+  function formatDurShort(mins: number): string {
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  }
+
+  function formatLensLabel(lens: PricingLens): string {
+    if (lens === 'standard') return 'Standard API';
+    if (lens === 'uncached') return 'Uncached';
+    return 'Billed';
+  }
+
+  function resolveHighlightedRunIds(raw: string): {
+    ids: Set<string>;
+    kind: 'none' | 'run' | 'model' | 'harness' | 'query';
+    label: string;
+    caveat: string;
+    singleRun: AnalyzedRun | null;
+  } {
+    const val = raw.trim();
+    if (!val) return { ids: new Set(), kind: 'none', label: '', caveat: '', singleRun: null };
+
+    const exactRun = runById.get(val);
+    if (exactRun) {
+      const mStat = groupStats.byModel[exactRun.data.model];
+      const hStat = groupStats.byHarness[exactRun.data.codingHarness];
+      const parts: string[] = [];
+      if (mStat) parts.push(`model n=${mStat.n}`);
+      if (hStat) {
+        parts.push(
+          `harness ${exactRun.displayHarness} n=${hStat.n}${hStat.singlePeerCaveat ? ' (single-model caveat)' : ''}`
+        );
+      }
+      if (exactRun.costMetrics.profile?.pricingBadge) {
+        parts.push(exactRun.costMetrics.profile.pricingBadge);
+      }
+      return {
+        ids: new Set([exactRun.id]),
+        kind: 'run',
+        label: `${exactRun.displayHarness} / ${exactRun.data.model}${exactRun.data.effort ? ` (${exactRun.data.effort})` : ''}`,
+        caveat: parts.join(' · '),
+        singleRun: exactRun,
+      };
+    }
+
+    if (val.toLowerCase().startsWith('model:')) {
+      const targetModel = val.slice(6).trim().toLowerCase();
+      const matched = runs.filter((r) => r.data.model.toLowerCase() === targetModel);
+      if (matched.length > 0) {
+        const canonical = matched[0].data.model;
+        const mStat = groupStats.byModel[canonical];
+        return {
+          ids: new Set(matched.map((r) => r.id)),
+          kind: 'model',
+          label: `Model: ${canonical}`,
+          caveat: `n=${mStat?.n ?? matched.length} (${mStat?.fullPass ?? 0}/${matched.length} passed 7/7 · harnesses: ${mStat?.peers.join(', ') ?? ''})`,
+          singleRun: matched.length === 1 ? matched[0] : null,
+        };
+      }
+    }
+
+    if (val.toLowerCase().startsWith('harness:')) {
+      const targetHarness = val.slice(8).trim().toLowerCase();
+      const matched = runs.filter(
+        (r) =>
+          r.data.codingHarness.toLowerCase() === targetHarness ||
+          r.displayHarness.toLowerCase() === targetHarness
+      );
+      if (matched.length > 0) {
+        const canonicalSlug = matched[0].data.codingHarness;
+        const hStat = groupStats.byHarness[canonicalSlug];
+        return {
+          ids: new Set(matched.map((r) => r.id)),
+          kind: 'harness',
+          label: `Harness: ${matched[0].displayHarness}`,
+          caveat: `n=${hStat?.n ?? matched.length} (${hStat?.fullPass ?? 0}/${matched.length} passed 7/7${hStat?.singlePeerCaveat ? ' · single-model harness' : ` · ${hStat?.peers.length ?? 0} models`})`,
+          singleRun: matched.length === 1 ? matched[0] : null,
+        };
+      }
+    }
+
+    const lower = val.toLowerCase();
+    const matched = runs.filter(
+      (r) =>
+        r.data.model.toLowerCase().includes(lower) ||
+        r.displayHarness.toLowerCase() === lower ||
+        r.data.codingHarness.toLowerCase() === lower
+    );
+    if (matched.length > 0) {
+      return {
+        ids: new Set(matched.map((r) => r.id)),
+        kind: 'query',
+        label: val,
+        caveat: `n=${matched.length} matching runs`,
+        singleRun: matched.length === 1 ? matched[0] : null,
+      };
+    }
+
+    return { ids: new Set(), kind: 'none', label: '', caveat: '', singleRun: null };
+  }
+
+  function syncUrlState() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (activeLens !== 'billed') params.set('lens', activeLens);
+      else params.delete('lens');
+
+      if (activeMode !== 'speed-7-of-7') params.set('mode', activeMode);
+      else params.delete('mode');
+
+      if (includePromos) params.set('promos', '1');
+      else params.delete('promos');
+
+      if (activeHighlight) params.set('highlight', activeHighlight);
+      else params.delete('highlight');
+
+      const qs = params.toString();
+      const nextUrl = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`;
+      if (nextUrl !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+        window.history.replaceState(null, '', nextUrl);
+      }
+    } catch {}
+  }
+
+  function hydrateFromUrlState() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const lens = params.get('lens');
+      const mode = params.get('mode');
+      const promos = params.get('promos');
+      const highlight = params.get('highlight');
+
+      if (lens === 'billed' || lens === 'standard' || lens === 'uncached') activeLens = lens;
+      if (mode === 'speed-7-of-7' || mode === 'all-outcomes') activeMode = mode;
+      if (promos === '1') includePromos = true;
+      if (highlight && highlight.trim()) {
+        activeHighlight = highlight.trim();
+        const resolved = resolveHighlightedRunIds(activeHighlight);
+        if (resolved.singleRun) {
+          inspectedRunId = resolved.singleRun.id;
+          if (resolved.singleRun.plan.ratio < 1 && !mode) activeMode = 'all-outcomes';
+          if (resolved.singleRun.data.costUsd <= 0 && !promos) includePromos = true;
+        }
+      }
+    } catch {}
+  }
+
+  function svgEl<K extends keyof SVGElementTagNameMap>(
+    tag: K,
+    attrs: Record<string, string | number> = {},
+    text?: string
+  ): SVGElementTagNameMap[K] {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
+
+  function updateHighlightBanner(resolved: ReturnType<typeof resolveHighlightedRunIds>) {
+    const hasHl = resolved.ids.size > 0;
+    if (!highlightBanner) return;
+    highlightBanner.hidden = !hasHl;
+    if (!hasHl) return;
+
+    if (hbTitle) hbTitle.textContent = resolved.label;
+    if (hbCaveat) hbCaveat.textContent = resolved.caveat;
+    if (hbDossierLink) {
+      if (resolved.singleRun) {
+        hbDossierLink.hidden = false;
+        hbDossierLink.href = `/runs/${resolved.singleRun.id}`;
+      } else {
+        hbDossierLink.hidden = true;
+      }
+    }
+    if (hbScopeModel) {
+      const sr = resolved.singleRun;
+      const mStat = sr ? groupStats.byModel[sr.data.model] : null;
+      if (sr && mStat && mStat.n > 1 && resolved.kind === 'run') {
+        hbScopeModel.hidden = false;
+        hbScopeModel.textContent = `All ${sr.data.model} (n=${mStat.n})`;
+        hbScopeModel.dataset.targetHighlight = `model:${sr.data.model}`;
+      } else {
+        hbScopeModel.hidden = true;
+      }
+    }
+    if (hbScopeHarness) {
+      const sr = resolved.singleRun;
+      const hStat = sr ? groupStats.byHarness[sr.data.codingHarness] : null;
+      if (sr && hStat && hStat.n > 1 && resolved.kind === 'run') {
+        hbScopeHarness.hidden = false;
+        hbScopeHarness.textContent = `All ${sr.displayHarness} (n=${hStat.n})`;
+        hbScopeHarness.dataset.targetHighlight = `harness:${sr.data.codingHarness}`;
+      } else {
+        hbScopeHarness.hidden = true;
+      }
+    }
+  }
+
+  function updateInspectorFromRun(runId: string) {
+    const run = runById.get(runId);
+    if (!run) return;
+    inspectedRunId = runId;
+
+    const plotModel = buildFrontierPlotModel(runs, {
+      lens: activeLens,
+      mode: activeMode,
+      includeZeroCostPromos: includePromos,
+      highlightedIds: resolveHighlightedRunIds(activeHighlight).ids,
+    });
+    const pt =
+      plotModel.points.find((p) => p.id === runId) ??
+      plotModel.hiddenPromoPoints.find((p) => p.id === runId);
+
+    const lensCost =
+      activeLens === 'standard'
+        ? run.costMetrics.standardApiCostUsd
+        : activeLens === 'uncached'
+          ? run.costMetrics.uncachedCounterfactualCostUsd
+          : run.data.costUsd;
+
+    const isPromo = lensCost <= 0;
+    const costPerStage =
+      !isPromo && run.plan.completed > 0 ? usdFmt.format(lensCost / run.plan.completed) : null;
+
+    if (vfInsBadge) {
+      vfInsBadge.className = 'hl vf-inspector-badge';
+      if (isPromo) {
+        vfInsBadge.classList.add('hl-mint');
+        vfInsBadge.textContent = '$0 Promo';
+      } else if (pt?.isFrontier) {
+        vfInsBadge.classList.add('hl-acid');
+        vfInsBadge.textContent =
+          pt.frontierOrder === 1
+            ? 'Cheapest 7/7'
+            : pt.frontierOrder === plotModel.frontier.frontierIds.length
+              ? 'Fastest 7/7'
+              : 'Balanced Pick';
+      } else if (run.plan.ratio === 1) {
+        vfInsBadge.classList.add('hl-sky');
+        vfInsBadge.textContent = '7/7 Full Pass';
+      } else {
+        vfInsBadge.classList.add('hl-magenta');
+        vfInsBadge.textContent = `${run.plan.completed}/${run.plan.total} Partial`;
+      }
+    }
+
+    if (vfInsTitle) {
+      vfInsTitle.textContent = `${run.displayHarness} / ${run.data.model} (${run.data.effort ?? 'Standard'})`;
+    }
+    if (vfInsStats) {
+      const costSummary = isPromo
+        ? '$0.00 (promo)'
+        : `${usdFmt.format(lensCost)} (${costPerStage}/stage)`;
+      const testsPart = run.data.tests ? ` · ${run.data.tests.passed}/${run.data.tests.total} tests` : '';
+      vfInsStats.textContent = `${run.plan.completed}/${run.plan.total} stages · ${formatDurShort(run.data.durationMinutes)} · ${costSummary} · ${run.data.tokens?.total ?? '—'} tokens (${run.tokens.cacheHitRatePct}% cache)${testsPart}`;
+    }
+    if (vfInsNote) {
+      const mStat = groupStats.byModel[run.data.model];
+      const hStat = groupStats.byHarness[run.data.codingHarness];
+      const notes: string[] = [];
+      if (run.costMetrics.profile?.pricingStatusNote) {
+        notes.push(run.costMetrics.profile.pricingStatusNote);
+      }
+      if (mStat && hStat) {
+        notes.push(
+          `Model n=${mStat.n} · Harness ${run.displayHarness} n=${hStat.n}${hStat.singlePeerCaveat ? ' (single-model harness — harness & model effects are confounded)' : ''}.`
+        );
+      }
+      vfInsNote.textContent = notes.join(' ');
+    }
+    if (vfInsLink) vfInsLink.href = `/runs/${run.id}`;
+  }
+
+  function renderAll(announce?: string) {
+    if (!vfSvg || runs.length === 0) return;
+
+    const resolved = resolveHighlightedRunIds(activeHighlight);
+    const hlIds = resolved.ids;
+    const hasHl = hlIds.size > 0;
+    updateHighlightBanner(resolved);
+
+    vfModeBtns.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.vfMode === activeMode));
+    });
+    vfLensBtns.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.vfLens === activeLens));
+    });
+    if (vfTogglePromos) vfTogglePromos.checked = includePromos;
+
+    const model = buildFrontierPlotModel(runs, {
+      lens: activeLens,
+      mode: activeMode,
+      includeZeroCostPromos: includePromos,
+      highlightedIds: hlIds,
+    });
+
+    const paidModel = buildFrontierPlotModel(runs, {
+      lens: activeLens,
+      mode: 'speed-7-of-7',
+      includeZeroCostPromos: false,
+    });
+
+    // Dynamic SWD action title
+    if (actionTitle && leadCopy) {
+      const fIds = paidModel.frontier.frontierIds;
+      const fastPt = paidModel.points.find((p) => p.id === fIds[fIds.length - 1]);
+      const domCount = paidModel.points.length - fIds.length;
+      if (activeMode === 'speed-7-of-7') {
+        actionTitle.innerHTML = `Only ${fIds.length} paid runs set the pace.<br /><span class="muted">Spending past ${fastPt ? usdFmt.format(fastPt.lensCostUsd) : '$3.14'} (${formatLensLabel(activeLens)}) never bought more speed.</span>`;
+        leadCopy.textContent = `Out of ${paidModel.points.length} paid runs that passed all 7 stages, ${fIds.length} define the real speed-vs-cost choices. The other ${domCount} cost more, took longer, or both.`;
+      } else {
+        actionTitle.innerHTML = `${model.frontier.thresholds.totalFullPassCount} of ${runs.length} runs cleared all 7 stages.<br /><span class="muted">${model.frontier.thresholds.partialCount} stopped short—mostly on the final Ctrl-C / shutdown stage.</span>`;
+        leadCopy.textContent = `Top band shows 7/7 full passes (faster sits higher); everything below the dashed line missed one or more holdout stages.`;
+      }
+    }
+
+    // Update 3 pick cards for active pricing lens
+    if (vfPicksGrid) {
+      const fIds = paidModel.frontier.frontierIds;
+      const pickMap: Record<string, string | undefined> = {
+        budget: fIds[0],
+        balanced: fIds.length >= 3 ? fIds[Math.floor(fIds.length / 2)] : fIds[1] ?? fIds[0],
+        fastest: fIds[fIds.length - 1],
+      };
+      vfPicksGrid.querySelectorAll<HTMLButtonElement>('.pick-card').forEach((card) => {
+        const key = card.dataset.pickKey ?? '';
+        const rid = pickMap[key];
+        const pt = paidModel.points.find((p) => p.id === rid);
+        if (!pt) return;
+        card.dataset.vfRun = pt.id;
+        card.setAttribute('aria-pressed', String(hasHl && hlIds.has(pt.id)));
+        const big = card.querySelector('.pick-metric-big');
+        if (big) big.textContent = usdFmt.format(pt.lensCostUsd);
+      });
+    }
+
+    const gridLayer = vfSvg.querySelector('#vf-layer-grid');
+    const quadLayer = vfSvg.querySelector('#vf-layer-quadrants');
+    const axesLayer = vfSvg.querySelector('#vf-layer-axes');
+    const annLayer = vfSvg.querySelector('#vf-layer-annotations');
+    const labelsLayer = vfSvg.querySelector('#vf-layer-labels');
+    const pointsLayer = vfSvg.querySelector('#vf-layer-points');
+
+    // Minimal tick marks only (no noisy gridlines)
+    if (gridLayer) {
+      gridLayer.replaceChildren();
+      if (model.includeZeroCostPromos && model.promoBreakX !== null && model.promoGutterCenter !== null) {
+        gridLayer.append(
+          svgEl('line', {
+            x1: model.promoBreakX,
+            y1: model.padT,
+            x2: model.promoBreakX,
+            y2: model.height - model.padB,
+            class: 'vf-promo-break',
+          }),
+          svgEl(
+            'text',
+            {
+              x: model.promoGutterCenter,
+              y: model.height - model.padB + 22,
+              'text-anchor': 'middle',
+              class: 'vf-axis-label',
+            },
+            '$0 promo'
+          )
+        );
+      }
+
+      for (const t of model.yTicks) {
+        gridLayer.append(
+          svgEl('line', {
+            x1: model.padL - 5,
+            y1: t.pos,
+            x2: model.padL,
+            y2: t.pos,
+            class: 'vf-tick-mark',
+          }),
+          svgEl(
+            'text',
+            {
+              x: model.padL - 10,
+              y: t.pos + 4,
+              'text-anchor': 'end',
+              class: 'vf-axis-label',
+            },
+            t.label
+          )
+        );
+      }
+
+      for (const t of model.xTicks) {
+        gridLayer.append(
+          svgEl('line', {
+            x1: t.pos,
+            y1: model.height - model.padB,
+            x2: t.pos,
+            y2: model.height - model.padB + 5,
+            class: 'vf-tick-mark',
+          }),
+          svgEl(
+            'text',
+            {
+              x: t.pos,
+              y: model.height - model.padB + 22,
+              'text-anchor': 'middle',
+              class: 'vf-axis-label',
+            },
+            t.label
+          )
+        );
+      }
+    }
+
+    if (quadLayer) {
+      quadLayer.replaceChildren();
+      if (model.passGateY !== null) {
+        quadLayer.append(
+          svgEl('line', {
+            x1: model.padL,
+            y1: model.passGateY,
+            x2: model.width - model.padR,
+            y2: model.passGateY,
+            class: 'vf-pass-gate-line',
+          }),
+          svgEl(
+            'text',
+            {
+              x: model.width - model.padR - 4,
+              y: model.passGateY - 6,
+              'text-anchor': 'end',
+              class: 'vf-gray-callout',
+            },
+            '7/7 pass gate'
+          )
+        );
+      }
+    }
+
+    if (axesLayer) {
+      const idealHint = axesLayer.querySelector('#vf-ideal-hint');
+      if (idealHint) {
+        idealHint.setAttribute('x', String(model.paidXStart + 12));
+        idealHint.textContent =
+          model.mode === 'speed-7-of-7' ? '↖ Faster & cheaper' : '↖ 7/7 & cheaper';
+      }
+      const xTitle = axesLayer.querySelector('#vf-x-axis-title');
+      if (xTitle) {
+        xTitle.setAttribute('x', String((model.paidXStart + model.width - model.padR) / 2));
+        xTitle.textContent = `Cost per run (USD, log scale · ${formatLensLabel(activeLens)})`;
+      }
+      const yTitle = axesLayer.querySelector('#vf-y-axis-title');
+      if (yTitle) {
+        yTitle.textContent =
+          model.mode === 'speed-7-of-7' ? 'Time (faster ↑)' : 'Stages passed (7/7 top)';
+      }
+    }
+
+    // One quiet direct annotation explaining the gray dots (SWD: replace legend with inline callout)
+    if (annLayer) {
+      annLayer.replaceChildren();
+      if (model.mode === 'speed-7-of-7' && !hasHl) {
+        const grayCount = model.points.filter((p) => !p.isFrontier && !p.isZeroCostPromo).length;
+        if (grayCount > 0) {
+          annLayer.append(
+            svgEl(
+              'text',
+              {
+                x: model.width - model.padR - 8,
+                y: model.height - model.padB - 14,
+                'text-anchor': 'end',
+                class: 'vf-gray-callout',
+              },
+              `Gray dots (${grayCount} runs): slower & pricier than a highlighted pick — hover any dot`
+            )
+          );
+        }
+      }
+    }
+
+    const pointById = new Map<string, FrontierPlotPoint>(model.points.map((p) => [p.id, p]));
+    const fCount = model.frontier.frontierIds.length;
+
+    if (labelsLayer) {
+      labelsLayer.replaceChildren();
+      for (const lbl of model.labels) {
+        const pt = pointById.get(lbl.id);
+        if (!pt) continue;
+        // In SWD mode, skip non-frontier anchor labels unless highlighted or promo
+        if (!pt.isFrontier && !pt.inPromoGutter && !hlIds.has(pt.id)) continue;
+
+        const isMatch = hasHl && hlIds.has(lbl.id);
+        const grp = svgEl('g', {
+          class: `vf-label-group${isMatch ? ' is-highlighted' : hasHl ? ' is-dimmed' : ''}`,
+          'data-label-for': lbl.id,
+        });
+        if (lbl.needsLeader) {
+          grp.append(
+            svgEl('line', {
+              x1: pt.cx,
+              y1: pt.cy,
+              x2: lbl.x,
+              y2: lbl.y - 4,
+              class: 'vf-leader',
+            })
+          );
+        }
+        const roleTag = pt.isFrontier
+          ? pt.frontierOrder === 1
+            ? 'Cheapest'
+            : pt.frontierOrder === fCount
+              ? 'Fastest'
+              : 'Balanced'
+          : '';
+        const primaryText = roleTag ? `${roleTag}: ${pt.model}` : pt.shortLabel;
+        const subText = `${pt.harness} · ${pt.isZeroCostPromo ? '$0' : usdFmt.format(pt.lensCostUsd)} · ${formatDurShort(pt.durationMinutes)}`;
+
+        grp.append(
+          svgEl(
+            'text',
+            {
+              x: lbl.x,
+              y: lbl.y,
+              'text-anchor': lbl.anchor,
+              class: `vf-node-label${pt.isFrontier ? ' is-frontier' : ''}`,
+            },
+            primaryText
+          ),
+          svgEl(
+            'text',
+            {
+              x: lbl.x,
+              y: lbl.y + 14,
+              'text-anchor': lbl.anchor,
+              class: 'vf-label-sub',
+            },
+            subText
+          )
+        );
+        labelsLayer.append(grp);
+      }
+    }
+
+    if (pointsLayer) {
+      pointsLayer.replaceChildren();
+      // Draw gray peers first, then highlighted / frontier winners on top
+      const orderedPts = [...model.points].sort((a, b) => {
+        const pa = (hlIds.has(a.id) ? 2 : 0) + (a.isFrontier ? 1 : 0);
+        const pb = (hlIds.has(b.id) ? 2 : 0) + (b.isFrontier ? 1 : 0);
+        return pa - pb;
+      });
+
+      for (const pt of orderedPts) {
+        const isMatch = hasHl && hlIds.has(pt.id);
+        const cls = [
+          'vf-point',
+          pt.isFrontier ? 'is-frontier' : '',
+          !pt.isFullPass ? 'is-partial' : '',
+          pt.isZeroCostPromo ? 'is-promo' : '',
+          isMatch ? 'is-highlighted' : '',
+          hasHl && !isMatch ? 'is-dimmed' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        const g = svgEl('g', {
+          class: cls,
+          role: 'button',
+          tabindex: '0',
+          'data-vf-run': pt.id,
+          'aria-pressed': String(isMatch),
+          'aria-label': `${pt.harness} / ${pt.model}: ${pt.completed}/${pt.total} stages, ${pt.durationMinutes}m, ${usdFmt.format(pt.lensCostUsd)}`,
+        });
+
+        g.append(svgEl('circle', { cx: pt.cx, cy: pt.cy, r: 16, class: 'vf-hit-target' }));
+        if (pt.isZeroCostPromo) {
+          g.append(
+            svgEl('polygon', {
+              points: `${pt.cx},${pt.cy - 8} ${pt.cx + 8},${pt.cy + 6} ${pt.cx - 8},${pt.cy + 6}`,
+              class: 'vf-marker-promo',
+            })
+          );
+        } else if (pt.isFrontier) {
+          g.append(
+            svgEl('circle', {
+              cx: pt.cx,
+              cy: pt.cy,
+              r: 9,
+              class: 'vf-marker-frontier',
+            })
+          );
+        } else if (!pt.isFullPass) {
+          g.append(
+            svgEl('circle', {
+              cx: pt.cx,
+              cy: pt.cy,
+              r: 5.5,
+              class: 'vf-marker-partial',
+            })
+          );
+        } else {
+          g.append(
+            svgEl('circle', {
+              cx: pt.cx,
+              cy: pt.cy,
+              r: 5.5,
+              class: 'vf-marker-peer',
+            })
+          );
+        }
+
+        pointsLayer.append(g);
+      }
+    }
+
+    // Paired Paid 7/7 Bars
+    const bars = computePairedValueBars(runs, activeLens);
+    const paid7Exec = bars.executionRows.filter((r) => r.isFullPass && !r.isZeroCostPromo);
+    const paid7Val = bars.paidValueRows.filter((r) => r.isFullPass);
+    const partialList = bars.executionRows.filter((r) => !r.isFullPass);
+
+    if (vfPairedLensPill) vfPairedLensPill.textContent = `Lens: ${formatLensLabel(activeLens)}`;
+
+    if (vfExecBars) {
+      vfExecBars.replaceChildren();
+      paid7Exec.forEach((item) => {
+        const isMatch = hasHl && hlIds.has(item.id);
+        const accent = hasHl ? isMatch : item.isPaidFrontier;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `vf-bar-row${item.isPaidFrontier ? ' is-frontier' : ''}${isMatch ? ' is-highlighted' : hasHl ? ' is-dimmed' : ''}`;
+        btn.dataset.barRun = item.id;
+        btn.setAttribute('aria-pressed', String(isMatch));
+        btn.innerHTML = `
+          <div class="vf-bar-meta">
+            <span class="vf-bar-label">
+              <strong>${item.model}</strong>
+              <span class="vf-bar-harness">${item.harness}</span>
+            </span>
+            <span class="mono vf-bar-val">${formatDurShort(item.durationMinutes)}</span>
+          </div>
+          <div class="vf-bar-track" aria-hidden="true">
+            <span class="vf-bar-fill${accent ? ' is-accent' : ''}" style="inline-size: ${item.executionBarPct}%"></span>
+          </div>
+        `;
+        vfExecBars.append(btn);
+      });
+    }
+
+    if (vfValueBars) {
+      vfValueBars.replaceChildren();
+      paid7Val.forEach((item, idx) => {
+        const speedIdx = paid7Exec.findIndex((r) => r.id === item.id);
+        const shift = speedIdx !== -1 ? speedIdx - idx : 0;
+        const isMatch = hasHl && hlIds.has(item.id);
+        const accent = hasHl ? isMatch : item.isPaidFrontier;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `vf-bar-row${item.isPaidFrontier ? ' is-frontier' : ''}${isMatch ? ' is-highlighted' : hasHl ? ' is-dimmed' : ''}`;
+        btn.dataset.barRun = item.id;
+        btn.setAttribute('aria-pressed', String(isMatch));
+        btn.innerHTML = `
+          <div class="vf-bar-meta">
+            <span class="vf-bar-label">
+              <strong>${item.model}</strong>
+              <span class="vf-bar-harness">${item.harness}</span>
+            </span>
+            <span class="mono vf-bar-val">
+              ${usdFmt.format(item.lensCostUsd)}
+              ${shift >= 3 ? `<span class="vf-delta is-up">↑+${shift}</span>` : ''}
+            </span>
+          </div>
+          <div class="vf-bar-track" aria-hidden="true">
+            <span class="vf-bar-fill${accent ? ' is-accent' : ''}" style="inline-size: ${item.valueBarPct ?? 14}%"></span>
+          </div>
+        `;
+        vfValueBars.append(btn);
+      });
+    }
+
+    if (vfPartialBars) {
+      vfPartialBars.replaceChildren();
+      partialList.forEach((item) => {
+        const isMatch = hasHl && hlIds.has(item.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `vf-bar-row${isMatch ? ' is-highlighted' : hasHl ? ' is-dimmed' : ''}`;
+        btn.dataset.barRun = item.id;
+        btn.setAttribute('aria-pressed', String(isMatch));
+        btn.innerHTML = `
+          <div class="vf-bar-meta">
+            <span class="vf-bar-label">
+              <span class="mono vf-stage-tag">${item.completed}/7</span>
+              <strong>${item.model}</strong>
+              <span class="vf-bar-harness">${item.harness}</span>
+              ${item.isOffPeak ? '<span class="mono vf-tag-offpeak">off-peak</span>' : ''}
+            </span>
+            <span class="mono vf-bar-val">${formatDurShort(item.durationMinutes)} · ${usdFmt.format(item.lensCostUsd)}</span>
+          </div>
+        `;
+        vfPartialBars.append(btn);
+      });
+    }
+
+    if (vfPromoBars) {
+      vfPromoBars.replaceChildren();
+      bars.promoRows.forEach((item) => {
+        const isMatch = hasHl && hlIds.has(item.id);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `vf-bar-row${isMatch ? ' is-highlighted' : hasHl ? ' is-dimmed' : ''}`;
+        btn.dataset.barRun = item.id;
+        btn.setAttribute('aria-pressed', String(isMatch));
+        btn.innerHTML = `
+          <div class="vf-bar-meta">
+            <span class="vf-bar-label">
+              <span class="mono vf-stage-tag">${item.completed}/7</span>
+              <strong>${item.model}</strong>
+              <span class="vf-bar-harness">${item.harness}</span>
+              <span class="mono vf-tag-promo">free (limited time)</span>
+            </span>
+            <span class="mono vf-bar-val">${formatDurShort(item.durationMinutes)} · $0.00</span>
+          </div>
+        `;
+        vfPromoBars.append(btn);
+      });
+    }
+
+    const defaultId =
+      (inspectedRunId && runById.has(inspectedRunId) ? inspectedRunId : null) ??
+      model.frontier.frontierIds[Math.floor(model.frontier.frontierIds.length / 2)] ??
+      model.points[0]?.id;
+    if (defaultId) updateInspectorFromRun(defaultId);
+
+    syncUrlState();
+    if (announce && statusRegion) statusRegion.textContent = announce;
+  }
+
+  function toggleHighlight(nextVal: string) {
+    activeHighlight = activeHighlight === nextVal ? '' : nextVal;
+    const resolved = resolveHighlightedRunIds(activeHighlight);
+    if (resolved.singleRun) {
+      inspectedRunId = resolved.singleRun.id;
+      if (resolved.singleRun.plan.ratio < 1 && activeMode !== 'all-outcomes') activeMode = 'all-outcomes';
+      if (resolved.singleRun.data.costUsd <= 0 && !includePromos) includePromos = true;
+    }
+    renderAll(activeHighlight ? `Focused ${resolved.label}` : 'Cleared highlight');
+  }
+
+  vfModeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const nextMode = btn.dataset.vfMode as FrontierViewMode | undefined;
+      if (!nextMode || nextMode === activeMode) return;
+      activeMode = nextMode;
+      renderAll();
+    });
+  });
+
+  vfLensBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const nextLens = btn.dataset.vfLens as PricingLens | undefined;
+      if (!nextLens || nextLens === activeLens) return;
+      activeLens = nextLens;
+      renderAll();
+    });
+  });
+
+  vfTogglePromos?.addEventListener('change', () => {
+    includePromos = Boolean(vfTogglePromos.checked);
+    renderAll();
+  });
+
+  // Focusgroup roving-tabindex fallback for browsers without native focusgroup
+  const vfToolbar = document.querySelector<HTMLElement>('.vf-toolbar[role="toolbar"]');
+  if (vfToolbar && !('focusGroup' in HTMLElement.prototype)) {
+    const items = Array.from(vfToolbar.querySelectorAll<HTMLButtonElement>('button'));
+    items.forEach((b, i) => {
+      b.tabIndex = i === 0 ? 0 : -1;
+    });
+    vfToolbar.addEventListener('focusin', (e) => {
+      const target = e.target as HTMLButtonElement | null;
+      if (target && items.includes(target)) {
+        items.forEach((b) => {
+          b.tabIndex = b === target ? 0 : -1;
+        });
+      }
+    });
+    vfToolbar.addEventListener('keydown', (e) => {
+      const current = document.activeElement as HTMLButtonElement | null;
+      const idx = current ? items.indexOf(current) : -1;
+      if (idx === -1) return;
+      const rtl = getComputedStyle(vfToolbar).direction === 'rtl';
+      let nextIdx: number | null = null;
+      if (e.key === 'ArrowRight') nextIdx = (idx + (rtl ? -1 : 1) + items.length) % items.length;
+      else if (e.key === 'ArrowLeft') nextIdx = (idx + (rtl ? 1 : -1) + items.length) % items.length;
+      else if (e.key === 'Home') nextIdx = 0;
+      else if (e.key === 'End') nextIdx = items.length - 1;
+      if (nextIdx !== null) {
+        e.preventDefault();
+        items[nextIdx].focus();
+      }
+    });
+  }
+
+  workspace?.addEventListener('mouseover', (e) => {
+    const target = (e.target as Element | null)?.closest<HTMLElement | SVGElement>(
+      '[data-vf-run], [data-bar-run]'
+    );
+    const runId = target?.getAttribute('data-vf-run') ?? target?.getAttribute('data-bar-run');
+    if (runId) updateInspectorFromRun(runId);
+  });
+
+  workspace?.addEventListener('focusin', (e) => {
+    const target = (e.target as Element | null)?.closest<HTMLElement | SVGElement>(
+      '[data-vf-run], [data-bar-run]'
+    );
+    const runId = target?.getAttribute('data-vf-run') ?? target?.getAttribute('data-bar-run');
+    if (runId) updateInspectorFromRun(runId);
+  });
+
+  workspace?.addEventListener('click', (e) => {
+    const target = (e.target as Element | null)?.closest<HTMLElement | SVGElement>(
+      '[data-vf-run], [data-bar-run]'
+    );
+    const runId = target?.getAttribute('data-vf-run') ?? target?.getAttribute('data-bar-run');
+    if (runId) toggleHighlight(runId);
+  });
+
+  vfSvg?.addEventListener('keydown', (e) => {
+    const pt = (e.target as Element | null)?.closest<SVGElement>('.vf-point[data-vf-run]');
+    const runId = pt?.getAttribute('data-vf-run');
+    if (!runId) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      toggleHighlight(runId);
+    } else if (e.key === ' ') {
+      e.preventDefault();
+    }
+  });
+
+  vfSvg?.addEventListener('keyup', (e) => {
+    if (e.key !== ' ') return;
+    const pt = (e.target as Element | null)?.closest<SVGElement>('.vf-point[data-vf-run]');
+    const runId = pt?.getAttribute('data-vf-run');
+    if (runId) {
+      e.preventDefault();
+      toggleHighlight(runId);
+    }
+  });
+
+  hbScopeModel?.addEventListener('click', () => {
+    const target = hbScopeModel.dataset.targetHighlight;
+    if (target) {
+      activeHighlight = target;
+      renderAll();
+    }
+  });
+  hbScopeHarness?.addEventListener('click', () => {
+    const target = hbScopeHarness.dataset.targetHighlight;
+    if (target) {
+      activeHighlight = target;
+      renderAll();
+    }
+  });
+  hbClearBtn?.addEventListener('click', () => {
+    activeHighlight = '';
+    renderAll('Cleared highlight');
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeHighlight) {
+      activeHighlight = '';
+      renderAll('Cleared highlight');
+    }
+  });
+
+  hydrateFromUrlState();
+  renderAll();
+</script>
