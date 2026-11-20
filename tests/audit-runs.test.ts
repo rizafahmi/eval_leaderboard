@@ -4,10 +4,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   analyzeAndRankRuns,
+  computeGroupSampleStats,
+  computeLensFrontier,
+  computePairedValueBars,
   computeStageBottleneckMatrix,
   discoverAblationPresets,
+  getRunLensCost,
+  isZeroCostPromoRun,
+  type PricingLens,
   type RunRecordData,
 } from '../src/utils/telemetry.ts';
+import { buildFrontierPlotModel } from '../src/utils/frontier-chart.ts';
 import { computeCostEconometrics } from '../src/data/pricing.ts';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
@@ -527,5 +534,152 @@ test('Benchmark specification constants match starter repository artifacts when 
       'starter/README.md must contain BENCHMARK_README_CONTRACT'
     );
   }
+});
+
+test('Value & Execution Frontier separates paid vs $0 promos cleanly across all 3 pricing lenses', () => {
+  const publishedRuns = loadAllRunRecords().filter((r) => r.data.published !== false);
+  const analyzed = analyzeAndRankRuns(publishedRuns);
+
+  const lenses: PricingLens[] = ['billed', 'standard', 'uncached'];
+  for (const lens of lenses) {
+    // 1. Default paid frontier excludes $0.00 limited-time promos
+    const paidFrontier = computeLensFrontier(analyzed, { lens, includeZeroCostPromos: false });
+    assert.ok(paidFrontier.frontierIds.length >= 2, `${lens}: expected >= 2 paid frontier runs`);
+    assert.ok(
+      !paidFrontier.frontierIds.includes('opencode-hy4-flash-free-high-20261117-0755'),
+      `${lens}: $0 promo hy4-flash-free must not be in default paid frontier`
+    );
+    assert.ok(
+      !paidFrontier.frontierIds.includes('opencode-inkling-2-small-free-high-20261111-0745'),
+      `${lens}: $0 promo inkling-2-small-free must not be in default paid frontier`
+    );
+    assert.ok(
+      paidFrontier.frontierIds.includes('pi-muse-spark-1-3-contrib-high-20261026-0535'),
+      `${lens}: paid budget champion pi-muse-spark must be on paid frontier`
+    );
+    assert.ok(
+      paidFrontier.frontierIds.includes('codex-cli-gpt-6-sol-high-20261025-1935'),
+      `${lens}: fastest 7/7 codex-cli gpt-6-sol must be on paid frontier`
+    );
+    assert.equal(paidFrontier.promoFullPassIds.length, 2, `${lens}: expected 2 promo 7/7 runs`);
+    assert.ok(
+      paidFrontier.thresholds.medianPaid7of7CostUsd !== null &&
+        Number.isFinite(paidFrontier.thresholds.medianPaid7of7CostUsd) &&
+        paidFrontier.thresholds.medianPaid7of7CostUsd > 0,
+      `${lens}: median paid 7/7 cost must be finite and > 0`
+    );
+
+    // 2. Including $0 promos puts hy4-flash-free ($0, 45m) on the frontier and dominates slower paid runs
+    const withPromos = computeLensFrontier(analyzed, { lens, includeZeroCostPromos: true });
+    assert.ok(
+      withPromos.frontierIds.includes('opencode-hy4-flash-free-high-20261117-0755'),
+      `${lens}: hy4-flash-free must enter frontier when promos included`
+    );
+    assert.ok(
+      !withPromos.frontierIds.includes('pi-muse-spark-1-3-contrib-high-20261026-0535'),
+      `${lens}: hy4-flash-free ($0, 45m) must dominate pi-muse-spark (56m) when promos included`
+    );
+
+    // 3. Paired value bars have zero NaN/Infinity and separate $0 promo runs cleanly
+    const bars = computePairedValueBars(analyzed, lens);
+    assert.equal(bars.executionRows.length, analyzed.length);
+    assert.equal(bars.promoRows.length, 2);
+    assert.equal(bars.paidValueRows.length, analyzed.length - 2);
+    for (const row of [...bars.executionRows, ...bars.paidValueRows, ...bars.promoRows]) {
+      assert.ok(Number.isFinite(row.lensCostUsd), `${lens}/${row.id}: lensCostUsd must be finite`);
+      assert.ok(Number.isFinite(row.executionBarPct), `${lens}/${row.id}: executionBarPct must be finite`);
+      if (row.isZeroCostPromo) {
+        assert.equal(row.costPerCompletedStageUsd, null, `${lens}/${row.id}: promo cost/stage must be null, not Infinity`);
+        assert.equal(row.valueBarPct, null, `${lens}/${row.id}: promo valueBarPct must be null`);
+      } else {
+        assert.ok(
+          row.costPerCompletedStageUsd !== null && Number.isFinite(row.costPerCompletedStageUsd) && row.costPerCompletedStageUsd > 0,
+          `${lens}/${row.id}: paid costPerCompletedStageUsd must be finite > 0`
+        );
+        assert.ok(
+          row.valueBarPct !== null && Number.isFinite(row.valueBarPct),
+          `${lens}/${row.id}: paid valueBarPct must be finite`
+        );
+      }
+    }
+
+    // 4. Plot model produces finite SVG coordinates and non-overlapping placed labels across modes
+    for (const mode of ['speed-7-of-7', 'all-outcomes'] as const) {
+      for (const includeZeroCostPromos of [false, true]) {
+        const model = buildFrontierPlotModel(analyzed, { lens, mode, includeZeroCostPromos });
+        for (const pt of model.points) {
+          assert.ok(Number.isFinite(pt.cx) && Number.isFinite(pt.cy), `${lens}/${mode}/${pt.id}: non-finite coordinates`);
+        }
+        // Verify zero label bounding-box collisions
+        for (let i = 0; i < model.labels.length; i++) {
+          for (let j = i + 1; j < model.labels.length; j++) {
+            const a = model.labels[i].box;
+            const b = model.labels[j].box;
+            const overlaps = !(a.x2 <= b.x1 || a.x1 >= b.x2 || a.y2 <= b.y1 || a.y1 >= b.y2);
+            assert.equal(
+              overlaps,
+              false,
+              `${lens}/${mode} (promos=${includeZeroCostPromos}): labels "${model.labels[i].text}" and "${model.labels[j].text}" overlap`
+            );
+          }
+        }
+      }
+    }
+  }
+});
+
+test('Frontier dominance tie-breaking and group sample-size stats are deterministic and exact', () => {
+  const makeRun = (
+    id: string,
+    harness: string,
+    model: string,
+    durationMinutes: number,
+    costUsd: number,
+    passed: number,
+    total = 10
+  ): { id: string; data: RunRecordData } => ({
+    id,
+    data: {
+      timestamp: '2026-11-12T00:00:00Z',
+      codingHarness: harness,
+      model,
+      provider: 'Test',
+      durationMinutes,
+      costUsd,
+      tests: { passed, total },
+      planCompletion: { S1: true, S2: true, S3: true, S4: true, S5: true, S6: true, S7: true },
+    },
+  });
+
+  const synth = analyzeAndRankRuns([
+    makeRun('tie-b-lower-tests', 'Pi', 'model-a', 30, 1.0, 8, 10),
+    makeRun('tie-a-higher-tests', 'Pi', 'model-a', 30, 1.0, 10, 10),
+    makeRun('tie-c-same-tests-z', 'Codex CLI', 'model-b', 30, 1.0, 10, 10),
+    makeRun('promo-zero', 'OpenCode', 'model-free', 25, 0.0, 10, 10),
+  ]);
+
+  const paid = computeLensFrontier(synth, { lens: 'billed', includeZeroCostPromos: false });
+  // Higher tests dominates lower tests on identical (cost, duration); equal tests keep both sorted by id
+  assert.deepEqual(paid.frontierIds, ['tie-a-higher-tests', 'tie-c-same-tests-z']);
+  assert.ok(paid.dominatedByById['tie-b-lower-tests'].includes('tie-a-higher-tests'));
+
+  const stats = computeGroupSampleStats(synth);
+  assert.equal(stats.byModel['model-a'].n, 2);
+  assert.equal(stats.byModel['model-a'].singlePeerCaveat, true);
+  assert.equal(stats.byHarness['Codex CLI'].n, 1);
+  assert.equal(stats.byHarness['Codex CLI'].singlePeerCaveat, true);
+
+  // Verify exact n counts on published runs
+  const published = analyzeAndRankRuns(
+    loadAllRunRecords().filter((r) => r.data.published !== false)
+  );
+  const pubStats = computeGroupSampleStats(published);
+  const totalModelN = Object.values(pubStats.byModel).reduce((s, e) => s + e.n, 0);
+  const totalHarnessN = Object.values(pubStats.byHarness).reduce((s, e) => s + e.n, 0);
+  assert.equal(totalModelN, published.length);
+  assert.equal(totalHarnessN, published.length);
+  assert.equal(pubStats.byHarness['codex-cli']?.singlePeerCaveat ?? pubStats.byHarness['Codex CLI']?.singlePeerCaveat, true);
+  assert.equal(isZeroCostPromoRun(published.find((r) => r.id === 'opencode-hy4-flash-free-high-20261117-0755')!, 'billed'), true);
+  assert.equal(getRunLensCost(published.find((r) => r.id === 'opencode-hy4-flash-free-high-20261117-0755')!, 'uncached'), 0);
 });
 

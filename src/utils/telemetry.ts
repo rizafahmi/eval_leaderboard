@@ -997,3 +997,502 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
   return presets;
 }
 
+export type PricingLens = 'billed' | 'standard' | 'uncached';
+export type FrontierViewMode = 'speed-7-of-7' | 'all-outcomes';
+
+export interface LensFrontierOptions {
+  lens: PricingLens;
+  includeZeroCostPromos?: boolean;
+}
+
+export interface GroupSampleEntry {
+  n: number;
+  fullPass: number;
+  peers: string[];
+  singlePeerCaveat: boolean;
+}
+
+export interface GroupSampleStats {
+  byModel: Record<string, GroupSampleEntry>;
+  byHarness: Record<string, GroupSampleEntry>;
+}
+
+export interface FrontierThresholds {
+  medianPaid7of7CostUsd: number | null;
+  medianPaid7of7DurationMinutes: number | null;
+  minPaidCostUsd: number;
+  maxPaidCostUsd: number;
+  minDurationMinutes: number;
+  maxDurationMinutes: number;
+  paidFullPassCount: number;
+  totalFullPassCount: number;
+  promoFullPassCount: number;
+  partialCount: number;
+}
+
+export interface LensFrontierResult {
+  lens: PricingLens;
+  includeZeroCostPromos: boolean;
+  eligibleIds: string[];
+  paidFullPassIds: string[];
+  promoFullPassIds: string[];
+  promoPartialIds: string[];
+  frontierIds: string[];
+  frontierOrderById: Record<string, number>;
+  dominatedByById: Record<string, string[]>;
+  thresholds: FrontierThresholds;
+}
+
+export interface PairedBarItem {
+  id: string;
+  harness: string;
+  model: string;
+  effort: string;
+  completed: number;
+  total: number;
+  isFullPass: boolean;
+  durationMinutes: number;
+  lensCostUsd: number;
+  costPerCompletedStageUsd: number | null;
+  isZeroCostPromo: boolean;
+  isOffPeak: boolean;
+  pricingBadge: string | null;
+  executionRank: number;
+  valueRank: number | null;
+  rankDelta: number | null;
+  executionBarPct: number;
+  valueBarPct: number | null;
+  isPaidFrontier: boolean;
+}
+
+export interface PairedValueBarsResult {
+  lens: PricingLens;
+  executionRows: PairedBarItem[];
+  paidValueRows: PairedBarItem[];
+  promoRows: PairedBarItem[];
+}
+
+export interface ScatterLabelInput {
+  id: string;
+  text: string;
+  cx: number;
+  cy: number;
+  priority: number;
+  required?: boolean;
+}
+
+export interface PlacedScatterLabel {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  anchor: 'start' | 'end' | 'middle';
+  box: { x1: number; y1: number; x2: number; y2: number };
+  needsLeader: boolean;
+}
+
+export function getRunLensCost(run: AnalyzedRun, lens: PricingLens): number {
+  const raw =
+    lens === 'standard'
+      ? run.costMetrics.standardApiCostUsd
+      : lens === 'uncached'
+        ? run.costMetrics.uncachedCounterfactualCostUsd
+        : run.data.costUsd;
+  if (!Number.isFinite(raw) || raw < 0) return 0;
+  return Number(raw.toFixed(4));
+}
+
+export function isZeroCostPromoRun(run: AnalyzedRun, lens: PricingLens = 'billed'): boolean {
+  return getRunLensCost(run, lens) <= 0;
+}
+
+export function isOffPeakDiscountRun(run: AnalyzedRun): boolean {
+  const badge = run.costMetrics.profile?.pricingBadge?.toLowerCase() ?? '';
+  return badge.includes('off-peak');
+}
+
+export function getRunTestRatio(run: AnalyzedRun): number {
+  return run.data.tests && run.data.tests.total > 0
+    ? run.data.tests.passed / run.data.tests.total
+    : -1;
+}
+
+export function getRunTestsPassed(run: AnalyzedRun): number {
+  return run.data.tests?.passed ?? -1;
+}
+
+export function computeMedian(values: number[]): number | null {
+  const finite = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (finite.length === 0) return null;
+  const mid = Math.floor(finite.length / 2);
+  if (finite.length % 2 === 1) return finite[mid];
+  return Number(((finite[mid - 1] + finite[mid]) / 2).toFixed(4));
+}
+
+export function computeGroupSampleStats(runs: AnalyzedRun[]): GroupSampleStats {
+  const modelMap = new Map<string, { n: number; fullPass: number; harnesses: Set<string> }>();
+  const harnessMap = new Map<string, { n: number; fullPass: number; models: Set<string> }>();
+
+  for (const run of runs) {
+    const modelKey = run.data.model;
+    const harnessKey = run.data.codingHarness;
+    const isFull = run.plan.ratio === 1 ? 1 : 0;
+
+    const mEntry = modelMap.get(modelKey) ?? { n: 0, fullPass: 0, harnesses: new Set<string>() };
+    mEntry.n += 1;
+    mEntry.fullPass += isFull;
+    mEntry.harnesses.add(run.displayHarness);
+    modelMap.set(modelKey, mEntry);
+
+    const hEntry = harnessMap.get(harnessKey) ?? { n: 0, fullPass: 0, models: new Set<string>() };
+    hEntry.n += 1;
+    hEntry.fullPass += isFull;
+    hEntry.models.add(run.data.model);
+    harnessMap.set(harnessKey, hEntry);
+  }
+
+  const byModel: Record<string, GroupSampleEntry> = {};
+  for (const [k, v] of modelMap.entries()) {
+    const peers = [...v.harnesses].sort();
+    byModel[k] = {
+      n: v.n,
+      fullPass: v.fullPass,
+      peers,
+      singlePeerCaveat: peers.length <= 1,
+    };
+  }
+
+  const byHarness: Record<string, GroupSampleEntry> = {};
+  for (const [k, v] of harnessMap.entries()) {
+    const peers = [...v.models].sort();
+    byHarness[k] = {
+      n: v.n,
+      fullPass: v.fullPass,
+      peers,
+      singlePeerCaveat: peers.length <= 1,
+    };
+  }
+
+  return { byModel, byHarness };
+}
+
+export function computeLensFrontier(
+  runs: AnalyzedRun[],
+  options: LensFrontierOptions
+): LensFrontierResult {
+  const { lens, includeZeroCostPromos = false } = options;
+
+  const fullPassRuns = runs.filter((r) => r.plan.ratio === 1);
+  const paidFullPass = fullPassRuns.filter((r) => getRunLensCost(r, lens) > 0);
+  const promoFullPass = fullPassRuns.filter((r) => getRunLensCost(r, lens) <= 0);
+  const promoPartial = runs.filter((r) => r.plan.ratio < 1 && getRunLensCost(r, lens) <= 0);
+  const partialCount = runs.filter((r) => r.plan.ratio < 1).length;
+
+  const eligible = includeZeroCostPromos ? fullPassRuns : paidFullPass;
+
+  const dominatedByById: Record<string, string[]> = {};
+  const frontierRuns: AnalyzedRun[] = [];
+
+  for (const cand of eligible) {
+    const candCost = getRunLensCost(cand, lens);
+    const candDur = cand.data.durationMinutes;
+    const candTestRatio = getRunTestRatio(cand);
+    const candTestsPassed = getRunTestsPassed(cand);
+
+    const dominators = eligible.filter((other) => {
+      if (other.id === cand.id) return false;
+      const otherCost = getRunLensCost(other, lens);
+      const otherDur = other.data.durationMinutes;
+
+      const strictlyBetter =
+        otherCost <= candCost &&
+        otherDur <= candDur &&
+        (otherCost < candCost || otherDur < candDur);
+      if (strictlyBetter) return true;
+
+      if (otherCost === candCost && otherDur === candDur) {
+        const otherTestRatio = getRunTestRatio(other);
+        const otherTestsPassed = getRunTestsPassed(other);
+        if (otherTestRatio !== candTestRatio) return otherTestRatio > candTestRatio;
+        if (otherTestsPassed !== candTestsPassed) return otherTestsPassed > candTestsPassed;
+      }
+      return false;
+    });
+
+    dominatedByById[cand.id] = dominators.map((d) => d.id).sort();
+    if (dominators.length === 0) {
+      frontierRuns.push(cand);
+    }
+  }
+
+  // Deterministic order: cheapest -> fastest (left to right on log-cost X-axis)
+  frontierRuns.sort((a, b) => {
+    const costDiff = getRunLensCost(a, lens) - getRunLensCost(b, lens);
+    if (costDiff !== 0) return costDiff;
+    const durDiff = a.data.durationMinutes - b.data.durationMinutes;
+    if (durDiff !== 0) return durDiff;
+    const testDiff = getRunTestRatio(b) - getRunTestRatio(a);
+    if (testDiff !== 0) return testDiff;
+    return a.id.localeCompare(b.id);
+  });
+
+  const frontierOrderById: Record<string, number> = {};
+  frontierRuns.forEach((r, idx) => {
+    frontierOrderById[r.id] = idx + 1;
+  });
+
+  const allPaidCosts = runs.map((r) => getRunLensCost(r, lens)).filter((c) => c > 0);
+  const allDurations = runs.map((r) => r.data.durationMinutes).filter((d) => d > 0);
+
+  return {
+    lens,
+    includeZeroCostPromos,
+    eligibleIds: eligible.map((r) => r.id),
+    paidFullPassIds: paidFullPass.map((r) => r.id),
+    promoFullPassIds: promoFullPass.map((r) => r.id),
+    promoPartialIds: promoPartial.map((r) => r.id),
+    frontierIds: frontierRuns.map((r) => r.id),
+    frontierOrderById,
+    dominatedByById,
+    thresholds: {
+      medianPaid7of7CostUsd: computeMedian(paidFullPass.map((r) => getRunLensCost(r, lens))),
+      medianPaid7of7DurationMinutes: computeMedian(paidFullPass.map((r) => r.data.durationMinutes)),
+      minPaidCostUsd: allPaidCosts.length > 0 ? Math.min(...allPaidCosts) : 0.1,
+      maxPaidCostUsd: allPaidCosts.length > 0 ? Math.max(...allPaidCosts) : 15,
+      minDurationMinutes: allDurations.length > 0 ? Math.min(...allDurations) : 10,
+      maxDurationMinutes: allDurations.length > 0 ? Math.max(...allDurations) : 120,
+      paidFullPassCount: paidFullPass.length,
+      totalFullPassCount: fullPassRuns.length,
+      promoFullPassCount: promoFullPass.length,
+      partialCount,
+    },
+  };
+}
+
+/**
+ * Deterministic Y-value in [0, 7.5] for All-Outcomes scatter view.
+ * Integer band = stages completed (0..7); within a band, faster runs (then stronger tests)
+ * sit higher within [-0.26, +0.26] so no partial run ever crosses the 6.5 pass gate.
+ */
+export function computeOutcomePlotY(run: AnalyzedRun, allRuns: AnalyzedRun[]): number {
+  const stage = run.plan.completed;
+  const peers = allRuns
+    .filter((r) => r.plan.completed === stage)
+    .sort((a, b) => {
+      if (a.data.durationMinutes !== b.data.durationMinutes) {
+        return a.data.durationMinutes - b.data.durationMinutes;
+      }
+      const trDiff = getRunTestRatio(b) - getRunTestRatio(a);
+      if (trDiff !== 0) return trDiff;
+      const tpDiff = getRunTestsPassed(b) - getRunTestsPassed(a);
+      if (tpDiff !== 0) return tpDiff;
+      return a.id.localeCompare(b.id);
+    });
+
+  if (peers.length <= 1) return stage;
+  const idx = peers.findIndex((p) => p.id === run.id);
+  if (idx === -1) return stage;
+  // idx = 0 is fastest -> +0.26, idx = peers.length - 1 is slowest -> -0.26
+  const frac = 1 - idx / (peers.length - 1);
+  return Number((stage - 0.26 + frac * 0.52).toFixed(4));
+}
+
+export function computePairedValueBars(
+  runs: AnalyzedRun[],
+  lens: PricingLens
+): PairedValueBarsResult {
+  const paidFrontier = computeLensFrontier(runs, { lens, includeZeroCostPromos: false });
+  const frontierSet = new Set(paidFrontier.frontierIds);
+
+  // 1. Execution order: completion desc -> duration asc -> tests desc -> lensCost asc -> id asc
+  const execSorted = [...runs].sort((a, b) => {
+    if (b.plan.completed !== a.plan.completed) return b.plan.completed - a.plan.completed;
+    if (a.data.durationMinutes !== b.data.durationMinutes) {
+      return a.data.durationMinutes - b.data.durationMinutes;
+    }
+    const trDiff = getRunTestRatio(b) - getRunTestRatio(a);
+    if (trDiff !== 0) return trDiff;
+    const costDiff = getRunLensCost(a, lens) - getRunLensCost(b, lens);
+    if (costDiff !== 0) return costDiff;
+    return a.id.localeCompare(b.id);
+  });
+
+  const execRankMap = new Map(execSorted.map((r, idx) => [r.id, idx + 1]));
+  const fastestDur = Math.max(1, Math.min(...runs.map((r) => r.data.durationMinutes)));
+
+  // 2. Paid value order: 7/7 paid runs first (cheapest cost/stage asc -> duration asc),
+  //    then partial paid runs (cost/stage asc -> completed desc -> duration asc).
+  const paidRuns = runs.filter((r) => getRunLensCost(r, lens) > 0 && r.plan.completed > 0);
+  const promoRuns = runs.filter((r) => getRunLensCost(r, lens) <= 0);
+
+  const costPerStage = (r: AnalyzedRun) => getRunLensCost(r, lens) / r.plan.completed;
+
+  const paidSorted = [...paidRuns].sort((a, b) => {
+    const fullA = a.plan.ratio === 1 ? 1 : 0;
+    const fullB = b.plan.ratio === 1 ? 1 : 0;
+    if (fullB !== fullA) return fullB - fullA;
+    const cpsDiff = costPerStage(a) - costPerStage(b);
+    if (Math.abs(cpsDiff) > 1e-9) return cpsDiff;
+    if (a.data.durationMinutes !== b.data.durationMinutes) {
+      return a.data.durationMinutes - b.data.durationMinutes;
+    }
+    return a.id.localeCompare(b.id);
+  });
+
+  const valueRankMap = new Map(paidSorted.map((r, idx) => [r.id, idx + 1]));
+
+  const paidCpsValues = paidSorted.map(costPerStage);
+  const minLogCps = paidCpsValues.length > 0 ? Math.log10(Math.min(...paidCpsValues)) : 0;
+  const maxLogCps = paidCpsValues.length > 0 ? Math.log10(Math.max(...paidCpsValues)) : 1;
+  const logSpan = Math.max(0.01, maxLogCps - minLogCps);
+
+  const toItem = (r: AnalyzedRun): PairedBarItem => {
+    const lensCost = getRunLensCost(r, lens);
+    const isPromo = lensCost <= 0;
+    const cps = !isPromo && r.plan.completed > 0 ? Number((lensCost / r.plan.completed).toFixed(4)) : null;
+    const executionRank = execRankMap.get(r.id) ?? runs.length;
+    const valueRank = valueRankMap.get(r.id) ?? null;
+    const rankDelta = valueRank !== null ? executionRank - valueRank : null;
+
+    // Relative speed bar: fastest run = 100%, slower runs scale inversely, clamped to [12, 100]
+    const rawSpeedPct = (fastestDur / Math.max(1, r.data.durationMinutes)) * 100;
+    const executionBarPct = Number(Math.max(12, Math.min(100, rawSpeedPct)).toFixed(1));
+
+    // Log-efficiency bar for paid runs: cheapest $/stage = 100%, priciest = 14%
+    let valueBarPct: number | null = null;
+    if (cps !== null && cps > 0) {
+      const norm = 1 - (Math.log10(cps) - minLogCps) / logSpan;
+      valueBarPct = Number(Math.max(14, Math.min(100, 14 + norm * 86)).toFixed(1));
+    }
+
+    return {
+      id: r.id,
+      harness: r.displayHarness,
+      model: r.data.model,
+      effort: r.data.effort ?? 'Standard',
+      completed: r.plan.completed,
+      total: r.plan.total,
+      isFullPass: r.plan.ratio === 1,
+      durationMinutes: r.data.durationMinutes,
+      lensCostUsd: lensCost,
+      costPerCompletedStageUsd: cps,
+      isZeroCostPromo: isPromo,
+      isOffPeak: isOffPeakDiscountRun(r),
+      pricingBadge: r.costMetrics.profile?.pricingBadge ?? null,
+      executionRank,
+      valueRank,
+      rankDelta,
+      executionBarPct,
+      valueBarPct,
+      isPaidFrontier: frontierSet.has(r.id),
+    };
+  };
+
+  return {
+    lens,
+    executionRows: execSorted.map(toItem),
+    paidValueRows: paidSorted.map(toItem),
+    promoRows: promoRuns
+      .sort((a, b) => a.data.durationMinutes - b.data.durationMinutes || a.id.localeCompare(b.id))
+      .map(toItem),
+  };
+}
+
+function boxesOverlap(
+  a: { x1: number; y1: number; x2: number; y2: number },
+  b: { x1: number; y1: number; x2: number; y2: number },
+  pad = 2
+): boolean {
+  return !(
+    a.x2 + pad <= b.x1 ||
+    a.x1 - pad >= b.x2 ||
+    a.y2 + pad <= b.y1 ||
+    a.y1 - pad >= b.y2
+  );
+}
+
+export function placeScatterLabels(
+  inputs: ScatterLabelInput[],
+  bounds: { xMin: number; xMax: number; yMin: number; yMax: number },
+  pointObstacles: Array<{ cx: number; cy: number; r: number }> = []
+): PlacedScatterLabel[] {
+  const sorted = [...inputs].sort(
+    (a, b) => b.priority - a.priority || a.id.localeCompare(b.id)
+  );
+  const placed: PlacedScatterLabel[] = [];
+  const charW = 6.3;
+  const labelH = 14;
+
+  const candidates: Array<{
+    dx: number;
+    dy: number;
+    anchor: 'start' | 'end' | 'middle';
+    leader: boolean;
+  }> = [
+    { dx: 10, dy: -8, anchor: 'start', leader: false },
+    { dx: 10, dy: 12, anchor: 'start', leader: false },
+    { dx: -10, dy: -8, anchor: 'end', leader: false },
+    { dx: -10, dy: 12, anchor: 'end', leader: false },
+    { dx: 0, dy: -13, anchor: 'middle', leader: false },
+    { dx: 0, dy: 20, anchor: 'middle', leader: false },
+    { dx: 16, dy: -20, anchor: 'start', leader: true },
+    { dx: -16, dy: -20, anchor: 'end', leader: true },
+    { dx: 16, dy: 24, anchor: 'start', leader: true },
+    { dx: -16, dy: 24, anchor: 'end', leader: true },
+    { dx: 0, dy: -28, anchor: 'middle', leader: true },
+    { dx: 0, dy: 34, anchor: 'middle', leader: true },
+  ];
+
+  for (const item of sorted) {
+    const estW = Math.max(36, item.text.length * charW);
+
+    let chosen: PlacedScatterLabel | null = null;
+    for (const cand of candidates) {
+      const x = Number((item.cx + cand.dx).toFixed(1));
+      const y = Number((item.cy + cand.dy).toFixed(1));
+      const x1 = cand.anchor === 'start' ? x : cand.anchor === 'end' ? x - estW : x - estW / 2;
+      const x2 = x1 + estW;
+      const y1 = y - labelH + 3;
+      const y2 = y + 3;
+
+      if (x1 < bounds.xMin || x2 > bounds.xMax || y1 < bounds.yMin || y2 > bounds.yMax) {
+        continue;
+      }
+
+      const box = { x1, y1, x2, y2 };
+      const hitsLabel = placed.some((p) => boxesOverlap(box, p.box, 3));
+      if (hitsLabel) continue;
+
+      const hitsPoint = pointObstacles.some((pt) => {
+        if (Math.abs(pt.cx - item.cx) < 0.5 && Math.abs(pt.cy - item.cy) < 0.5) return false;
+        const pBox = {
+          x1: pt.cx - pt.r - 2,
+          y1: pt.cy - pt.r - 2,
+          x2: pt.cx + pt.r + 2,
+          y2: pt.cy + pt.r + 2,
+        };
+        return boxesOverlap(box, pBox, 1);
+      });
+      if (hitsPoint) continue;
+
+      chosen = {
+        id: item.id,
+        text: item.text,
+        x,
+        y,
+        anchor: cand.anchor,
+        box,
+        needsLeader: cand.leader,
+      };
+      break;
+    }
+
+    if (chosen) {
+      placed.push(chosen);
+    }
+  }
+
+  return placed;
+}
+
+

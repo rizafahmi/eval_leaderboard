@@ -7,10 +7,16 @@
   "title": "What separates 7/7 from 6/7 across all 21 benchmark runs",
   "subtitle": "Patterns from 21 published runs, 8 harnesses, and 15 models.",
   "description": "A 7-slide meta-synthesis of all 21 published Capy Bench runs: where the 7 partial runs failed (S5 & S7), why duration and turns don't predict success, the Speed × Cost Pareto frontier, and what actually separates 7/7 winners.",
+  "seoTitle": "What Separates 7/7 From 6/7 Across 21 Runs",
+  "seoDescription": "7-slide synthesis of 21 Capy Bench runs: why S5 live HTTP and S7 Ctrl-C gatekeep 7/7, the Speed × Cost Pareto frontier, and harness multipliers.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["Meta Analysis", "21 Runs", "Pareto Frontier"],
+  "tags": [
+    "Meta Analysis",
+    "21 Runs",
+    "Pareto Frontier"
+  ],
   "relatedRunIds": [
     "codex-cli-gpt-6-sol-high-20261025-1935",
     "pi-gpt-6-1-sol-high-20261025-1820",
@@ -24,8 +30,14 @@
       "label": "COVER",
       "filename": "01-meta-synthesis-cover.png",
       "badges": [
-        { "text": "META SYNTHESIS", "tone": "acid" },
-        { "text": "21 PUBLISHED RUNS", "tone": "sky" }
+        {
+          "text": "META SYNTHESIS",
+          "tone": "acid"
+        },
+        {
+          "text": "21 PUBLISHED RUNS",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "What separates 7/7 from 6/7 across 21 runs.",
       "headlineMuted": "Patterns from 15 models and 8 harnesses.",
@@ -56,8 +68,14 @@
       "label": "7/7 VS PARTIAL RUNS",
       "filename": "02-meta-pass-vs-fail.png",
       "badges": [
-        { "text": "COHORT SPLIT", "tone": "mint" },
-        { "text": "14 PASS · 7 PARTIAL", "tone": "outline" }
+        {
+          "text": "COHORT SPLIT",
+          "tone": "mint"
+        },
+        {
+          "text": "14 PASS · 7 PARTIAL",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Speed and turns didn't predict a 7/7 pass.",
       "headlineMuted": "Partial runs averaged slightly faster clocks.",
@@ -98,12 +116,23 @@
       "label": "THE PARETO FRONTIER",
       "filename": "03-meta-pareto-frontier.png",
       "badges": [
-        { "text": "PARETO FRONTIER", "tone": "sky" },
-        { "text": "SPEED × COST (7/7)", "tone": "outline" }
+        {
+          "text": "PARETO FRONTIER",
+          "tone": "sky"
+        },
+        {
+          "text": "SPEED × COST (7/7)",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Four runs define the Speed × Cost frontier.",
       "headlineMuted": "From $0.00 free tier to 25-minute flagship speed.",
-      "columns": ["Metric", "gpt-6-sol", "hy4-flash", "Delta"],
+      "columns": [
+        "Metric",
+        "gpt-6-sol",
+        "hy4-flash",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -169,8 +198,14 @@
       "label": "PATTERN #1 REAL GATEKEEPERS",
       "filename": "04-meta-s5-s7-gatekeepers.png",
       "badges": [
-        { "text": "PATTERN #1", "tone": "violet" },
-        { "text": "FAILURE MODES", "tone": "outline" }
+        {
+          "text": "PATTERN #1",
+          "tone": "violet"
+        },
+        {
+          "text": "FAILURE MODES",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Everyone passes S1, S2 & S4.",
       "headlineMuted": "Live HTTP (S5) and PTY Ctrl-C (S7) separate the field.",
@@ -204,8 +239,14 @@
       "label": "PATTERN #2 HARNESS MULTIPLIER",
       "filename": "05-meta-harness-effect.png",
       "badges": [
-        { "text": "PATTERN #2", "tone": "violet" },
-        { "text": "HARNESS EFFECT", "tone": "outline" }
+        {
+          "text": "PATTERN #2",
+          "tone": "violet"
+        },
+        {
+          "text": "HARNESS EFFECT",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Your harness moves the needle as much as the model.",
       "headlineMuted": "Three controlled ablations proved it.",
@@ -239,8 +280,14 @@
       "label": "CROSS-BOARD CAVEATS",
       "filename": "06-meta-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 BLIND SPOTS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 BLIND SPOTS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "4 metrics that lie if you read them alone.",
       "headlineMuted": "What 21 forensic audits taught me.",
@@ -274,8 +321,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-meta-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 RULES", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 RULES",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 rules for picking a coding agent today.",
       "headlineMuted": "Distilled from 21 real-world runs.",

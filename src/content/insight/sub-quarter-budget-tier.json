@@ -7,10 +7,16 @@
   "title": "The sub-$0.25 coding agent tier: fast, cheap, and brittle at the last mile",
   "subtitle": "6 paid runs from $0.13 to $0.25 — including the 3 fastest runs on the board.",
   "description": "A 7-slide analysis of all 6 sub-$0.25 paid Capy Bench runs (SubQ Savant 1.4, DeepSeek Flash across Pi/DSH/OMP, and Muse Spark 1.3): why the 4 fastest runs all stopped short of 7/7, the 3-harness DeepSeek ladder, and how Pi Muse Spark won 7/7 for $0.14.",
+  "seoTitle": "Sub-$0.25 Agents: Fast, Cheap & Brittle",
+  "seoDescription": "7-slide analysis of 6 sub-$0.25 paid runs (SubQ Savant, DeepSeek Flash, Muse Spark): why the 4 fastest stalled short of 7/7 and how Pi won for $0.14.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["Sub-$0.25 Tier", "DeepSeek Flash", "SubQ Savant 1.4"],
+  "tags": [
+    "Sub-$0.25 Tier",
+    "DeepSeek Flash",
+    "SubQ Savant 1.4"
+  ],
   "relatedRunIds": [
     "omp-subq-savant-1-4-high-20261120-1516",
     "omp-deepseek-v4-flash-high-20261119-2012",
@@ -25,8 +31,14 @@
       "label": "COVER",
       "filename": "01-sub-quarter-tier-cover.png",
       "badges": [
-        { "text": "BUDGET TIER", "tone": "acid" },
-        { "text": "6 PAID RUNS ≤ $0.25", "tone": "sky" }
+        {
+          "text": "BUDGET TIER",
+          "tone": "acid"
+        },
+        {
+          "text": "6 PAID RUNS ≤ $0.25",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "The sub-$0.25 coding agent tier.",
       "headlineMuted": "Blistering speed, brutal last-mile edge cases.",
@@ -57,8 +69,14 @@
       "label": "COHORT OVERVIEW",
       "filename": "02-sub-quarter-tier-metrics.png",
       "badges": [
-        { "text": "COHORT SPLIT", "tone": "mint" },
-        { "text": "6 PAID RUNS · $0.13–$0.25", "tone": "outline" }
+        {
+          "text": "COHORT SPLIT",
+          "tone": "mint"
+        },
+        {
+          "text": "6 PAID RUNS · $0.13–$0.25",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Speed vs. reliability under 25 cents.",
       "headlineMuted": "The 4 fastest paid runs all missed 7/7.",
@@ -99,12 +117,23 @@
       "label": "SPEED VS 7/7 WINNER",
       "filename": "03-sub-quarter-speed-vs-winner.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "FASTEST VS CHEAPEST 7/7", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "FASTEST VS CHEAPEST 7/7",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Fastest sprint vs. cheapest 7/7 pass.",
       "headlineMuted": "SubQ Savant 1.4 vs. Pi Muse Spark 1.3.",
-      "columns": ["Metric", "subq-savant-1.4", "Pi muse-spark", "Delta"],
+      "columns": [
+        "Metric",
+        "subq-savant-1.4",
+        "Pi muse-spark",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Holdout",
@@ -141,7 +170,7 @@
           {
             "name": "SubQ Savant 1.4 (6/7, $0.23)",
             "value": "14m",
-            "widthPct": 25.0,
+            "widthPct": 25,
             "accent": true
           },
           {
@@ -175,8 +204,14 @@
       "label": "CASE STUDY #1 DEEPSEEK FLASH",
       "filename": "04-deepseek-3-harness-ladder.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "3 HARNESSES · SAME WEIGHTS", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "3 HARNESSES · SAME WEIGHTS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Same DeepSeek weights, 3 different misses.",
       "headlineMuted": "Pi (4/7) → DSH (5/7) → OMP (6/7).",
@@ -210,8 +245,14 @@
       "label": "CASE STUDY #2 THE S7 WALL",
       "filename": "05-budget-tier-s7-wall.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "CTRL-C FAILURE MODES", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "CTRL-C FAILURE MODES",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "S7 blocked 4 of 6 sub-$0.25 runs.",
       "headlineMuted": "Three distinct ways terminal Ctrl-C broke.",
@@ -245,8 +286,14 @@
       "label": "PRICING & EVAL TRAPS",
       "filename": "06-sub-quarter-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 BUDGET TRAPS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 BUDGET TRAPS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "4 traps hiding in sub-$0.25 pricing.",
       "headlineMuted": "What cheap token bills don't tell you.",
@@ -280,8 +327,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-sub-quarter-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 RULES", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 RULES",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 rules for ultra-cheap coding agents.",
       "headlineMuted": "Capture 20× savings without silent regressions.",

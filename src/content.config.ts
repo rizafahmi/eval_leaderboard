@@ -265,6 +265,8 @@ const insight = defineCollection({
     title: z.string(),
     subtitle: z.string(),
     description: z.string(),
+    seoTitle: z.string().max(47).optional(),
+    seoDescription: z.string().max(160).optional(),
     brandLabel: z.string().default('EVAL.RIZAFAHMI.COM'),
     footerLeft: z.string().default('@rizafahmi · Personal Eval'),
     defaultRatio: z.enum(['4:5', '1:1']).default('4:5'),

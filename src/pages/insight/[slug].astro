@@ -25,8 +25,8 @@ const relatedRuns = insight.relatedRunIds
 ---
 
 <BaseLayout
-  title={`${insight.part} · ${insight.title}`}
-  description={insight.description}
+  title={insight.seoTitle ?? insight.title}
+  description={insight.seoDescription ?? insight.description}
   activeNav="insight"
   lang={insight.lang}
   ogType="article"

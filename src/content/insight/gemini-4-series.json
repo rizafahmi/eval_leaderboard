@@ -7,10 +7,16 @@
   "title": "Testing the Gemini 4 series on my personal benchmark",
   "subtitle": "Four variants, two harnesses, six 7/7 passes.",
   "description": "A 7-slide visual breakdown of all 6 Gemini 4 runs (Hydrogen, Neon, Argon, Carbon across Antigravity CLI and OMP): generational leap over 3.8 Flash, 4-variant trade-offs, harness ablation, cold-boot Ctrl-C depth, and field notes.",
+  "seoTitle": "Gemini 4 Series: 4 Variants, 6 Full Passes",
+  "seoDescription": "7-slide comparison of Hydrogen, Neon, Argon, and Carbon across Antigravity CLI and OMP: generational leap over 3.8 Flash, harness ablation, and Ctrl-C.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["Gemini 4", "Antigravity CLI", "OMP"],
+  "tags": [
+    "Gemini 4",
+    "Antigravity CLI",
+    "OMP"
+  ],
   "relatedRunIds": [
     "agy-gemini-4-hydrogen-high-20261119-1110",
     "agy-gemini-4-neon-high-20261119-0842",
@@ -26,8 +32,14 @@
       "label": "COVER",
       "filename": "01-gemini-4-series-cover.png",
       "badges": [
-        { "text": "PERSONAL EVAL", "tone": "acid" },
-        { "text": "GEMINI 4 SERIES", "tone": "sky" }
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "GEMINI 4 SERIES",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "Testing the Gemini 4 series on my personal benchmark.",
       "headlineMuted": "Four variants, two harnesses, six 7/7 passes.",
@@ -58,8 +70,14 @@
       "label": "GENERATIONAL LEAP",
       "filename": "02-gemini-4-vs-38-flash.png",
       "badges": [
-        { "text": "GENERATION LEAP", "tone": "mint" },
-        { "text": "ANTIGRAVITY CLI", "tone": "outline" }
+        {
+          "text": "GENERATION LEAP",
+          "tone": "mint"
+        },
+        {
+          "text": "ANTIGRAVITY CLI",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Same harness, huge efficiency jump.",
       "headlineMuted": "Gemini 4 cut turns by up to 66% vs 3.8 Flash.",
@@ -100,12 +118,23 @@
       "label": "4-VARIANT SHOWDOWN",
       "filename": "03-gemini-4-variants.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "ANTIGRAVITY CLI · #HIGH", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "ANTIGRAVITY CLI · #HIGH",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Four variants, four different trade-offs.",
       "headlineMuted": "Hydrogen vs Carbon on the exact same harness.",
-      "columns": ["Metric", "Hydrogen", "Carbon", "Delta"],
+      "columns": [
+        "Metric",
+        "Hydrogen",
+        "Carbon",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -171,8 +200,14 @@
       "label": "CASE STUDY #1 HARNESS ABLATION",
       "filename": "04-gemini-4-agy-vs-omp.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "AGY VS OMP", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "AGY VS OMP",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Same models, two different harnesses.",
       "headlineMuted": "Switching to OMP sped up both Argon and Carbon.",
@@ -206,8 +241,14 @@
       "label": "CASE STUDY #2 COLD-BOOT CTRL-C",
       "filename": "05-gemini-4-carbon-boot-race.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "BOOT-WINDOW RACE", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "BOOT-WINDOW RACE",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Only Carbon closed the cold-boot race.",
       "headlineMuted": "Where the slowest variant earned its keep.",
@@ -241,8 +282,14 @@
       "label": "FIELD NOTES",
       "filename": "06-gemini-4-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "6/6 full passes, not without friction.",
       "headlineMuted": "4 caveats behind the Gemini 4 numbers.",
@@ -276,8 +323,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-gemini-4-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from the Gemini 4 series.",
       "headlineMuted": "Picking the right variant matters.",

@@ -7,10 +7,16 @@
   "title": "Third-party vs. native harness: muse-spark-1.3 on Pi vs. Muse Code",
   "subtitle": "Same Meta model — Pi beat the native harness on every metric.",
   "description": "A 7-slide controlled harness ablation of Meta's muse-spark-1.3-contributor (#high) on Pi vs. Muse Code: how Pi hit 7/7 for $0.14 while Muse Code's Seatbelt sandbox, 8.5× larger prompt, and Turn-339 compaction stalled at 6/7.",
+  "seoTitle": "muse-spark-1.3: Pi vs Native Muse Code",
+  "seoDescription": "7-slide harness ablation of Meta muse-spark-1.3 (#high): how third-party Pi hit 7/7 for $0.14 while Muse Code sandbox and compaction stalled at 6/7.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["muse-spark-1.3", "Pi vs Muse Code", "Harness Ablation"],
+  "tags": [
+    "muse-spark-1.3",
+    "Pi vs Muse Code",
+    "Harness Ablation"
+  ],
   "relatedRunIds": [
     "pi-muse-spark-1-3-contrib-high-20261026-0535",
     "muse-code-muse-spark-1-3-contrib-high-20261105-1529"
@@ -22,8 +28,14 @@
       "label": "COVER",
       "filename": "01-muse-spark-harness-cover.png",
       "badges": [
-        { "text": "HARNESS ABLATION", "tone": "acid" },
-        { "text": "MUSE-SPARK-1.3", "tone": "sky" }
+        {
+          "text": "HARNESS ABLATION",
+          "tone": "acid"
+        },
+        {
+          "text": "MUSE-SPARK-1.3",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "When a third-party harness beats the native one.",
       "headlineMuted": "muse-spark-1.3 on Pi vs. Muse Code.",
@@ -54,8 +66,14 @@
       "label": "PROMPT & CONTEXT TAX",
       "filename": "02-muse-spark-context-tax.png",
       "badges": [
-        { "text": "HARNESS OVERHEAD", "tone": "mint" },
-        { "text": "SAME WEIGHTS", "tone": "outline" }
+        {
+          "text": "HARNESS OVERHEAD",
+          "tone": "mint"
+        },
+        {
+          "text": "SAME WEIGHTS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "An 8.5× bigger system prompt compounded fast.",
       "headlineMuted": "Muse Code burned 74.07M tokens — #1 highest on the board.",
@@ -96,12 +114,23 @@
       "label": "HEAD-TO-HEAD",
       "filename": "03-muse-spark-pi-vs-native.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "MUSE-SPARK-1.3 · #HIGH", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "MUSE-SPARK-1.3 · #HIGH",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Faster, half the tokens, and a full pass.",
       "headlineMuted": "Pi vs. Muse Code on identical weights.",
-      "columns": ["Metric", "Pi", "Muse Code", "Delta"],
+      "columns": [
+        "Metric",
+        "Pi",
+        "Muse Code",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Holdouts",
@@ -157,8 +186,14 @@
       "label": "CASE STUDY #1 SANDBOX BLIND SPOT",
       "filename": "04-muse-code-sandbox.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "SEATBELT SANDBOX", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "SEATBELT SANDBOX",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Muse Code's sandbox hid 16 failing tests.",
       "headlineMuted": "And blinded the agent on S7 Ctrl-C.",
@@ -192,8 +227,14 @@
       "label": "CASE STUDY #2 HOW PI WON S7",
       "filename": "05-pi-signal-debugging.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "PI EXECUTION", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "PI EXECUTION",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Unblocked on Pi, the same model solved S7.",
       "headlineMuted": "Zero dependencies and 57/57 clean tests.",
@@ -227,8 +268,14 @@
       "label": "FIELD NOTES",
       "filename": "06-muse-spark-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Pi won the run, not every detail.",
       "headlineMuted": "4 caveats across both muse-spark-1.3 runs.",
@@ -262,8 +309,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-muse-spark-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from Pi vs. Muse Code.",
       "headlineMuted": "Never judge a model by one harness.",

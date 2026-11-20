@@ -7,10 +7,16 @@
   "title": "Testing hy4-flash-free on my personal benchmark",
   "subtitle": "Building a CLI app from scratch.",
   "description": "A 7-slide visual breakdown of hy4-flash-free on OpenCode v2.2.7: time split, head-to-head with inkling-2-small-free, Ctrl-C handling, timeout debugging, and field notes.",
+  "seoTitle": "hy4-flash-free on OpenCode (7/7 in 45m)",
+  "seoDescription": "7-slide breakdown of hy4-flash-free on OpenCode v2.2.7: time split, inkling-2-small comparison, 50ms Ctrl-C handling, timeout debugging, and caveats.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["hy4-flash-free", "OpenCode v2.2.7", "Personal Eval"],
+  "tags": [
+    "hy4-flash-free",
+    "OpenCode v2.2.7",
+    "Personal Eval"
+  ],
   "relatedRunIds": [
     "opencode-hy4-flash-free-high-20261117-0755",
     "opencode-inkling-2-small-free-high-20261111-0745"
@@ -22,8 +28,14 @@
       "label": "COVER",
       "filename": "01-hy4-flash-cover.png",
       "badges": [
-        { "text": "PERSONAL EVAL", "tone": "acid" },
-        { "text": "OPENCODE v2.2.7", "tone": "sky" }
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "OPENCODE v2.2.7",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "Testing hy4-flash-free on my personal benchmark.",
       "headlineMuted": "Building a CLI app from scratch.",
@@ -53,8 +65,14 @@
       "label": "TIME SPLIT",
       "filename": "02-hy4-flash-metrics.png",
       "badges": [
-        { "text": "SESSION NOTES", "tone": "mint" },
-        { "text": "227 TURNS", "tone": "outline" }
+        {
+          "text": "SESSION NOTES",
+          "tone": "mint"
+        },
+        {
+          "text": "227 TURNS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "44 minutes total.",
       "headlineMuted": "Nearly half went to running tests.",
@@ -95,12 +113,23 @@
       "label": "SAME-SETUP COMPARISON",
       "filename": "03-hy4-flash-vs-inkling.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "OPENCODE v2.2.7 · #HIGH", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "OPENCODE v2.2.7 · #HIGH",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "On the exact same setup.",
       "headlineMuted": "hy4-flash-free vs inkling-2-small-free.",
-      "columns": ["Metric", "hy4-flash-free", "inkling-2-small", "Delta"],
+      "columns": [
+        "Metric",
+        "hy4-flash-free",
+        "inkling-2-small",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -156,8 +185,14 @@
       "label": "CASE STUDY #1 CTRL-C",
       "filename": "04-hy4-flash-ctrlc.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "CTRL-C", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "CTRL-C",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Handled Ctrl-C cleanly.",
       "headlineMuted": "Even 50 ms after startup.",
@@ -191,8 +226,14 @@
       "label": "CASE STUDY #2 DEBUGGING",
       "filename": "05-hy4-flash-debugging.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "DEBUGGING", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "DEBUGGING",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Tracked down a tricky timeout bug.",
       "headlineMuted": "Fixed with a single line of code.",
@@ -226,8 +267,14 @@
       "label": "FIELD NOTES",
       "filename": "06-hy4-flash-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Passed every stage, not without rough edges.",
       "headlineMuted": "4 caveats behind the result.",
@@ -261,8 +308,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-hy4-flash-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from this run.",
       "headlineMuted": "Evaluating an agent isn't just pass/fail.",

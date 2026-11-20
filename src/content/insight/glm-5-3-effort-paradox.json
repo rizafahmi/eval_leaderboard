@@ -7,10 +7,16 @@
   "title": "The Effort Paradox: testing GLM-5.3 across Low, High & Max",
   "subtitle": "High beat both Low and Max on every metric.",
   "description": "A 7-slide controlled effort ablation of GLM-5.3-Flash (Low vs High vs Max) and flagship GLM-5.3 on ZCode: why High was faster, cheaper, and the only Flash tier to pass 7/7 — plus chunked-301 failures and a 22.6-minute sleep hang.",
+  "seoTitle": "GLM-5.3 Effort Paradox: Low vs High vs Max",
+  "seoDescription": "7-slide effort ablation of GLM-5.3-Flash and flagship GLM-5.3 on ZCode: why High beat both Low and Max on pass rate, speed, and cost.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["GLM-5.3", "Effort Ablation", "ZCode"],
+  "tags": [
+    "GLM-5.3",
+    "Effort Ablation",
+    "ZCode"
+  ],
   "relatedRunIds": [
     "zcode-glm-5-3-flash-high-20261025-0555",
     "zcode-glm-5-3-flash-low-20261024-1852",
@@ -24,8 +30,14 @@
       "label": "COVER",
       "filename": "01-glm-53-effort-paradox-cover.png",
       "badges": [
-        { "text": "PERSONAL EVAL", "tone": "acid" },
-        { "text": "ZCODE · GLM-5.3", "tone": "sky" }
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "ZCODE · GLM-5.3",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "The Effort Paradox: GLM-5.3 on Low, High & Max.",
       "headlineMuted": "High beat both Low and Max on every metric.",
@@ -56,8 +68,14 @@
       "label": "THE EFFORT U-CURVE",
       "filename": "02-glm-53-u-curve.png",
       "badges": [
-        { "text": "EFFORT ABLATION", "tone": "mint" },
-        { "text": "ZCODE HARNESS", "tone": "outline" }
+        {
+          "text": "EFFORT ABLATION",
+          "tone": "mint"
+        },
+        {
+          "text": "ZCODE HARNESS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "High effort wasn't just better — it was cheaper.",
       "headlineMuted": "Half the tokens of Max, 36% faster than Low.",
@@ -98,12 +116,23 @@
       "label": "HIGH VS MAX & FLAGSHIP",
       "filename": "03-glm-53-high-vs-max.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "ZCODE · GLM-5.3", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "ZCODE · GLM-5.3",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Paying 2× more for Max bought a worse result.",
       "headlineMuted": "glm-5.3-flash High vs Max on ZCode.",
-      "columns": ["Metric", "Flash High", "Flash Max", "Delta"],
+      "columns": [
+        "Metric",
+        "Flash High",
+        "Flash Max",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Holdouts",
@@ -169,8 +198,14 @@
       "label": "CASE STUDY #1 LIVE CHUNKED 301",
       "filename": "04-glm-53-chunked-301.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "S5 FAILURE MODE", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "S5 FAILURE MODE",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Synthetic tests passed. Real HTTP broke them.",
       "headlineMuted": "Both Low and Max tripped on live chunked 301s.",
@@ -204,8 +239,14 @@
       "label": "CASE STUDY #2 OVERTHINKING SPIRAL",
       "filename": "05-glm-53-overthinking.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "REASONING DYNAMICS", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "REASONING DYNAMICS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "One deep plan beat 110 minutes of spirals.",
       "headlineMuted": "How High and Max spent their thinking budgets.",
@@ -239,8 +280,14 @@
       "label": "FIELD NOTES",
       "filename": "06-glm-53-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Even the winner had rough edges.",
       "headlineMuted": "4 caveats across the ZCode GLM-5.3 runs.",
@@ -274,8 +321,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-glm-53-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from the Effort Paradox.",
       "headlineMuted": "Why 'High' is the sweet spot.",

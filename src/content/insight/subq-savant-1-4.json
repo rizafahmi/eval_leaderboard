@@ -7,10 +7,16 @@
   "title": "Testing SubQ Savant 1.4 on my personal benchmark",
   "subtitle": "14 minutes, 259 turns, $0.23 — fastest run on the board, stopped at S7.",
   "description": "A 7-slide visual breakdown of SubQ Savant 1.4 on OMP v19.0.1: 1.82s/turn inference speed, head-to-head with deepseek-v4-flash on OMP, why deferring S1 broke S7 Ctrl-C, S3 micro-turn churn, and field caveats.",
+  "seoTitle": "SubQ Savant 1.4 on OMP: 1.8s/Turn, 6/7",
+  "seoDescription": "7-slide breakdown of SubQ Savant 1.4 on OMP v19.0.1: 1.82s/turn speed, deepseek-v4-flash comparison, why deferring S1 broke S7 Ctrl-C, and caveats.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["subq-savant-1.4", "OMP v19.0.1", "Speed Record"],
+  "tags": [
+    "subq-savant-1.4",
+    "OMP v19.0.1",
+    "Speed Record"
+  ],
   "relatedRunIds": [
     "omp-subq-savant-1-4-high-20261120-1516",
     "omp-deepseek-v4-flash-high-20261119-2012"
@@ -22,8 +28,14 @@
       "label": "COVER",
       "filename": "01-subq-savant-1-4-cover.png",
       "badges": [
-        { "text": "PERSONAL EVAL", "tone": "acid" },
-        { "text": "OMP v19.0.1 · #HIGH", "tone": "sky" }
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "OMP v19.0.1 · #HIGH",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "Testing SubQ Savant 1.4 on my personal benchmark.",
       "headlineMuted": "14 minutes, 259 turns, $0.23 — stopped at S7.",
@@ -54,8 +66,14 @@
       "label": "SPEED & TELEMETRY",
       "filename": "02-subq-savant-1-4-metrics.png",
       "badges": [
-        { "text": "SESSION NOTES", "tone": "mint" },
-        { "text": "259 TURNS · 1.82s/TURN", "tone": "outline" }
+        {
+          "text": "SESSION NOTES",
+          "tone": "mint"
+        },
+        {
+          "text": "259 TURNS · 1.82s/TURN",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "14 minutes across 259 turns.",
       "headlineMuted": "Sub-2s inference masked sequential churn.",
@@ -96,12 +114,23 @@
       "label": "SAME-HARNESS COMPARISON",
       "filename": "03-subq-vs-deepseek-omp.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "OMP v19 · BOTH 6/7", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "OMP v19 · BOTH 6/7",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "On the exact same OMP v19 setup.",
       "headlineMuted": "subq-savant-1.4 vs deepseek-v4-flash.",
-      "columns": ["Metric", "subq-savant-1.4", "deepseek-v4-flash", "Delta"],
+      "columns": [
+        "Metric",
+        "subq-savant-1.4",
+        "deepseek-v4-flash",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -138,7 +167,7 @@
           {
             "name": "subq-savant-1.4 (259t)",
             "value": "1.82s",
-            "widthPct": 32.0,
+            "widthPct": 32,
             "accent": true
           },
           {
@@ -157,8 +186,14 @@
       "label": "CASE STUDY #1 S7 CTRL-C",
       "filename": "04-subq-savant-s7-ctrlc.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "S7 CTRL-C FAILURE", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "S7 CTRL-C FAILURE",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Deferred the S1 wrapper decision.",
       "headlineMuted": "Then conceded Ctrl-C in S7.",
@@ -192,8 +227,14 @@
       "label": "CASE STUDY #2 MICRO-TURNS",
       "filename": "05-subq-savant-micro-turns.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "EXECUTION STYLE", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "EXECUTION STYLE",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "107 turns in S3 took just 3m36s.",
       "headlineMuted": "Ultra-fast turns hid sequential churn.",
@@ -227,8 +268,14 @@
       "label": "FIELD NOTES",
       "filename": "06-subq-savant-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Fastest clock on the board, with real blind spots.",
       "headlineMuted": "4 caveats behind the 14-minute run.",
@@ -262,8 +309,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-subq-savant-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from the 14-minute sprint.",
       "headlineMuted": "Raw inference speed isn't architectural discipline.",

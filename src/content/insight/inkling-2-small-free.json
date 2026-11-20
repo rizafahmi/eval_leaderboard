@@ -7,10 +7,16 @@
   "title": "Deep-diving inkling-2-small-free on my personal benchmark",
   "subtitle": "Slowest full pass — and the most thorough.",
   "description": "A 7-slide breakdown of Thinking Machines' inkling-2-small-free (17B-active MoE) on OpenCode v2.2.7: where 390 turns went, how it compares to small & flash peers, OTP :httpc source audit, PTY signal fixes, and counterfactual cost.",
+  "seoTitle": "inkling-2-small: Slowest 7/7, Most Thorough",
+  "seoDescription": "7-slide deep dive into Thinking Machines inkling-2-small-free on OpenCode: 390 turns, small/flash peer comparison, OTP :httpc audit, and PTY fixes.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["inkling-2-small-free", "OpenCode v2.2.7", "Thinking Machines"],
+  "tags": [
+    "inkling-2-small-free",
+    "OpenCode v2.2.7",
+    "Thinking Machines"
+  ],
   "relatedRunIds": [
     "opencode-inkling-2-small-free-high-20261111-0745",
     "opencode-hy4-flash-free-high-20261117-0755",
@@ -24,8 +30,14 @@
       "label": "COVER",
       "filename": "01-inkling-2-small-cover.png",
       "badges": [
-        { "text": "PERSONAL EVAL", "tone": "acid" },
-        { "text": "OPENCODE v2.2.7", "tone": "sky" }
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "OPENCODE v2.2.7",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "Testing inkling-2-small-free on my personal benchmark.",
       "headlineMuted": "Slowest 7/7 pass — and the most thorough.",
@@ -56,8 +68,14 @@
       "label": "TURN & TOKEN ANATOMY",
       "filename": "02-inkling-2-small-metrics.png",
       "badges": [
-        { "text": "SESSION NOTES", "tone": "mint" },
-        { "text": "390 TURNS", "tone": "outline" }
+        {
+          "text": "SESSION NOTES",
+          "tone": "mint"
+        },
+        {
+          "text": "390 TURNS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "106 minutes, 390 turns.",
       "headlineMuted": "Two-thirds went to just 3 hard stages.",
@@ -98,12 +116,23 @@
       "label": "SMALL & FLASH PEERS",
       "filename": "03-inkling-vs-peers.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "SMALL & FLASH 7/7 PEERS", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "SMALL & FLASH 7/7 PEERS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Slow on the clock, solid on the spec.",
       "headlineMuted": "inkling-2-small vs small & flash 7/7 peers.",
-      "columns": ["Metric", "inkling-2-small", "3-Peer Avg*", "Delta"],
+      "columns": [
+        "Metric",
+        "inkling-2-small",
+        "3-Peer Avg*",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -169,8 +198,14 @@
       "label": "CASE STUDY #1 ZERO-DEP HTTP",
       "filename": "04-inkling-httpc-audit.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "OTP SOURCE AUDIT", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "OTP SOURCE AUDIT",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Proved :httpc broke the spec.",
       "headlineMuted": "Then built its own HTTP/1.1 + TLS client.",
@@ -204,8 +239,14 @@
       "label": "CASE STUDY #2 PTY & CONTRACT",
       "filename": "05-inkling-pty-fixes.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "SIGNALS & EDGE CASES", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "SIGNALS & EDGE CASES",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Caught 4 real PTY & spec traps.",
       "headlineMuted": "Where faster 7/7 runs cut corners.",
@@ -239,8 +280,14 @@
       "label": "FIELD NOTES",
       "filename": "06-inkling-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Deep engineering, heavy token footprint.",
       "headlineMuted": "4 caveats behind the 7/7 pass.",
@@ -274,8 +321,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-inkling-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from inkling-2-small.",
       "headlineMuted": "Why slow doesn't always mean weak.",

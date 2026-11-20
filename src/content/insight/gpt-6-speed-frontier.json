@@ -7,10 +7,16 @@
   "title": "The Speed & Context Frontier: gpt-6-sol vs. gpt-6.1-sol",
   "subtitle": "Fastest 7/7 (25m) and leanest 7/7 (6.50M tokens) on the board.",
   "description": "A 7-slide breakdown of OpenAI's gpt-6-sol (Codex CLI) and gpt-6.1-sol (Pi): how they claimed the #1 fastest (25m) and #1 leanest (6.50M tokens, 75k peak context) 7/7 spots despite the highest tool error rates on the leaderboard.",
+  "seoTitle": "gpt-6-sol vs gpt-6.1-sol: Speed & Context",
+  "seoDescription": "7-slide breakdown of gpt-6-sol (Codex CLI) and gpt-6.1-sol (Pi): #1 fastest (25m) and #1 leanest (6.50M tokens, 75k context) 7/7 runs on the board.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["gpt-6-sol", "gpt-6.1-sol", "Speed Frontier"],
+  "tags": [
+    "gpt-6-sol",
+    "gpt-6.1-sol",
+    "Speed Frontier"
+  ],
   "relatedRunIds": [
     "codex-cli-gpt-6-sol-high-20261025-1935",
     "pi-gpt-6-1-sol-high-20261025-1820"
@@ -22,8 +28,14 @@
       "label": "COVER",
       "filename": "01-gpt6-speed-frontier-cover.png",
       "badges": [
-        { "text": "PARETO FRONTIER", "tone": "acid" },
-        { "text": "GPT-6 · GPT-6.1", "tone": "sky" }
+        {
+          "text": "PARETO FRONTIER",
+          "tone": "acid"
+        },
+        {
+          "text": "GPT-6 · GPT-6.1",
+          "tone": "sky"
+        }
       ],
       "headlinePrimary": "The Speed & Context Frontier: gpt-6-sol vs. gpt-6.1-sol.",
       "headlineMuted": "Fastest 7/7 and leanest 7/7 on the entire board.",
@@ -54,8 +66,14 @@
       "label": "CONTEXT & TOKEN ECONOMY",
       "filename": "02-gpt6-token-economy.png",
       "badges": [
-        { "text": "EFFICIENCY", "tone": "mint" },
-        { "text": "SMALL CONTEXT", "tone": "outline" }
+        {
+          "text": "EFFICIENCY",
+          "tone": "mint"
+        },
+        {
+          "text": "SMALL CONTEXT",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "75k peak context. 6.50M total tokens.",
       "headlineMuted": "Compact prompts beat massive reasoning dumps.",
@@ -96,12 +114,23 @@
       "label": "GPT-6-SOL VS GPT-6.1-SOL",
       "filename": "03-gpt6-vs-gpt61.png",
       "badges": [
-        { "text": "COMPARISON", "tone": "sky" },
-        { "text": "CODEX CLI VS PI", "tone": "outline" }
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "CODEX CLI VS PI",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Speed on Codex CLI. Thrift on Pi.",
       "headlineMuted": "gpt-6-sol vs. gpt-6.1-sol head-to-head.",
-      "columns": ["Metric", "gpt-6-sol", "gpt-6.1-sol", "Delta"],
+      "columns": [
+        "Metric",
+        "gpt-6-sol",
+        "gpt-6.1-sol",
+        "Delta"
+      ],
       "rows": [
         {
           "metric": "Duration",
@@ -167,8 +196,14 @@
       "label": "CASE STUDY #1 UPFRONT OTP AUDIT",
       "filename": "04-gpt6-otp-audit.png",
       "badges": [
-        { "text": "CASE STUDY #1", "tone": "violet" },
-        { "text": "S1 & S3 SPEED", "tone": "outline" }
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "S1 & S3 SPEED",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "How gpt-6-sol finished in 25 minutes flat.",
       "headlineMuted": "Read OTP source first, dodge traps completely.",
@@ -202,8 +237,14 @@
       "label": "CASE STUDY #2 SYSTEMS DEPTH",
       "filename": "05-gpt61-systems-depth.png",
       "badges": [
-        { "text": "CASE STUDY #2", "tone": "violet" },
-        { "text": "GPT-6.1-SOL ON PI", "tone": "outline" }
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "GPT-6.1-SOL ON PI",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Only 6.50M tokens — still caught subtle bugs.",
       "headlineMuted": "Three deep systems wins on gpt-6.1-sol.",
@@ -237,8 +278,14 @@
       "label": "FIELD NOTES",
       "filename": "06-gpt6-caveats.png",
       "badges": [
-        { "text": "FIELD NOTES", "tone": "magenta" },
-        { "text": "4 CAVEATS", "tone": "outline" }
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "Fast and lean, not spotless.",
       "headlineMuted": "4 caveats behind the GPT-6 frontier runs.",
@@ -272,8 +319,14 @@
       "label": "TAKEAWAYS & ARCHIVE",
       "filename": "07-gpt6-takeaways.png",
       "badges": [
-        { "text": "TAKEAWAYS", "tone": "mint" },
-        { "text": "3 LESSONS", "tone": "outline" }
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
       ],
       "headlinePrimary": "3 lessons from the GPT-6 frontier.",
       "headlineMuted": "Why compact context wins.",
