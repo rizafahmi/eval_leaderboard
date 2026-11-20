@@ -721,6 +721,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 1e. Harness Ablation: omp vs DeepSeek Harness on subq-savant-1.4 (High)
+  const ompSubqHarness = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'subq-savant-1.4'
+  );
+  const dshSubqHarness = runs.find(
+    (r) => r.displayHarness === 'DeepSeek Harness' && r.data.model === 'subq-savant-1.4'
+  );
+  if (ompSubqHarness && dshSubqHarness) {
+    presets.push({
+      id: 'harness-subq-savant-1-4',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'omp vs. DeepSeek Harness (subq-savant-1.4 · High)',
+      subtitle: 'Minimal 4-tool omp harness vs. 24-tool DeepSeek Harness (dsh) on identical SubQ Savant 1.4 ($0.10/$0.01/$0.50) rates',
+      runAId: ompSubqHarness.id,
+      runBId: dshSubqHarness.id,
+      findingHeadline: `Both cleared S1–S6 (6/7) with identical 513 production LoC and almost identical turn counts (${ompSubqHarness.llmCalls} vs ${dshSubqHarness.llmCalls}); omp finished 2.6× faster (${ompSubqHarness.data.durationMinutes}m vs ${dshSubqHarness.data.durationMinutes}m) and 12% cheaper ($${ompSubqHarness.data.costUsd.toFixed(2)} vs $${dshSubqHarness.data.costUsd.toFixed(2)}), while dsh's Mint client tripled live HTTPS throughput (41/41 vs 14/14) and wrote 64/64 tests before losing 21m on S7's single-wait launcher bug.`,
+    });
+  }
+
   // 2. Effort Scaling: ZCode glm-5.3-flash High vs Low (and High vs Max)
   const flashHigh = runs.find(
     (r) => r.data.model === 'glm-5.3-flash' && r.data.effort?.toLowerCase() === 'high'

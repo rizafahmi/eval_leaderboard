@@ -1,0 +1,303 @@
+{
+  "timestamp": "2026-11-20T19:54:06+07:00",
+  "codingHarness": "DeepSeek Harness",
+  "model": "subq-savant-1.4",
+  "effort": "High",
+  "provider": "SubQ",
+  "durationMinutes": 36,
+  "costUsd": 0.26,
+  "commits": 7,
+  "tests": {
+    "passed": 64,
+    "total": 64,
+    "durationSeconds": 32.5,
+    "details": "Finished in 32.5 seconds (0.1s async, 32.4s sync) — 64 passed (64/64 at Steps 259 & 262 in session log; mix format --check-formatted clean; mix compile --warnings-as-errors clean; Credo not setup, deps: [{:mint, \"~> 1.11\"}])"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": false
+  },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 6,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "unverifiedSlices": [
+      "S7"
+    ],
+    "agentSuitePassed": 64,
+    "agentSuiteTotal": 64
+  },
+  "interface": {
+    "type": "cli",
+    "command": "dsh headless --permission-mode danger-full-access --approval-policy never --json < PROMPT.md (provider: subq, model: subq-savant-1.4, reasoningEffort: high)",
+    "details": "Run window: 19:54:06–20:30:34 WIB (36m 27.3s / 2,187.3s wall-clock in session.v4.jsonl.zstd; 36m28s in manual note, 19:38:29 git init; preceded by 0-token 400 validation abort at 19:45:07 WIB) • Session session-0c5ba62f-5e64-4184-817a-a57af1fcafae (subq / subq-savant-1.4, reasoningEffort: high, dsh native mode with 24 tools advertised, 269 LLM steps, 0 compactions)"
+  },
+  "tokens": {
+    "input": "195.1k",
+    "cachedInput": "18.03M",
+    "output": "121.8k",
+    "total": "18.35M",
+    "cacheHitRate": "98.93%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 195088,
+    "cachedInput": 18029568,
+    "output": 121808,
+    "total": 18346464,
+    "cacheHitRatePct": 98.93
+  },
+  "contextWindow": "120.6k peak (6,608 → 120,566 prompt tokens; 121,023 total; 12.06% of 1.00M dsh cap / 4.00M native)",
+  "contextMetrics": {
+    "minTokens": 6608,
+    "avgTokens": 67750,
+    "peakTokens": 120566,
+    "windowLimitTokens": 1000000,
+    "peakUtilizationPct": 12.06
+  },
+  "calls": {
+    "llmCalls": 269,
+    "toolCalls": {
+      "total": 281,
+      "done": 279,
+      "error": 2,
+      "breakdown": [
+        {
+          "tool": "bash",
+          "total": 180,
+          "done": 180,
+          "error": 0
+        },
+        {
+          "tool": "write",
+          "total": 36,
+          "done": 36,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 36,
+          "done": 34,
+          "error": 2
+        },
+        {
+          "tool": "read",
+          "total": 17,
+          "done": 17,
+          "error": 0
+        },
+        {
+          "tool": "todo_write",
+          "total": 8,
+          "done": 8,
+          "error": 0
+        },
+        {
+          "tool": "job_output",
+          "total": 3,
+          "done": 3,
+          "error": 0
+        },
+        {
+          "tool": "job_kill",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "fffc6b4",
+      "relativeTime": "66 seconds",
+      "author": "Riza Fahmi",
+      "message": "S7: handle Ctrl-C with a launcher that forwards INT as TERM"
+    },
+    {
+      "hash": "9e9a6dd",
+      "relativeTime": "23 minutes",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and completed-response p50/p95"
+    },
+    {
+      "hash": "ac48698",
+      "relativeTime": "24 minutes",
+      "author": "Riza Fahmi",
+      "message": "S5: report outcome counts and exit codes"
+    },
+    {
+      "hash": "a7c2308",
+      "relativeTime": "26 minutes",
+      "author": "Riza Fahmi",
+      "message": "S4: run a paced five-second loop with one request in flight"
+    },
+    {
+      "hash": "3fe1432",
+      "relativeTime": "29 minutes",
+      "author": "Riza Fahmi",
+      "message": "S3: send one bounded, streamed GET with Mint over reusable connections"
+    },
+    {
+      "hash": "4d6b31a",
+      "relativeTime": "34 minutes",
+      "author": "Riza Fahmi",
+      "message": "S2: validate the target URL and arguments before any request"
+    },
+    {
+      "hash": "1712f4b",
+      "relativeTime": "34 minutes",
+      "author": "Riza Fahmi",
+      "message": "S1: launch the CLI with help output and escript entry point"
+    },
+    {
+      "hash": "7dcfd4e",
+      "relativeTime": "53 minutes",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "195,088",
+      "rate2026": "$0.10 / 1M",
+      "cost2026": "$0.019509"
+    },
+    {
+      "component": "Cached Input (cacheReadTokens)",
+      "tokens": "18,029,568",
+      "rate2026": "$0.01 / 1M (90% off)",
+      "cost2026": "$0.180296"
+    },
+    {
+      "component": "Output (reasoning bundled by dsh)",
+      "tokens": "121,808",
+      "rate2026": "$0.50 / 1M",
+      "cost2026": "$0.060904"
+    },
+    {
+      "component": "Total",
+      "tokens": "18,346,464",
+      "cost2026": "$0.26 ($0.260708)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation: workspace & Elixir 1.20.4 reconnaissance",
+      "stepRange": "1–4",
+      "llmCalls": 4,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S1: CLI help, escript & SIGINT-to-SIGTERM launcher (1712f4b)",
+      "stepRange": "5–26",
+      "llmCalls": 22,
+      "manageTaskPolls": 0,
+      "costUsd": 0.02
+    },
+    {
+      "slice": "S2: Target URL & CLI argument validation (4d6b31a)",
+      "stepRange": "27–34",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "costUsd": 0
+    },
+    {
+      "slice": "S3: Bounded streamed Mint HTTP/HTTPS GET client & TLS tests (3fe1432)",
+      "stepRange": "35–100",
+      "llmCalls": 66,
+      "manageTaskPolls": 0,
+      "costUsd": 0.05
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & deterministic tests (a7c2308)",
+      "stepRange": "101–125",
+      "llmCalls": 25,
+      "manageTaskPolls": 0,
+      "costUsd": 0.02
+    },
+    {
+      "slice": "S5: Outcome counts, transport failures & exit codes (ac48698)",
+      "stepRange": "126–138",
+      "llmCalls": 13,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S6: Elapsed duration & completed-response p50/p95 latencies (9e9a6dd)",
+      "stepRange": "139–151",
+      "llmCalls": 13,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S7: Foreground Ctrl-C probes, launcher & release checks (fffc6b4)",
+      "stepRange": "152–267",
+      "llmCalls": 116,
+      "manageTaskPolls": 0,
+      "costUsd": 0.14
+    },
+    {
+      "slice": "Release verification: final todo & handoff summary",
+      "stepRange": "268–269",
+      "llmCalls": 2,
+      "manageTaskPolls": 0,
+      "costUsd": 0
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Lossless Session Audit: 36m 27.3s Wall-Clock (36m28s Note), 7 Agent Commits, 64/64 Passing Tests (No Credo) & Identical 513 Production LoC to omp",
+    "Why S7 Failed Holdout (6/7 vs. 7/7 Claimed) Despite Looking OK in an Interactive Shell: Single `wait \"$child\"` in `cb` Exits Immediately on Ctrl-C, Orphaning `cb.escript`",
+    "Mint Connection-Reuse S3–S6 Cleared Live HTTPS (41/41 200 at 61ms p50) in 14m 52s, Before S7 Consumed 21m 27s (59% of Wall-Clock & 54% of Spend)",
+    "98.93% Cache Hit Rate ($0.26 / $1.62 Saved), 3.35s/Turn Inference & Only 2 Tool Errors Across 281 Calls (Using Native write/edit Unlike dsh-deepseek-flash)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Lossless Session Audit: 36m 27.3s Wall-Clock (36m28s Note), 7 Agent Commits, 64/64 Passing Tests (No Credo) & Identical 513 Production LoC to omp",
+      "bullets": [
+        "Exact Wall-Clock Alignment (`36m28s` Note vs. `36m 27.3s` Session Log): Following the pre-run `init` commit (`7dcfd4e` at `19:38:29 WIB`) and an aborted 0-token attempt at `19:45:07 WIB` (`session-2cfad97c`, HTTP 400 `messages/0/role` validation error), `session-0c5ba62f-5e64-4184-817a-a57af1fcafae` opened at `2026-11-20T12:54:06.844Z` (`19:54:06.844 WIB`) and completed `turn/end` (`reason: completed`) at `20:30:34.168 WIB` for an exact active duration of `36m 27.32s` (`2,187.32s` / `36m`). Projected `20261120T125406Z.events.jsonl` (1,261 events) matches `records/sessions/.../session.v4.jsonl.zstd` (1,758 events) identically across all `269` step usage records.",
+        "Model Config, 7 Organic Commits & Mint Dependency: `request/header` (`seq 15`) and `request/context` confirm `provider: \"subq\"`, `model: \"subq-savant-1.4\"`, `reasoningEffort: \"high\"`, `contextWindow: 1,000,000` (dsh-configured cap out of Savant 1.4's `4.00M` native window), and `24` native tools. Starting from `7dcfd4e` (`init`), the agent made `7` clean slice commits (`1712f4b` S1 through `fffc6b4` S7) spanning `513` production LoC across 7 modules (`http.ex` 139, `cli.ex` 106, `runner.ex` 104, `pacer.ex` 64, `summary.ex` 47, `target.ex` 33, `stats.ex` 20 — matching `omp-subq-savant-1.4`'s exact `513` LoC) and `685` test LoC across 10 files.",
+        "64/64 Tests Clean & No Credo: Manual `mix test` (`64/64` passed in `32.5s` [`0.1s async, 32.4s sync`]) matches Steps `259` and `262`, `mix format --check-formatted` and `mix compile --warnings-as-errors` passed cleanly, and Credo was not installed (`deps` contains only `{:mint, \"~> 1.11\"}`)."
+      ]
+    },
+    {
+      "title": "Why S7 Failed Holdout (6/7 vs. 7/7 Claimed) Despite Looking OK in an Interactive Shell: Single `wait \"$child\"` in `cb` Exits Immediately on Ctrl-C, Orphaning `cb.escript`",
+      "bullets": [
+        "Root Cause at `cb:15-19` (Single `wait \"$child\"` in POSIX `/bin/sh`): The launcher runs `ERL_AFLAGS=\"+B i\" \"$dir/cb.escript\" \"$@\" &`, traps `INT` with `kill -TERM \"$child\"`, and calls `wait \"$child\"` only once. In POSIX `/bin/sh`, catching `INT` immediately interrupts `wait` with exit code `130`, so `cb` exits **before** `cb.escript` settles its in-flight request or prints its summary.",
+        "Why Interactive Terminals Mask the Bug While Holdout PTY Probes Fail: In a direct PTY probe (`start_new_session=True`), `cb` exits at `0.05s–1.52s` (`rc=130`), tearing down the PTY session (`SIGHUP`) and killing `cb.escript` before any summary line prints (`out='^C'` across all 7 probes: `50ms`/`150ms` boot, `800ms`/`1500ms` pacing, `800ms` slow `1.5s`, `800ms` stall `3.5s`, and `1500ms` live HTTPS). In an interactive shell (where the outer shell holds the PTY open), `cb` still exits immediately (`t=0.814s` on a `1.5s` slow request, `t=1.516s` on live HTTPS), returning the prompt while the orphaned `cb.escript` finishes `0.05s–1.05s` later (`t=1.868s` on slow `1.5s`, `t=1.569s` on live HTTPS) and writes the summary on top of the prompt — visually looking normal interactively, yet failing S7's contract (`cb` must wait for the in-flight request to settle and print the partial summary before exiting) and failing any non-interactive/piped/scripted caller. `PLAN.md` Lines `114–117` explicitly acknowledge this gap (`\"Known gap: under terminal Ctrl-C the summary is still truncated in the pty probe... the complete partial summary does not\"`), yet still marked S7 `[x]`."
+      ]
+    },
+    {
+      "title": "Mint Connection-Reuse S3–S6 Cleared Live HTTPS (41/41 200 at 61ms p50) in 14m 52s, Before S7 Consumed 21m 27s (59% of Wall-Clock & 54% of Spend)",
+      "bullets": [
+        "Strong Live S1–S6 Holdout Performance via Mint: S1 (`--help`/`-h` exit `0`, empty stderr) and S2 (`[]`, `ftp://`, `not-a-url`, `--unknown`, extra args all exit `2` on stderr with empty stdout) passed cleanly. Using `{:mint, \"~> 1.11\"}` over a persistent connection, `./cb https://rizafahmi.com` achieved `41/41` HTTP `200` (`0` failures, `p50 61 ms, p95 257 ms`, vs. `14/14` at `295 ms` p50 on `omp-subq-savant-1.4`'s per-request `:ssl`), `./cb http://rizafahmi.com` achieved `41/41` HTTP `301` (`p50 44 ms, p95 109 ms`), and a local `500 ms` split-body `/drip` server completed `10/10` HTTP `200` with `p50 506 ms, p95 509 ms`.",
+        "Extreme S7 Bottleneck (`116` Steps, `21m 27s`, `$0.14`): S1 through S6 completed in just `14m 52s` (`151` steps, `$0.12`). S7 alone (`Steps 152–267`) consumed `21m 27.8s` (`58.9%` of total wall-clock) and `$0.14` (`53.8%` of total spend) debugging `System.trap_signal(:sigterm, ...)` shutdown races, `job_output` waits on `mix test` (`Steps 166, 171`), and a hung PTY probe killed via `job_kill` (`Steps 216–217`)."
+      ]
+    },
+    {
+      "title": "98.93% Cache Hit Rate ($0.26 / $1.62 Saved), 3.35s/Turn Inference & Only 2 Tool Errors Across 281 Calls (Using Native write/edit Unlike dsh-deepseek-flash)",
+      "bullets": [
+        "Unit Economics & Prefix Cache Stability: Across `269` steps, `subq-savant-1.4` processed `18,224,656` prompt tokens (`195,088` uncached at `$0.10/1M` = `$0.0195` + `18,029,568` cached at `$0.01/1M` = `$0.1803`; `98.93%` hit rate with `266/268` post-Step-1 hits and only `2` cache-miss turns at Steps `2` and `87` as prompt grew from `6,608` to `120,566`) and `121,808` output tokens (`$0.0609`, `23.4%` of spend; `dsh` bundles reasoning inside `outputTokens`, streaming `163,693` reasoning chars), totaling `18,346,464` tokens and `$0.260708` (`$0.26`, saving `$1.62` / `86.2%` vs. the `$1.88` uncached counterfactual). Cached reads accounted for `69.2%` of total spend.",
+        "41.2% Inference vs. 58.7% Tool Wall-Clock Split: LLM inference took `900.3s` (`3.35s/turn` avg, `2.22s` avg TTFT, peaking at `16.8s` on Step `18` and `16.5s` on Step `4`), while `281` tool calls took `1,283.5s` (`58.7%`, dominated by S7 PTY probes and `mix test` runs). Multi-tool batching remained minimal (`10/269` turns / `3.7%`, `1.04` tools/turn, max `4`).",
+        "Native `write`/`edit` Adoption & Clean Tool Error Profile: Unlike `dsh-deepseek-flash` (`0` `write`/`edit` calls, `36` inline Python patches), `subq-savant-1.4` used `dsh`'s native `write` (`36`) and `edit` (`36`) tools alongside `180` `bash`, `17` `read`, `8` `todo_write`, `3` `job_output`, and `1` `job_kill` calls. Only `2` tool calls errored (`FS_EDIT_NOT_FOUND` on `edit` at Step `78` in `http.ex` and Step `105` in `pacer_test.exs`), plus `4` non-zero `bash` exits (Steps `15`, `42`, `135`, `149`) and `1` hung PTY probe cancelled via `job_kill` (`Step 217`)."
+      ]
+    }
+  ]
+}
