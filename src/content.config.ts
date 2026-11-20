@@ -140,4 +140,138 @@ const runs = defineCollection({
   }),
 });
 
-export const collections = { runs };
+const badgeSchema = z.object({
+  text: z.string(),
+  tone: z.enum(['acid', 'violet', 'mint', 'sky', 'magenta', 'outline']),
+});
+
+const statCardSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  sub: z.string(),
+  accent: z.boolean().optional(),
+});
+
+const slideCommon = {
+  id: z.string(),
+  label: z.string(),
+  filename: z.string(),
+  badges: z.array(badgeSchema),
+  headlinePrimary: z.string(),
+  headlineMuted: z.string(),
+  footerRight: z.string().optional(),
+};
+
+const carouselSlideSchema = z.discriminatedUnion('kind', [
+  z.object({
+    ...slideCommon,
+    kind: z.literal('cover'),
+    lead: z.string().optional(),
+    stats: z.array(statCardSchema).min(2).max(3),
+  }),
+  z.object({
+    ...slideCommon,
+    kind: z.literal('metrics'),
+    splitBar: z.object({
+      label: z.string(),
+      primaryLabel: z.string(),
+      primaryPct: z.number(),
+      secondaryLabel: z.string(),
+      secondaryPct: z.number(),
+    }),
+    stats: z.array(statCardSchema).length(4),
+  }),
+  z.object({
+    ...slideCommon,
+    kind: z.literal('comparison'),
+    columns: z.tuple([z.string(), z.string(), z.string(), z.string()]),
+    rows: z.array(
+      z.object({
+        metric: z.string(),
+        primary: z.string(),
+        baseline: z.string(),
+        delta: z.string(),
+        deltaTone: z.enum(['acid', 'violet', 'mint', 'sky', 'magenta']),
+      })
+    ),
+    barCompare: z.object({
+      label: z.string(),
+      items: z.array(
+        z.object({
+          name: z.string(),
+          value: z.string(),
+          widthPct: z.number(),
+          accent: z.boolean().optional(),
+        })
+      ),
+    }),
+    footnote: z.string().optional(),
+  }),
+  z.object({
+    ...slideCommon,
+    kind: z.literal('steps'),
+    steps: z.array(
+      z.object({
+        num: z.string(),
+        title: z.string(),
+        desc: z.string(),
+      })
+    ),
+    callout: z
+      .object({
+        title: z.string(),
+        body: z.string(),
+        tone: z.enum(['violet', 'acid', 'sky']).optional(),
+      })
+      .optional(),
+  }),
+  z.object({
+    ...slideCommon,
+    kind: z.literal('caveats'),
+    items: z.array(
+      z.object({
+        num: z.string(),
+        head: z.string(),
+        text: z.string(),
+      })
+    ),
+  }),
+  z.object({
+    ...slideCommon,
+    kind: z.literal('takeaways'),
+    items: z.array(
+      z.object({
+        num: z.string(),
+        head: z.string(),
+        text: z.string(),
+      })
+    ),
+    archive: z.object({
+      label: z.string(),
+      body: z.string(),
+      url: z.string(),
+    }),
+  }),
+]);
+
+const carousels = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/carousels' }),
+  schema: z.object({
+    published: z.boolean().default(true),
+    order: z.number(),
+    part: z.string(),
+    date: z.string(),
+    lang: z.enum(['id', 'en']).default('id'),
+    title: z.string(),
+    subtitle: z.string(),
+    description: z.string(),
+    brandLabel: z.string().default('EVAL.RIZAFAHMI.COM'),
+    footerLeft: z.string().default('@rizafahmi · Personal Eval'),
+    defaultRatio: z.enum(['4:5', '1:1']).default('4:5'),
+    tags: z.array(z.string()).default([]),
+    relatedRunIds: z.array(z.string()).default([]),
+    slides: z.array(carouselSlideSchema).min(1),
+  }),
+});
+
+export const collections = { runs, carousels };

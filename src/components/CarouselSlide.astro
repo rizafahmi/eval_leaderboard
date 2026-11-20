@@ -1,0 +1,251 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+type CarouselData = CollectionEntry<'carousels'>['data'];
+type SlideData = CarouselData['slides'][number];
+
+interface Props {
+  slide: SlideData;
+  index: number;
+  total: number;
+  brandLabel: string;
+  footerLeft: string;
+  lang: 'id' | 'en';
+}
+
+const { slide, index, total, brandLabel, footerLeft, lang } = Astro.props;
+
+const counter = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+const ariaLabel =
+  lang === 'id' ? `${index + 1} dari ${total}: ${slide.label}` : `${index + 1} of ${total}: ${slide.label}`;
+const markerName =
+  lang === 'id' ? `Buka slide ${index + 1}: ${slide.label}` : `Go to slide ${index + 1}: ${slide.label}`;
+
+function escapeHtml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function renderInline(text: string): string {
+  const escaped = escapeHtml(text);
+  return escaped
+    .replace(/`([^`]+)`/g, '<span class="c-mono-inline">$1</span>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+---
+
+<div
+  class="c-slide-item"
+  role="group"
+  aria-roledescription="slide"
+  aria-label={ariaLabel}
+  data-slide-index={index}
+  data-filename={slide.filename}
+  data-marker-name={markerName}
+>
+  <div class="c-slide-export-bar" data-export-only>
+    <span>SLIDE {String(index + 1).padStart(2, '0')} · {slide.label}</span>
+    <button type="button" class="btn btn-sm btn-secondary c-btn-save-one">Save PNG</button>
+  </div>
+
+  <div class="c-slide-viewport">
+    <article class="c-slide">
+      <div class="c-slide-head">
+        <div class="c-slide-brand">
+          <span class="c-brand-square" aria-hidden="true"></span>
+          <span>{brandLabel}</span>
+        </div>
+        <span class="c-slide-counter">{counter}</span>
+      </div>
+
+      <div class="c-slide-body">
+        <div class="c-badge-row">
+          {slide.badges.map((badge) =>
+            badge.tone === 'outline' ? (
+              <span class="c-tag-outline">{badge.text}</span>
+            ) : (
+              <span class={`c-hl c-hl-${badge.tone}`}>{badge.text}</span>
+            )
+          )}
+        </div>
+
+        {slide.kind === 'cover' ? (
+          <h2 class="c-headline is-cover">
+            {slide.headlinePrimary}{' '}
+            <span class="c-muted">{slide.headlineMuted}</span>
+          </h2>
+        ) : (
+          <h2 class="c-headline">
+            {slide.headlinePrimary}{' '}
+            <span class="c-muted">{slide.headlineMuted}</span>
+          </h2>
+        )}
+
+        {slide.kind === 'cover' && (
+          <>
+            {slide.lead && <p class="c-lead" set:html={renderInline(slide.lead)} />}
+            <div class="c-stat-grid-3">
+              {slide.stats.map((stat) => (
+                <div class:list={['c-stat-card', { 'is-accent': stat.accent }]}>
+                  <span class="c-stat-label">{stat.label}</span>
+                  <span class="c-stat-value">{stat.value}</span>
+                  <span class="c-stat-sub">{stat.sub}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {slide.kind === 'metrics' && (
+          <>
+            <div class="c-split-bar-box">
+              <span class="c-stat-label">{slide.splitBar.label}</span>
+              <div class="c-split-bar-track">
+                <div
+                  class="c-split-seg-a"
+                  style={`width: ${slide.splitBar.primaryPct}%;`}
+                ></div>
+                <div
+                  class="c-split-seg-b"
+                  style={`width: ${slide.splitBar.secondaryPct}%;`}
+                ></div>
+              </div>
+              <div class="c-split-legend">
+                <span>■ {slide.splitBar.primaryLabel}</span>
+                <span>■ {slide.splitBar.secondaryLabel}</span>
+              </div>
+            </div>
+
+            <div class="c-stat-grid-2">
+              {slide.stats.map((stat) => (
+                <div class:list={['c-stat-card', { 'is-accent': stat.accent }]}>
+                  <span class="c-stat-label">{stat.label}</span>
+                  <span class="c-stat-value">{stat.value}</span>
+                  <span class="c-stat-sub">{stat.sub}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {slide.kind === 'comparison' && (
+          <>
+            <table class="c-comp-table">
+              <thead>
+                <tr>
+                  {slide.columns.map((col) => (
+                    <th>{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {slide.rows.map((row) => (
+                  <tr>
+                    <td class="c-comp-metric">{row.metric}</td>
+                    <td class="c-comp-val-win">{row.primary}</td>
+                    <td class="c-comp-val-base">{row.baseline}</td>
+                    <td>
+                      <span class={`c-hl c-hl-${row.deltaTone}`}>{row.delta}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div class="c-bar-compare">
+              <span class="c-stat-label">{slide.barCompare.label}</span>
+              {slide.barCompare.items.map((item) => (
+                <div class="c-bar-row">
+                  <span>{item.name}</span>
+                  <div class="c-bar-track">
+                    <div
+                      class={item.accent ? 'c-bar-fill-acid' : 'c-bar-fill-muted'}
+                      style={`width: ${item.widthPct}%;`}
+                    ></div>
+                  </div>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {slide.footnote && <p class="c-footnote">{slide.footnote}</p>}
+          </>
+        )}
+
+        {slide.kind === 'steps' && (
+          <>
+            <div class="c-flow-stack">
+              {slide.steps.map((step) => (
+                <div class="c-flow-step">
+                  <div class="c-step-num">{step.num}</div>
+                  <div>
+                    <p class="c-step-title">{step.title}</p>
+                    <p class="c-step-desc" set:html={renderInline(step.desc)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {slide.callout && (
+              <div
+                class:list={[
+                  'c-callout',
+                  slide.callout.tone === 'acid' && 'c-callout-acid',
+                  slide.callout.tone === 'sky' && 'c-callout-sky',
+                ]}
+              >
+                <p class="c-callout-title">{slide.callout.title}</p>
+                <p class="c-callout-body" set:html={renderInline(slide.callout.body)} />
+              </div>
+            )}
+          </>
+        )}
+
+        {slide.kind === 'caveats' && (
+          <div class="c-caveat-list">
+            {slide.items.map((item) => (
+              <div class="c-caveat-row">
+                <div class="c-caveat-idx">{item.num}</div>
+                <div>
+                  <p class="c-caveat-head">{item.head}</p>
+                  <p class="c-caveat-text" set:html={renderInline(item.text)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {slide.kind === 'takeaways' && (
+          <>
+            <div class="c-caveat-list">
+              {slide.items.map((item) => (
+                <div class="c-caveat-row">
+                  <div class="c-caveat-idx is-mint">{item.num}</div>
+                  <div>
+                    <p class="c-caveat-head">{item.head}</p>
+                    <p class="c-caveat-text" set:html={renderInline(item.text)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div class="c-archive-note">
+              <span class="c-archive-label">{slide.archive.label}</span>
+              <p class="c-archive-body" set:html={renderInline(slide.archive.body)} />
+              <span class="c-archive-url">{slide.archive.url}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div class="c-slide-foot">
+        <span class="c-handle">{footerLeft}</span>
+        <span>{slide.footerRight ?? 'GESER →'}</span>
+      </div>
+    </article>
+  </div>
+</div>

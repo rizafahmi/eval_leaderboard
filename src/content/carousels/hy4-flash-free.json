@@ -1,0 +1,294 @@
+{
+  "published": true,
+  "order": 1,
+  "part": "Part 1",
+  "date": "2026-11-17",
+  "lang": "id",
+  "title": "Menjajal hy4-flash-free di personal benchmark",
+  "subtitle": "Membangun aplikasi CLI dari nol.",
+  "description": "Ringkasan visual 7 slide dari eksperimen hy4-flash-free via OpenCode v2.2.7: pembagian waktu, perbandingan dengan inkling-2-small-free, studi kasus Ctrl-C, debugging timeout, dan catatan lapangan.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["hy4-flash-free", "OpenCode v2.2.7", "Personal Eval"],
+  "relatedRunIds": [
+    "opencode-hy4-flash-free-high-20261117-0755",
+    "opencode-inkling-2-small-free-high-20261111-0745"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-hy4-flash-cover.png",
+      "badges": [
+        { "text": "PERSONAL EVAL", "tone": "acid" },
+        { "text": "OPENCODE v2.2.7", "tone": "sky" }
+      ],
+      "headlinePrimary": "Menjajal hy4-flash-free di personal benchmark.",
+      "headlineMuted": "Membangun aplikasi CLI dari nol.",
+      "stats": [
+        {
+          "label": "Verifikasi",
+          "value": "7/7",
+          "sub": "Semua tahap lolos",
+          "accent": true
+        },
+        {
+          "label": "Durasi",
+          "value": "44m51s",
+          "sub": "53.8% model · 46.2% tes"
+        },
+        {
+          "label": "Total Turn",
+          "value": "227",
+          "sub": "0 compaction"
+        }
+      ],
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "metrics",
+      "kind": "metrics",
+      "label": "PEMBAGIAN WAKTU",
+      "filename": "02-hy4-flash-metrics.png",
+      "badges": [
+        { "text": "CATATAN SESI", "tone": "mint" },
+        { "text": "227 TURN", "tone": "outline" }
+      ],
+      "headlinePrimary": "Durasi total 44 menit.",
+      "headlineMuted": "Hampir separuhnya untuk menjalankan tes.",
+      "splitBar": {
+        "label": "Pembagian Waktu (44m51s)",
+        "primaryLabel": "PROSES MODEL: 24m05s (53.8%)",
+        "primaryPct": 53.8,
+        "secondaryLabel": "TES & TOOL: 20m42s (46.2%)",
+        "secondaryPct": 46.2
+      },
+      "stats": [
+        {
+          "label": "Total Token",
+          "value": "19.95M",
+          "sub": "98.14% dari cache · 369k baru · 116k output"
+        },
+        {
+          "label": "Peak Context",
+          "value": "157.7k",
+          "sub": "15% dari batas 1.05M · 0 compaction"
+        },
+        {
+          "label": "Tes Buatan Model",
+          "value": "53 / 53",
+          "sub": "Lolos semua + lulus 7/7 tes terpisah"
+        },
+        {
+          "label": "Tool Calls",
+          "value": "226/229",
+          "sub": "116 perintah terminal mulus · 3 salah edit"
+        }
+      ],
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "PERBANDINGAN SETUP",
+      "filename": "03-hy4-flash-vs-inkling.png",
+      "badges": [
+        { "text": "PERBANDINGAN", "tone": "sky" },
+        { "text": "OPENCODE v2.2.7 · #HIGH", "tone": "outline" }
+      ],
+      "headlinePrimary": "Di setup yang sama.",
+      "headlineMuted": "hy4-flash-free vs inkling-2-small-free.",
+      "columns": ["Metrik", "hy4-flash-free", "inkling-2-small", "Selisih"],
+      "rows": [
+        {
+          "metric": "Durasi",
+          "primary": "44m51s",
+          "baseline": "105m58s",
+          "delta": "-57.7%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Jumlah Turn",
+          "primary": "227",
+          "baseline": "390",
+          "delta": "-41.8%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Total Token",
+          "primary": "19.95M",
+          "baseline": "73.45M",
+          "delta": "-72.8%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Peak Context",
+          "primary": "157.7k",
+          "baseline": "378.4k",
+          "delta": "-58.3%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Total Token",
+        "items": [
+          {
+            "name": "hy4-flash-free",
+            "value": "19.95M",
+            "widthPct": 27.2,
+            "accent": true
+          },
+          {
+            "name": "inkling-2-small",
+            "value": "73.45M",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* 2 sesi di setup OpenCode v2.2.7 (#high) — bukan kesimpulan mutlak.",
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "ctrl-c",
+      "kind": "steps",
+      "label": "STUDI KASUS #1 CTRL-C",
+      "filename": "04-hy4-flash-ctrlc.png",
+      "badges": [
+        { "text": "STUDI KASUS #1", "tone": "violet" },
+        { "text": "CTRL-C", "tone": "outline" }
+      ],
+      "headlinePrimary": "Menangani Ctrl-C dengan mulus.",
+      "headlineMuted": "Termasuk saat aplikasi baru mulai jalan.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Kendala awal",
+          "desc": "Secara default, `Ctrl-C` langsung memutus program sehinga ringkasan hasil gagal tercetak."
+        },
+        {
+          "num": "02",
+          "title": "Solusi model",
+          "desc": "Terminal diatur agar `Ctrl-C` terbaca sebagai input biasa, bukan sinyal sistem."
+        },
+        {
+          "num": "03",
+          "title": "Alur berhenti",
+          "desc": "Request baru dihentikan, proses aktif diselesaikan, ringkasan tercetak, terminal kembali normal."
+        }
+      ],
+      "callout": {
+        "title": "Hasil Uji: 5 / 5 Lolos",
+        "body": "Termasuk di **50 ms awal** saat aplikasi mulai — semua tetap mencetak ringkasan & keluar dengan kode `130`.",
+        "tone": "violet"
+      },
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "debugging",
+      "kind": "steps",
+      "label": "STUDI KASUS #2 DEBUGGING",
+      "filename": "05-hy4-flash-debugging.png",
+      "badges": [
+        { "text": "STUDI KASUS #2", "tone": "violet" },
+        { "text": "DEBUGGING", "tone": "outline" }
+      ],
+      "headlinePrimary": "Menemukan penyebab bug timeout yang cukup rumit.",
+      "headlineMuted": "Diperbaiki dengan satu baris kode.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Gejala",
+          "desc": "Saat memakai ulang koneksi HTTP, sebagian request terus gagal karena timeout."
+        },
+        {
+          "num": "02",
+          "title": "Analisa mandiri",
+          "desc": "Model melacak sendiri penyebabnya: state koneksi terbaru lupa disimpan kembali."
+        },
+        {
+          "num": "03",
+          "title": "Perbaikan",
+          "desc": "Cukup ubah 1 baris kode, seluruh **50/50 request** langsung berjalan normal."
+        }
+      ],
+      "callout": {
+        "title": "Detail Teknis di Halaman Web",
+        "body": "Potongan kode, log jarak antar request, dan diff perbaikannya tersimpan lengkap di catatan sesi.",
+        "tone": "acid"
+      },
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "CATATAN LAPANGAN",
+      "filename": "06-hy4-flash-caveats.png",
+      "badges": [
+        { "text": "CATATAN LAPANGAN", "tone": "magenta" },
+        { "text": "4 HAL PENTING", "tone": "outline" }
+      ],
+      "headlinePrimary": "Lolos semua tahap, tapi belum sempurna.",
+      "headlineMuted": "4 catatan di balik hasilnya.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Bukan percobaan pertama",
+          "text": "Sesi sebelunya dihentikan manual di tahap 4 (**32m31s**)."
+        },
+        {
+          "num": "02",
+          "head": "Berhenti 0,05 detik lebih awal",
+          "text": "Selesai di **4,95 detik** begitu 50 request tercapai (spek: 5,00 detik)."
+        },
+        {
+          "num": "03",
+          "head": "File crash dump 5,02 MB ikut ter-commit",
+          "text": "File `erl_crash.dump` dari tahap 2 sempat masuk ke git."
+        },
+        {
+          "num": "04",
+          "head": "$0 bukan harga API permanen",
+          "text": "Ini **akses gratis sementara OpenCode** (Nov 2026)."
+        }
+      ],
+      "footerRight": "GESER →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "RINGKASAN & ARSIP",
+      "filename": "07-hy4-flash-takeaways.png",
+      "badges": [
+        { "text": "RINGKASAN", "tone": "mint" },
+        { "text": "3 PELAJARAN", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 pelajaran dari eksperimen ini.",
+      "headlineMuted": "Menilai agent bukan cuma soal lolos tes.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Jangan cuma lihat angka total token",
+          "text": "**19.95M** itu akumulasi 227 turn — pemakaian context terbesarnya cuma **157.7k**."
+        },
+        {
+          "num": "02",
+          "head": "Uji skenario yang jarang terpikir",
+          "text": "Kasus seperti `Ctrl-C` mendadak dan pengelolaan koneksi paling menunjukkan kualitas model."
+        },
+        {
+          "num": "03",
+          "head": "Tetap periksa riwayat git",
+          "text": "Lolos semua tes bukan jaminan repo bersih dari file tambahan seperti `erl_crash.dump`."
+        }
+      ],
+      "archive": {
+        "label": "ARSIP LOG & CATATAN LANJUTAN",
+        "body": "Log lengkap, commit, serta catatan `inkling-2-small` & seri **Gemini 4**:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "LANJUT DI PART 2 →"
+    }
+  ]
+}

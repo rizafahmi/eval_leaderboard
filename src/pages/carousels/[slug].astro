@@ -1,0 +1,582 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CarouselSlide from '../../components/CarouselSlide.astro';
+import '../../styles/carousel.css';
+
+export async function getStaticPaths() {
+  const carousels = (await getCollection('carousels')).filter(
+    (entry) => entry.data.published !== false
+  );
+  return carousels.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const carousel = entry.data;
+const isDev = import.meta.env.DEV;
+
+const allRuns = await getCollection('runs');
+const relatedRuns = carousel.relatedRunIds
+  .map((id) => allRuns.find((r) => r.id === id))
+  .filter((r): r is NonNullable<typeof r> => Boolean(r));
+---
+
+<BaseLayout
+  title={`${carousel.part} · ${carousel.title}`}
+  description={carousel.description}
+  lang={carousel.lang}
+  ogType="article"
+>
+  <header class="c-page-header">
+    <nav aria-label="Breadcrumb" style="margin-bottom: 0.75rem;">
+      <ol class="app-breadcrumbs">
+        <li><a href="/">Leaderboard</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a href="/carousels">Carousels</a></li>
+        <li aria-hidden="true">/</li>
+        <li><span class="hl hl-acid">{carousel.part}</span></li>
+      </ol>
+    </nav>
+
+    <h1 class="headline-two-tone">
+      {carousel.title}.
+      <span class="muted">{carousel.subtitle}</span>
+    </h1>
+    <p class="c-page-desc">{carousel.description}</p>
+  </header>
+
+  <!-- Export Studio Bar (hidden in production unless ?export=1) -->
+  <section
+    class="c-studio-bar"
+    id="c-studio-bar"
+    aria-label="Export Studio"
+    hidden={!isDev}
+  >
+    <div class="c-studio-controls">
+      <div class="btn-group" role="group" aria-label="Mode tampilan">
+        <button type="button" class="btn btn-sm is-active" data-view-btn="viewer">
+          Mode Baca
+        </button>
+        <button type="button" class="btn btn-sm" data-view-btn="sheet">
+          Semua Slide
+        </button>
+      </div>
+
+      <div class="btn-group" role="group" aria-label="Rasio slide">
+        <button
+          type="button"
+          class:list={['btn btn-sm', { 'is-active': carousel.defaultRatio === '4:5' }]}
+          data-ratio-btn="4:5"
+        >
+          4:5 (1080×1350)
+        </button>
+        <button
+          type="button"
+          class:list={['btn btn-sm', { 'is-active': carousel.defaultRatio === '1:1' }]}
+          data-ratio-btn="1:1"
+        >
+          1:1 (1080×1080)
+        </button>
+      </div>
+    </div>
+
+    <div class="c-studio-controls">
+      <button type="button" class="btn btn-sm" id="c-btn-print-pdf">
+        Export PDF (Print)
+      </button>
+      <button type="button" class="btn btn-sm c-btn-mint" id="c-btn-export-all">
+        Download Semua PNG
+      </button>
+    </div>
+
+    <div class="c-studio-status">
+      <span>
+        Tips PDF: pilih <strong>Save as PDF</strong>, aktifkan <strong>Background graphics</strong>, Margin: <strong>None</strong>.
+      </span>
+      <span id="c-export-status">
+        Siap export ({carousel.slides.length} slide · {carousel.defaultRatio === '1:1' ? '1080×1080' : '1080×1350'} px)
+      </span>
+    </div>
+  </section>
+
+  <!-- Main Interactive Carousel Region -->
+  <section
+    class="c-carousel-region"
+    id="c-carousel-region"
+    aria-roledescription="carousel"
+    aria-label={carousel.title}
+    data-ratio={carousel.defaultRatio}
+    data-view="viewer"
+    data-is-dev={isDev ? 'true' : 'false'}
+    data-lang={carousel.lang}
+  >
+    <!-- Controls before track in DOM order -->
+    <div class="c-controls-row">
+      <div class="c-nav-actions">
+        <button
+          type="button"
+          class="btn btn-sm btn-secondary"
+          data-direction="previous"
+          aria-label="Slide sebelumnya"
+          disabled
+        >
+          ← Sebelumnya
+        </button>
+      </div>
+
+      <span class="c-progress-pill" id="c-progress-pill" aria-hidden="true">
+        01 / {String(carousel.slides.length).padStart(2, '0')}
+      </span>
+
+      <div class="c-nav-actions">
+        <button
+          type="button"
+          class="btn btn-sm"
+          data-direction="next"
+          aria-label="Slide berikutnya"
+        >
+          Berikutnya →
+        </button>
+      </div>
+    </div>
+
+    <div class="c-track-shell">
+      <div
+        class="c-carousel-track"
+        id="c-carousel-track"
+        tabindex="0"
+        role="group"
+        aria-label="Daftar slide"
+      >
+        {carousel.slides.map((slide, idx) => (
+          <CarouselSlide
+            slide={slide}
+            index={idx}
+            total={carousel.slides.length}
+            brandLabel={carousel.brandLabel}
+            footerLeft={carousel.footerLeft}
+            lang={carousel.lang}
+          />
+        ))}
+      </div>
+    </div>
+
+    <!-- Visually hidden polite status region for settled slide changes -->
+    <p class="visually-hidden" role="status" aria-live="polite" id="c-live-status"></p>
+
+    <!-- Slide marker buttons (direct jump) -->
+    <nav class="c-markers" id="c-markers" aria-label="Pilih slide">
+      {carousel.slides.map((slide, idx) => (
+        <button
+          type="button"
+          class="c-marker-btn"
+          data-marker-index={idx}
+          aria-label={`Buka slide ${idx + 1}: ${slide.label}`}
+          aria-current={idx === 0 ? 'true' : undefined}
+        >
+          {String(idx + 1).padStart(2, '0')}
+        </button>
+      ))}
+    </nav>
+  </section>
+
+  <!-- Related Run Data Links + Print Fallback -->
+  <aside class="c-related-bar" aria-label="Tautan terkait">
+    <div class="c-related-links">
+      <span class="subnav-meta">DATA &amp; LOG LENGKAP:</span>
+      {relatedRuns.map((run) => (
+        <a href={`/runs/${run.id}`} class="action-link">
+          {run.data.model} ({run.data.codingHarness}) →
+        </a>
+      ))}
+    </div>
+
+    <div class="row-wrap">
+      <button type="button" class="btn btn-sm btn-secondary" id="c-btn-public-print">
+        Print / Save PDF
+      </button>
+      <a href="/carousels" class="btn btn-sm btn-secondary">
+        ← Semua Carousel
+      </a>
+    </div>
+  </aside>
+
+  <style id="c-dynamic-page-style" is:inline>
+    @page {
+      size: 1080px 1350px;
+      margin: 0;
+    }
+  </style>
+
+  <script>
+    const region = document.getElementById('c-carousel-region');
+    const track = document.getElementById('c-carousel-track');
+    const prevBtn = region?.querySelector<HTMLButtonElement>('button[data-direction="previous"]');
+    const nextBtn = region?.querySelector<HTMLButtonElement>('button[data-direction="next"]');
+    const progressPill = document.getElementById('c-progress-pill');
+    const liveStatus = document.getElementById('c-live-status');
+    const markerButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('#c-markers .c-marker-btn')
+    );
+    const slides = Array.from(
+      track?.querySelectorAll<HTMLElement>('.c-slide-item') ?? []
+    );
+    const studioBar = document.getElementById('c-studio-bar');
+    const exportStatus = document.getElementById('c-export-status');
+    const pageStyle = document.getElementById('c-dynamic-page-style');
+
+    const total = slides.length;
+    const isDev = region?.getAttribute('data-is-dev') === 'true';
+    const params = new URLSearchParams(window.location.search);
+    const exportEnabled = isDev || params.get('export') === '1';
+
+    if (studioBar && exportEnabled) {
+      studioBar.hidden = false;
+    }
+
+    // ------------------------------------------------------------------------
+    // 1. Exact responsive scaling of the 1080px slide canvas
+    // ------------------------------------------------------------------------
+    function syncSlideScale() {
+      if (!region) return;
+      const firstViewport = region.querySelector<HTMLElement>('.c-slide-viewport');
+      if (!firstViewport) return;
+      const w = firstViewport.clientWidth;
+      if (w > 0) {
+        region.style.setProperty('--slide-scale', String(w / 1080));
+      }
+    }
+
+    const resizeObserver = new ResizeObserver(() => syncSlideScale());
+    if (region) {
+      const firstViewport = region.querySelector<HTMLElement>('.c-slide-viewport');
+      if (firstViewport) resizeObserver.observe(firstViewport);
+      resizeObserver.observe(region);
+    }
+    syncSlideScale();
+
+    // ------------------------------------------------------------------------
+    // 2. Scroll-snap state, Prev/Next wiring, Markers & Accessible Announcements
+    // ------------------------------------------------------------------------
+    let settledIndex = 0;
+    let activeMarkerIndex = 0;
+    let pendingTargetIndex: number | null = null;
+    let pendingScrollStartLeft: number | null = null;
+    let rafId: number | null = null;
+    let fallbackSettleTimer: number | null = null;
+    let hasUserInteracted = false;
+
+    function prefersReducedMotion(): boolean {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function getNearestSlideIndex(): number {
+      if (!track || slides.length === 0) return 0;
+      const trackRect = track.getBoundingClientRect();
+      const trackCenter = trackRect.left + trackRect.width / 2;
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < slides.length; i++) {
+        const rect = slides[i].getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        const dist = Math.abs(center - trackCenter);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    function paintMarkersAndCounter(index: number) {
+      if (index === activeMarkerIndex && progressPill) {
+        progressPill.textContent = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+        return;
+      }
+      activeMarkerIndex = index;
+      markerButtons.forEach((btn, idx) => {
+        if (idx === index) {
+          btn.setAttribute('aria-current', 'true');
+        } else {
+          btn.removeAttribute('aria-current');
+        }
+      });
+      if (progressPill) {
+        progressPill.textContent = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+      }
+    }
+
+    function updateControlsAfterSettle(index: number) {
+      const prevWasFocused = document.activeElement === prevBtn;
+      const nextWasFocused = document.activeElement === nextBtn;
+
+      const disablePrev = index <= 0;
+      const disableNext = index >= total - 1;
+
+      if (prevBtn) prevBtn.disabled = disablePrev;
+      if (nextBtn) nextBtn.disabled = disableNext;
+
+      // Redirect focus if the active button just became disabled
+      if (prevWasFocused && disablePrev && nextBtn && !nextBtn.disabled) {
+        nextBtn.focus();
+      } else if (nextWasFocused && disableNext && prevBtn && !prevBtn.disabled) {
+        prevBtn.focus();
+      }
+
+      if (hasUserInteracted && index !== settledIndex && liveStatus) {
+        liveStatus.textContent = `Slide ${index + 1} dari ${total}`;
+      }
+      settledIndex = index;
+    }
+
+    function scrollToSlide(targetIndex: number) {
+      if (!track || targetIndex < 0 || targetIndex >= total) return;
+      const slideEl = slides[targetIndex];
+      if (!slideEl) return;
+
+      hasUserInteracted = true;
+      pendingTargetIndex = targetIndex;
+      pendingScrollStartLeft = track.scrollLeft;
+      paintMarkersAndCounter(targetIndex);
+
+      const trackRect = track.getBoundingClientRect();
+      const slideRect = slideEl.getBoundingClientRect();
+      const delta =
+        slideRect.left + slideRect.width / 2 - (trackRect.left + trackRect.width / 2);
+
+      track.scrollBy({
+        left: delta,
+        behavior: prefersReducedMotion() ? 'instant' : 'smooth',
+      });
+
+      // If reduced motion or already aligned, settle immediately
+      if (prefersReducedMotion() || Math.abs(delta) < 1) {
+        pendingTargetIndex = null;
+        pendingScrollStartLeft = null;
+        updateControlsAfterSettle(targetIndex);
+      }
+    }
+
+    function handleSettled() {
+      if (!track) return;
+      const currentIdx = getNearestSlideIndex();
+
+      // Ignore a stale settle event at the exact pre-scroll offset right as a new scroll starts
+      if (
+        pendingTargetIndex !== null &&
+        pendingScrollStartLeft !== null &&
+        Math.abs(track.scrollLeft - pendingScrollStartLeft) < 1 &&
+        currentIdx !== pendingTargetIndex
+      ) {
+        return;
+      }
+
+      pendingTargetIndex = null;
+      pendingScrollStartLeft = null;
+      paintMarkersAndCounter(currentIdx);
+      updateControlsAfterSettle(currentIdx);
+    }
+
+    prevBtn?.addEventListener('click', () => {
+      const base = pendingTargetIndex ?? getNearestSlideIndex();
+      scrollToSlide(Math.max(0, base - 1));
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      const base = pendingTargetIndex ?? getNearestSlideIndex();
+      scrollToSlide(Math.min(total - 1, base + 1));
+    });
+
+    markerButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.markerIndex);
+        if (!Number.isNaN(idx)) scrollToSlide(idx);
+      });
+    });
+
+    const supportsScrollEnd = 'onscrollend' in window;
+
+    track?.addEventListener(
+      'scroll',
+      () => {
+        hasUserInteracted = true;
+
+        if (pendingTargetIndex === null && rafId === null) {
+          rafId = requestAnimationFrame(() => {
+            rafId = null;
+            const nearest = getNearestSlideIndex();
+            if (nearest !== activeMarkerIndex) {
+              paintMarkersAndCounter(nearest);
+            }
+          });
+        }
+
+        // Only use debounced scroll settle where scrollend is unsupported
+        if (!supportsScrollEnd) {
+          if (fallbackSettleTimer !== null) window.clearTimeout(fallbackSettleTimer);
+          fallbackSettleTimer = window.setTimeout(() => {
+            fallbackSettleTimer = null;
+            handleSettled();
+          }, 140);
+        }
+      },
+      { passive: true }
+    );
+
+    if (supportsScrollEnd) {
+      track?.addEventListener('scrollend', handleSettled);
+    }
+
+    // Initial silent sync
+    paintMarkersAndCounter(0);
+    updateControlsAfterSettle(0);
+
+    // ------------------------------------------------------------------------
+    // 3. Export Studio controls (View toggle, Aspect Ratio, Print PDF & PNG)
+    // ------------------------------------------------------------------------
+    function setRatio(ratio: string) {
+      if (!region) return;
+      region.setAttribute('data-ratio', ratio);
+      const isSquare = ratio === '1:1';
+      if (pageStyle) {
+        pageStyle.textContent = `@page { size: 1080px ${isSquare ? '1080px' : '1350px'}; margin: 0; }`;
+      }
+      document.querySelectorAll<HTMLButtonElement>('[data-ratio-btn]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.ratioBtn === ratio);
+      });
+      if (exportStatus) {
+        exportStatus.textContent = `Siap export (${total} slide · ${isSquare ? '1080×1080' : '1080×1350'} px)`;
+      }
+      requestAnimationFrame(syncSlideScale);
+    }
+
+    function setViewMode(mode: 'viewer' | 'sheet') {
+      if (!region) return;
+      region.setAttribute('data-view', mode);
+      document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.viewBtn === mode);
+      });
+      requestAnimationFrame(syncSlideScale);
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('[data-ratio-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.ratioBtn) setRatio(btn.dataset.ratioBtn);
+      });
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.viewBtn === 'sheet' ? 'sheet' : 'viewer';
+        setViewMode(mode);
+      });
+    });
+
+    // If ?export=1&view=sheet is passed, open directly in sheet mode
+    if (exportEnabled && params.get('view') === 'sheet') {
+      setViewMode('sheet');
+    }
+
+    document.getElementById('c-btn-print-pdf')?.addEventListener('click', () => window.print());
+    document.getElementById('c-btn-public-print')?.addEventListener('click', () => window.print());
+
+    async function exportSlideAsPng(slideItem: HTMLElement) {
+      const slideEl = slideItem.querySelector<HTMLElement>('.c-slide');
+      if (!slideEl || !region) return;
+      const ratio = region.getAttribute('data-ratio') || '4:5';
+      const width = 1080;
+      const height = ratio === '1:1' ? 1080 : 1350;
+      const filename = slideItem.dataset.filename || 'slide.png';
+
+      const { toPng } = await import(
+        /* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/+esm'
+      );
+
+      // Render an unscaled clone offscreen so PNG is exact 1080px without transform artifacts
+      const host = document.createElement('div');
+      host.className = 'c-carousel-region';
+      host.setAttribute('data-ratio', ratio);
+      host.style.setProperty('--slide-scale', '1');
+      host.style.position = 'fixed';
+      host.style.left = '-99999px';
+      host.style.top = '0';
+      host.style.width = `${width}px`;
+      host.style.height = `${height}px`;
+      host.style.overflow = 'hidden';
+
+      const clone = slideEl.cloneNode(true) as HTMLElement;
+      clone.style.position = 'static';
+      clone.style.transform = 'none';
+      clone.style.width = `${width}px`;
+      clone.style.height = `${height}px`;
+      host.appendChild(clone);
+      document.body.appendChild(host);
+
+      try {
+        if (document.fonts?.ready) await document.fonts.ready;
+        const dataUrl = await toPng(clone, {
+          width,
+          height,
+          pixelRatio: 1,
+          cacheBust: true,
+        });
+        const a = document.createElement('a');
+        a.download = filename;
+        a.href = dataUrl;
+        a.click();
+      } finally {
+        host.remove();
+      }
+    }
+
+    slides.forEach((slideItem) => {
+      const saveBtn = slideItem.querySelector<HTMLButtonElement>('.c-btn-save-one');
+      saveBtn?.addEventListener('click', async () => {
+        const orig = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        try {
+          await exportSlideAsPng(slideItem);
+          saveBtn.textContent = 'Saved ✓';
+        } catch (err) {
+          console.error(err);
+          saveBtn.textContent = 'Error';
+        } finally {
+          window.setTimeout(() => {
+            saveBtn.textContent = orig;
+            saveBtn.disabled = false;
+          }, 1200);
+        }
+      });
+    });
+
+    const exportAllBtn = document.getElementById('c-btn-export-all') as HTMLButtonElement | null;
+    exportAllBtn?.addEventListener('click', async () => {
+      const orig = exportAllBtn.textContent;
+      exportAllBtn.disabled = true;
+      try {
+        for (let i = 0; i < slides.length; i++) {
+          if (exportStatus) {
+            exportStatus.textContent = `Mengunduh slide ${i + 1} / ${slides.length}...`;
+          }
+          await exportSlideAsPng(slides[i]);
+          await new Promise((r) => window.setTimeout(r, 320));
+        }
+        if (exportStatus) {
+          exportStatus.textContent = `Selesai! ${slides.length} PNG berhasil diunduh.`;
+        }
+      } catch (err) {
+        console.error(err);
+        if (exportStatus) {
+          exportStatus.textContent = 'Gagal export PNG — gunakan Export PDF (Print).';
+        }
+      } finally {
+        exportAllBtn.disabled = false;
+        exportAllBtn.textContent = orig;
+      }
+    });
+  </script>
+</BaseLayout>

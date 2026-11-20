@@ -1,0 +1,1015 @@
+/* ==========================================================================
+   NEO-ACID CAROUSELS — Index, Interactive Viewer, Export Studio & Print PDF
+   ========================================================================== */
+
+.c-index-header,
+.c-page-header {
+  padding-block: 2rem 1.5rem;
+  border-bottom: var(--border-row);
+  margin-bottom: 1.75rem;
+}
+
+.c-index-header p,
+.c-page-header .c-page-desc {
+  margin: 0.75rem 0 0;
+  max-width: 68ch;
+  color: var(--text-secondary);
+}
+
+.c-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.c-deck-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  border: var(--border-frame);
+  background: var(--bg-surface);
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.c-deck-card:hover {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+.c-deck-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.c-deck-card:hover .c-deck-meta,
+.c-deck-card:hover .c-deck-sub,
+.c-deck-card:hover .c-deck-cta {
+  color: var(--hl-ink);
+}
+
+.c-deck-card:hover .c-deck-title {
+  color: var(--hl-ink);
+}
+
+.c-deck-card:hover .tag-outline {
+  border-color: var(--raw-ebony);
+  color: var(--hl-ink);
+  background: transparent;
+}
+
+.c-deck-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+}
+
+.c-deck-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.c-deck-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: var(--border-row);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.c-deck-card:hover .c-deck-foot {
+  border-top-color: var(--raw-ebony);
+}
+
+/* ==========================================================================
+   EXPORT STUDIO BAR (Shown in DEV or ?export=1)
+   ========================================================================== */
+.c-studio-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.25rem;
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+}
+
+.c-studio-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-studio-status {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: var(--border-row);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.c-btn-mint {
+  background-color: var(--hl-mint);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+  font-weight: 700;
+}
+
+.c-btn-mint:hover:not(:disabled) {
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+}
+
+/* ==========================================================================
+   INTERACTIVE CAROUSEL VIEWER (WCAG + CSS Scroll Snap)
+   ========================================================================== */
+.c-carousel-region {
+  --slide-w: 1080px;
+  --slide-h: 1350px;
+  --slide-scale: 0.44;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.c-carousel-region[data-ratio="1:1"] {
+  --slide-h: 1080px;
+}
+
+/* Top Prev/Next + Counter bar (before track in DOM order) */
+.c-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  max-width: 560px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.c-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-controls-row .btn {
+  touch-action: manipulation;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.c-progress-pill {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scroll-Snap Track */
+.c-track-shell {
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.c-carousel-track {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Only contain horizontal overscroll so vertical page scroll stays smooth */
+  overscroll-behavior-x: contain;
+  touch-action: manipulation;
+  scrollbar-width: none;
+}
+
+.c-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .c-carousel-track {
+    scroll-behavior: smooth;
+  }
+}
+
+.c-carousel-track:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 4px;
+}
+
+.c-slide-item {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.c-slide-export-bar {
+  display: none;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Sheet View (Export All Slides grid) */
+.c-carousel-region[data-view="sheet"] .c-controls-row,
+.c-carousel-region[data-view="sheet"] .c-markers {
+  display: none;
+}
+
+.c-carousel-region[data-view="sheet"] .c-track-shell {
+  max-width: none;
+}
+
+.c-carousel-region[data-view="sheet"] .c-carousel-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.75rem;
+  overflow-x: visible;
+  scroll-snap-type: none;
+}
+
+.c-carousel-region[data-view="sheet"] .c-slide-item {
+  flex: initial;
+  align-items: stretch;
+}
+
+.c-carousel-region[data-view="sheet"] .c-slide-export-bar {
+  display: flex;
+}
+
+/* Slide Markers (WCAG 2.5.8 target >= 36px, WCAG 1.4.1 non-color active indicator) */
+.c-markers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-width: 560px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.c-marker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0 0.5rem;
+  border: 2px solid var(--border-strong-color);
+  border-radius: 0;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.12s ease, color 0.12s ease, min-width 0.12s ease;
+}
+
+.c-marker-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.c-marker-btn[aria-current="true"] {
+  min-width: 3.25rem;
+  background-color: var(--hl-acid);
+  color: var(--hl-ink);
+  border-color: var(--raw-ebony);
+  box-shadow: inset 0 -4px 0 var(--raw-ebony);
+}
+
+/* Related Runs & Utilities Footer below Carousel */
+.c-related-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: var(--border-row);
+}
+
+.c-related-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+/* ==========================================================================
+   SCALED 1080px SLIDE CANVAS (Identical on Web, PNG Export & PDF Print)
+   ========================================================================== */
+.c-slide-viewport {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: var(--border-frame);
+  background-color: var(--bg-canvas);
+  position: relative;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-slide-viewport {
+  aspect-ratio: 1 / 1;
+}
+
+.c-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--slide-w);
+  height: var(--slide-h);
+  transform: scale(var(--slide-scale));
+  transform-origin: top left;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 58px 66px 52px;
+  overflow: hidden;
+  text-align: left;
+  font-size-adjust: none;
+}
+
+.c-slide p {
+  text-wrap: initial;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-slide {
+  padding: 46px 56px 42px;
+}
+
+.c-slide-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 22px;
+  border-bottom: var(--border-split);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.c-slide-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-primary);
+}
+
+.c-brand-square {
+  width: 18px;
+  height: 18px;
+  background-color: var(--hl-acid);
+  border: 2px solid var(--raw-ebony);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.c-slide-counter {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.c-slide-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 22px;
+  border-top: var(--border-row);
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.c-handle {
+  color: var(--text-primary);
+}
+
+.c-slide-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 30px;
+  padding: 28px 0;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-slide-body {
+  gap: 18px;
+  padding: 16px 0;
+}
+
+.c-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.c-hl {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  color: var(--hl-ink);
+  background-color: var(--hl-acid);
+  line-height: 1.1;
+}
+
+.c-hl-acid    { background-color: var(--hl-acid); }
+.c-hl-violet  { background-color: var(--hl-violet); }
+.c-hl-mint    { background-color: var(--hl-mint); }
+.c-hl-sky     { background-color: var(--hl-sky); }
+.c-hl-magenta { background-color: var(--hl-magenta); }
+
+.c-tag-outline {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border: var(--border-frame);
+  color: var(--text-secondary);
+  line-height: 1.1;
+}
+
+.c-headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 46px;
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+  margin: 0;
+  color: var(--text-primary);
+  font-size-adjust: none;
+  text-wrap: initial;
+}
+
+.c-headline.is-cover {
+  font-size: 56px;
+  line-height: 1.13;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-headline {
+  font-size: 38px;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-headline.is-cover {
+  font-size: 46px;
+}
+
+.c-headline .c-muted {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.c-lead {
+  font-family: var(--font-body);
+  font-size: 27px;
+  line-height: 1.48;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-lead {
+  font-size: 22px;
+}
+
+.c-stat-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.c-stat-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.c-stat-card {
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-stat-card {
+  padding: 18px 18px;
+  gap: 6px;
+}
+
+.c-stat-card.is-accent {
+  background-color: var(--hl-acid);
+  border-color: var(--raw-ebony);
+  color: var(--hl-ink);
+}
+
+.c-stat-label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.c-stat-card.is-accent .c-stat-label,
+.c-stat-card.is-accent .c-stat-sub {
+  color: var(--hl-ink);
+}
+
+.c-stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 48px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-stat-value {
+  font-size: 38px;
+}
+
+.c-stat-sub {
+  font-family: var(--font-body);
+  font-size: 19px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-stat-sub {
+  font-size: 16px;
+}
+
+.c-split-bar-box {
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-split-bar-box {
+  padding: 14px 20px;
+  gap: 10px;
+}
+
+.c-split-bar-track {
+  display: flex;
+  width: 100%;
+  height: 24px;
+  border: var(--border-frame);
+  background-color: var(--bg-elevated);
+}
+
+.c-split-seg-a {
+  background-color: var(--hl-acid);
+  border-right: 2px solid var(--raw-ebony);
+}
+
+.c-split-seg-b {
+  background-color: var(--hl-sky);
+}
+
+.c-split-legend {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.c-comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.c-comp-table th,
+.c-comp-table td {
+  padding: 20px 20px;
+  text-align: left;
+  border-bottom: var(--border-row);
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-comp-table th,
+.c-carousel-region[data-ratio="1:1"] .c-comp-table td {
+  padding: 13px 16px;
+}
+
+.c-comp-table thead th {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: var(--border-frame);
+  background-color: var(--bg-elevated);
+}
+
+.c-comp-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.c-comp-metric {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--text-primary);
+}
+
+.c-comp-val-win {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 23px;
+  color: var(--text-primary);
+}
+
+.c-comp-val-base {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--text-muted);
+}
+
+.c-bar-compare {
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-bar-compare {
+  padding: 14px 20px;
+  gap: 10px;
+}
+
+.c-bar-row {
+  display: grid;
+  grid-template-columns: 200px 1fr 110px;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.c-bar-track {
+  height: 20px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong-color);
+}
+
+.c-bar-fill-acid {
+  height: 100%;
+  background-color: var(--hl-acid);
+}
+
+.c-bar-fill-muted {
+  height: 100%;
+  background-color: var(--text-muted);
+}
+
+.c-flow-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.c-flow-step {
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+  padding: 22px 26px;
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-flow-step {
+  padding: 14px 20px;
+  gap: 16px;
+}
+
+.c-step-num {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--hl-ink);
+  background-color: var(--hl-violet);
+  padding: 8px 0;
+  text-align: center;
+  border: 2px solid var(--raw-ebony);
+}
+
+.c-step-title {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 25px;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.c-step-desc {
+  font-family: var(--font-body);
+  font-size: 21px;
+  line-height: 1.42;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-step-title { font-size: 21px; }
+.c-carousel-region[data-ratio="1:1"] .c-step-desc { font-size: 18px; }
+
+.c-callout {
+  border: var(--border-frame);
+  border-left: 10px solid var(--hl-violet);
+  background-color: var(--bg-surface);
+  padding: 22px 26px;
+}
+
+.c-callout-acid {
+  border-left-color: var(--hl-acid);
+}
+
+.c-callout-sky {
+  border-left-color: var(--hl-sky);
+}
+
+.c-callout-title {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.c-callout-body {
+  font-family: var(--font-body);
+  font-size: 22px;
+  line-height: 1.42;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-callout { padding: 14px 20px; }
+.c-carousel-region[data-ratio="1:1"] .c-callout-body { font-size: 18px; }
+
+.c-caveat-list {
+  display: flex;
+  flex-direction: column;
+  border: var(--border-frame);
+  background-color: var(--bg-surface);
+}
+
+.c-caveat-row {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 22px;
+  padding: 22px 26px;
+  border-bottom: var(--border-row);
+  align-items: start;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-caveat-row {
+  padding: 14px 20px;
+}
+
+.c-caveat-row:last-child {
+  border-bottom: none;
+}
+
+.c-caveat-idx {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--hl-ink);
+  background-color: var(--hl-magenta);
+  padding: 6px 0;
+  text-align: center;
+}
+
+.c-caveat-idx.is-mint {
+  background-color: var(--hl-mint);
+  color: var(--hl-ink);
+}
+
+.c-caveat-head {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 25px;
+  color: var(--text-primary);
+  margin: 0 0 5px;
+}
+
+.c-caveat-text {
+  font-family: var(--font-body);
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-caveat-head { font-size: 21px; }
+.c-carousel-region[data-ratio="1:1"] .c-caveat-text { font-size: 18px; }
+
+.c-archive-note {
+  border: var(--border-frame);
+  border-left: 8px solid var(--hl-acid);
+  background-color: var(--bg-surface);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-archive-note {
+  padding: 16px 20px;
+  gap: 6px;
+}
+
+.c-archive-label {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.c-archive-body {
+  font-family: var(--font-body);
+  font-size: 21px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.c-archive-body strong,
+.c-step-desc strong,
+.c-callout-body strong,
+.c-caveat-text strong {
+  color: var(--text-primary);
+}
+
+.c-archive-url {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  color: var(--text-primary);
+}
+
+.c-carousel-region[data-ratio="1:1"] .c-archive-body { font-size: 18px; }
+.c-carousel-region[data-ratio="1:1"] .c-archive-url { font-size: 16px; }
+
+.c-mono-inline {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  font-weight: 700;
+  padding: 2px 8px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong-color);
+  color: var(--text-primary);
+}
+
+.c-footnote {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ==========================================================================
+   PRINT / EXPORT TO PDF (1 slide per page, zero web chrome)
+   ========================================================================== */
+@media print {
+  .app-navbar,
+  .app-footer,
+  .c-page-header,
+  .c-studio-bar,
+  .c-controls-row,
+  .c-markers,
+  .c-related-bar,
+  .c-slide-export-bar,
+  .skip-link {
+    display: none !important;
+  }
+
+  .app-shell,
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .c-track-shell {
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .c-carousel-track {
+    display: block !important;
+    overflow: visible !important;
+    gap: 0 !important;
+  }
+
+  .c-slide-item {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .c-slide-item:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .c-slide-viewport {
+    width: var(--slide-w) !important;
+    height: var(--slide-h) !important;
+    aspect-ratio: auto !important;
+    border: none !important;
+    overflow: hidden !important;
+  }
+
+  .c-slide {
+    position: static !important;
+    transform: none !important;
+    width: var(--slide-w) !important;
+    height: var(--slide-h) !important;
+  }
+}

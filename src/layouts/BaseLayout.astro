@@ -11,6 +11,7 @@ interface Props {
   title: string;
   description?: string;
   activeNav?: 'leaderboard' | 'compare' | 'about';
+  lang?: 'en' | 'id';
   ogType?: 'website' | 'article';
   ogImage?: string;
   ogImageAlt?: string;
@@ -23,6 +24,7 @@ const {
   title,
   description = DEFAULT_DESCRIPTION,
   activeNav,
+  lang = 'en',
   ogType = 'website',
   ogImage = '/og-image.png?v=personal-field-notes',
   ogImageAlt = 'Capy Bench: My stack. My field notes. A personal coding-agent evaluation by Riza Fahmi. Elixir/OTP, outside-in TDD, seven stages. One workflow, not a universal ranking.',
@@ -33,6 +35,8 @@ const pathname = Astro.url.pathname.replace(/\/+$/, '');
 const canonicalUrl = pathname ? `${siteOrigin}${pathname}` : siteOrigin;
 const fullTitle = `${title} | Capy Bench`;
 const ogImageUrl = new URL(ogImage, siteOrigin).toString();
+const ogLocale = lang === 'id' ? 'id_ID' : 'en_US';
+const inLanguage = lang === 'id' ? 'id-ID' : 'en-US';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -40,7 +44,7 @@ const jsonLd = {
   name: fullTitle,
   description,
   url: canonicalUrl,
-  inLanguage: 'en-US',
+  inLanguage,
   isPartOf: {
     '@type': 'WebSite',
     name: 'Capy Bench',
@@ -55,7 +59,7 @@ const jsonLd = {
 ---
 
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang={lang} data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -90,7 +94,7 @@ const jsonLd = {
     <!-- Open Graph -->
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="Capy Bench" />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale" content={ogLocale} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
@@ -203,6 +207,7 @@ const jsonLd = {
         <div class="reading-footer">
           <p>Capy Bench <span aria-hidden="true">·</span> Field notes by <a href="https://rizafahmi.com">Riza Fahmi</a></p>
           <nav aria-label="Footer">
+            <a href="/carousels">Carousels</a>
             <a href="/about">Methodology &amp; specifications</a>
             <a href="#main-content">Back to top ↑</a>
           </nav>

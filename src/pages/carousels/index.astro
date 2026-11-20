@@ -1,0 +1,60 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/carousel.css';
+
+const carousels = (await getCollection('carousels'))
+  .filter((entry) => entry.data.published !== false)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<BaseLayout
+  title="Carousels"
+  description="Ringkasan visual berbentuk slide carousel dari catatan eksperimen personal benchmark coding agent."
+  lang="id"
+>
+  <section class="c-index-header">
+    <span class="section-kicker">PERSONAL EVAL · VISUAL DECKS</span>
+    <h1 class="headline-two-tone">
+      Carousels.
+      <span class="muted">Ringkasan visual catatan eksperimen per seri.</span>
+    </h1>
+    <p>
+      Versi ringkas berbentuk slide yang bisa digeser langsung di browser — cocok untuk baca cepat sebelum masuk ke log lengkap di halaman detail run.
+    </p>
+  </section>
+
+  <section class="c-index-grid" aria-label="Daftar carousel">
+    {carousels.map((entry) => {
+      const { part, date, title, subtitle, slides, tags } = entry.data;
+      return (
+        <a href={`/carousels/${entry.id}`} class="c-deck-card">
+          <div>
+            <div class="c-deck-meta">
+              <span class="hl hl-acid">{part}</span>
+              <span>{slides.length} SLIDE · {date}</span>
+            </div>
+
+            <h2 class="c-deck-title" style="margin-top: 1rem;">{title}</h2>
+            <p class="c-deck-sub">{subtitle}</p>
+          </div>
+
+          <div>
+            {tags.length > 0 && (
+              <div class="row-wrap" style="margin-bottom: 1rem;">
+                {tags.map((tag) => (
+                  <span class="tag-outline">{tag}</span>
+                ))}
+              </div>
+            )}
+
+            <div class="c-deck-foot">
+              <span class="c-deck-cta">Lihat Slide</span>
+              <span aria-hidden="true">→</span>
+            </div>
+          </div>
+        </a>
+      );
+    })}
+  </section>
+</BaseLayout>
