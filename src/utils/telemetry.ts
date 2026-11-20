@@ -824,6 +824,23 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3b1c. Model Comparison: omp subq-savant-1.4 vs deepseek-v4-flash (High)
+  const ompSubqSavant = runs.find(
+    (r) => r.displayHarness === 'omp' && r.data.model === 'subq-savant-1.4'
+  );
+  if (ompSubqSavant && ompDeepseekV4Flash) {
+    presets.push({
+      id: 'model-omp-subq-savant-vs-deepseek-v4-flash',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'omp: subq-savant-1.4 vs. deepseek-v4-flash (High)',
+      subtitle: 'Same omp v19 harness & 6/7 S7-blocked verdict — 1.82s/turn ultra-fast micro-turns (259 turns, 14m) vs. 5.69s/turn (133 turns, 22m)',
+      runAId: ompSubqSavant.id,
+      runBId: ompDeepseekV4Flash.id,
+      findingHeadline: `Both cleared S1–S6 and failed S7 (${ompSubqSavant.plan.completed}/${ompSubqSavant.plan.total}) on omp v19; subq-savant-1.4 finished 36% faster (${ompSubqSavant.data.durationMinutes}m vs ${ompDeepseekV4Flash.data.durationMinutes}m — fastest run on the leaderboard) despite 1.95x more LLM turns (${ompSubqSavant.llmCalls} vs ${ompDeepseekV4Flash.llmCalls}) via 1.82s/turn inference at $${ompSubqSavant.data.costUsd.toFixed(2)}, while deepseek-v4-flash cost 43% less ($${ompDeepseekV4Flash.data.costUsd.toFixed(2)} Off-Peak; $0.25 Peak) and included 0-issue Credo --strict.`,
+    });
+  }
+
   // 3b1c. Harness Ablation: DeepSeek Harness vs omp on deepseek-flash (High)
   const dshDeepseekFlash = runs.find(
     (r) => r.displayHarness === 'DeepSeek Harness' && r.data.model === 'deepseek-flash'

@@ -1,0 +1,295 @@
+{
+  "published": true,
+  "order": 8,
+  "part": "Part 8",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "Testing SubQ Savant 1.4 on my personal benchmark",
+  "subtitle": "14 minutes, 259 turns, $0.23 — fastest run on the board, stopped at S7.",
+  "description": "A 7-slide visual breakdown of SubQ Savant 1.4 on OMP v19.0.1: 1.82s/turn inference speed, head-to-head with deepseek-v4-flash on OMP, why deferring S1 broke S7 Ctrl-C, S3 micro-turn churn, and field caveats.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["subq-savant-1.4", "OMP v19.0.1", "Speed Record"],
+  "relatedRunIds": [
+    "omp-subq-savant-1-4-high-20261120-1516",
+    "omp-deepseek-v4-flash-high-20261119-2012"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-subq-savant-1-4-cover.png",
+      "badges": [
+        { "text": "PERSONAL EVAL", "tone": "acid" },
+        { "text": "OMP v19.0.1 · #HIGH", "tone": "sky" }
+      ],
+      "headlinePrimary": "Testing SubQ Savant 1.4 on my personal benchmark.",
+      "headlineMuted": "14 minutes, 259 turns, $0.23 — stopped at S7.",
+      "lead": "The **fastest run on the entire leaderboard** (`1.82s/turn` across `259` turns) cleared live HTTP & HTTPS, then surrendered on terminal `Ctrl-C`.",
+      "stats": [
+        {
+          "label": "Duration",
+          "value": "14m05s",
+          "sub": "#1 fastest run · 1.82s/turn",
+          "accent": true
+        },
+        {
+          "label": "Verification",
+          "value": "6 / 7",
+          "sub": "S1–S6 passed · S7 failed"
+        },
+        {
+          "label": "Dashboard Cost",
+          "value": "$0.23",
+          "sub": "$0.2226 JSONL · 99.41% cached"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "metrics",
+      "kind": "metrics",
+      "label": "SPEED & TELEMETRY",
+      "filename": "02-subq-savant-1-4-metrics.png",
+      "badges": [
+        { "text": "SESSION NOTES", "tone": "mint" },
+        { "text": "259 TURNS · 1.82s/TURN", "tone": "outline" }
+      ],
+      "headlinePrimary": "14 minutes across 259 turns.",
+      "headlineMuted": "Sub-2s inference masked sequential churn.",
+      "splitBar": {
+        "label": "Time Split (14m05s)",
+        "primaryLabel": "MODEL TIME: 7m52s (55.8%)",
+        "primaryPct": 55.8,
+        "secondaryLabel": "TESTS & TOOLS: 6m13s (44.2%)",
+        "secondaryPct": 44.2
+      },
+      "stats": [
+        {
+          "label": "Total Tokens",
+          "value": "16.88M",
+          "sub": "99.41% cached · 99k new · 92k out"
+        },
+        {
+          "label": "Peak Context",
+          "value": "118.3k",
+          "sub": "2.96% of 4M window · 0 compactions"
+        },
+        {
+          "label": "Self-Written Tests",
+          "value": "40 / 40",
+          "sub": "22.5s · S1–S6 live HTTP/HTTPS clean"
+        },
+        {
+          "label": "Tool Calls",
+          "value": "260/276",
+          "sub": "1.07 tools/turn · 6 edit guardrails"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "SAME-HARNESS COMPARISON",
+      "filename": "03-subq-vs-deepseek-omp.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "OMP v19 · BOTH 6/7", "tone": "outline" }
+      ],
+      "headlinePrimary": "On the exact same OMP v19 setup.",
+      "headlineMuted": "subq-savant-1.4 vs deepseek-v4-flash.",
+      "columns": ["Metric", "subq-savant-1.4", "deepseek-v4-flash", "Delta"],
+      "rows": [
+        {
+          "metric": "Duration",
+          "primary": "14m05s",
+          "baseline": "22m07s",
+          "delta": "-36%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Avg Turn",
+          "primary": "1.82s",
+          "baseline": "5.69s",
+          "delta": "-68%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Total Turns",
+          "primary": "259",
+          "baseline": "133",
+          "delta": "+95%",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Cost (Billed)",
+          "primary": "$0.23",
+          "baseline": "$0.13",
+          "delta": "+$0.10",
+          "deltaTone": "magenta"
+        }
+      ],
+      "barCompare": {
+        "label": "Average LLM Turn Latency (Lower = Faster)",
+        "items": [
+          {
+            "name": "subq-savant-1.4 (259t)",
+            "value": "1.82s",
+            "widthPct": 32.0,
+            "accent": true
+          },
+          {
+            "name": "deepseek-v4-flash (133t)",
+            "value": "5.69s",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* Both scored 6/7 on OMP v19 (#high), failing S7 on different OTP signal bugs. DeepSeek ran Off-Peak ($0.25 Peak).",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "ctrl-c",
+      "kind": "steps",
+      "label": "CASE STUDY #1 S7 CTRL-C",
+      "filename": "04-subq-savant-s7-ctrlc.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "S7 CTRL-C FAILURE", "tone": "outline" }
+      ],
+      "headlinePrimary": "Deferred the S1 wrapper decision.",
+      "headlineMuted": "Then conceded Ctrl-C in S7.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Skipped S1's entry-point rule",
+          "desc": "Probed PTY `Ctrl-C`, saw BEAM's `BREAK` menu, yet kept `cb` as a bare escript and punted the fix to S7."
+        },
+        {
+          "num": "02",
+          "title": "71 turns fighting the VM",
+          "desc": "Spent **$0.09** (`39%` of cost) probing `/dev/tty`, `stty`, and `+Bd`/`+Bc` — even after proving `sh trap INT` works at Line 590."
+        },
+        {
+          "num": "03",
+          "title": "Conceded & shipped dead code",
+          "desc": "Wrote `\"Ctrl-C is the BEAM's, not this code's\"` in `PLAN.md`; `Interrupt.start/0` never subscribed to `:erl_signal_server`."
+        }
+      ],
+      "callout": {
+        "title": "PTY Holdout Result: 0 / 7 Passed",
+        "body": "Every live PTY `Ctrl-C` probe (`50ms` to `1.5s`) died immediately on raw `SIGINT` (`rc=-2`, no partial summary).",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "micro-turns",
+      "kind": "steps",
+      "label": "CASE STUDY #2 MICRO-TURNS",
+      "filename": "05-subq-savant-micro-turns.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "EXECUTION STYLE", "tone": "outline" }
+      ],
+      "headlinePrimary": "107 turns in S3 took just 3m36s.",
+      "headlineMuted": "Ultra-fast turns hid sequential churn.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Almost purely sequential calls",
+          "desc": "Only **17 / 259** turns (`6.6%`) batched multiple tools (`1.07` tools/turn vs `1.86` on Gemini 4 Argon OMP)."
+        },
+        {
+          "num": "02",
+          "title": "Small-step S3 iteration",
+          "desc": "`107` micro-turns debugged missing `:ssl` in `extra_applications` and `openssl req` flags into a compact **513-LoC** core."
+        },
+        {
+          "num": "03",
+          "title": "Clean S1–S6 live delivery",
+          "desc": "Live `./cb https://rizafahmi.com` cleared **14/14** HTTP `200` (`p50 295 ms`) and HTTP cleared **44/44** `301` (`p50 98 ms`)."
+        }
+      ],
+      "callout": {
+        "title": "4M Context Window, 2.96% Used",
+        "body": "Prompt size stayed lean (`118.3k` peak, **0 evictions**), keeping the longest single turn under `9.4s`.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-subq-savant-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Fastest clock on the board, with real blind spots.",
+      "headlineMuted": "4 caveats behind the 14-minute run.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Checked [x] S7 while admitting failure",
+          "text": "Marked `[x] S7` in `PLAN.md` despite noting terminal `Ctrl-C` was unverified; live holdouts confirmed **6/7**."
+        },
+        {
+          "num": "02",
+          "head": "No Credo linting setup",
+          "text": "Kept `deps: []` empty (`0` Credo checks), skipping the static-lint requirement in `PLAN.md`."
+        },
+        {
+          "num": "03",
+          "head": "90% cache discount drove 75% of cost",
+          "text": "At `$0.01/1M` cached across `259` turns, `cacheRead` cost `$0.167` — vs `$0.037` on DeepSeek's 98%-off rate."
+        },
+        {
+          "num": "04",
+          "head": "55 pipeline-masked bash exits",
+          "text": "Piping `mix test` into `| tail` hid `33` failing test runs and `14` PTY probes behind `16` logged `isError` results."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-subq-savant-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from the 14-minute sprint.",
+      "headlineMuted": "Raw inference speed isn't architectural discipline.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Enforce S1 architectural gates early",
+          "text": "Deferring the shell-wrapper decision in S1 guaranteed a **71-turn** dead end in S7."
+        },
+        {
+          "num": "02",
+          "head": "Speed hides turn bloat until a hard wall hits",
+          "text": "`1.82s/turn` let `259` micro-turns finish 8 minutes faster than `133` turns — right up until OTP's signal boundary."
+        },
+        {
+          "num": "03",
+          "head": "Cache-read pricing dominates micro-turn loops",
+          "text": "At `259` turns, `$0.01/1M` cached reads (`90%` off) outweighed SubQ's low `$0.10` base input price."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & BUDGET TIER",
+        "body": "Next up in Part 9: comparing `subq-savant-1.4` across the entire **sub-$0.25** speed & budget tier:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "NEXT: PART 9 →"
+    }
+  ]
+}

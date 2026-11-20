@@ -4,13 +4,13 @@
   "part": "Part 7",
   "date": "2026-11-20",
   "lang": "en",
-  "title": "What separates 7/7 from 6/7 across all 20 benchmark runs",
-  "subtitle": "Patterns from 20 published runs, 9 harnesses, and 15 models.",
-  "description": "A 7-slide meta-synthesis of all 20 published Capy Bench runs: where the 6 partial runs failed (S5 & S7), why duration and turns don't predict success, the Speed × Cost Pareto frontier, and what actually separates 7/7 winners.",
+  "title": "What separates 7/7 from 6/7 across all 21 benchmark runs",
+  "subtitle": "Patterns from 21 published runs, 8 harnesses, and 15 models.",
+  "description": "A 7-slide meta-synthesis of all 21 published Capy Bench runs: where the 7 partial runs failed (S5 & S7), why duration and turns don't predict success, the Speed × Cost Pareto frontier, and what actually separates 7/7 winners.",
   "brandLabel": "EVAL.RIZAFAHMI.COM",
   "footerLeft": "@rizafahmi · Personal Eval",
   "defaultRatio": "4:5",
-  "tags": ["Meta Analysis", "20 Runs", "Pareto Frontier"],
+  "tags": ["Meta Analysis", "21 Runs", "Pareto Frontier"],
   "relatedRunIds": [
     "codex-cli-gpt-6-sol-high-20261025-1935",
     "pi-gpt-6-1-sol-high-20261025-1820",
@@ -25,27 +25,27 @@
       "filename": "01-meta-synthesis-cover.png",
       "badges": [
         { "text": "META SYNTHESIS", "tone": "acid" },
-        { "text": "20 PUBLISHED RUNS", "tone": "sky" }
+        { "text": "21 PUBLISHED RUNS", "tone": "sky" }
       ],
-      "headlinePrimary": "What separates 7/7 from 6/7 across 20 runs.",
-      "headlineMuted": "Patterns from 15 models and 9 harnesses.",
-      "lead": "**14 runs** cleared every stage; **6 runs** stalled short — and they spent almost the exact same time trying.",
+      "headlinePrimary": "What separates 7/7 from 6/7 across 21 runs.",
+      "headlineMuted": "Patterns from 15 models and 8 harnesses.",
+      "lead": "**14 runs** cleared every stage; **7 runs** stalled short — and partial runs actually finished slightly faster on average.",
       "stats": [
         {
           "label": "Full Pass Rate",
-          "value": "14 / 20",
-          "sub": "70% passed all 7 holdouts",
+          "value": "14 / 21",
+          "sub": "67% passed all 7 holdouts",
           "accent": true
         },
         {
           "label": "Easy Stages",
-          "value": "20 / 20",
+          "value": "21 / 21",
           "sub": "S1, S2 & S4 passed on every run"
         },
         {
           "label": "Real Gatekeepers",
-          "value": "S5 & S7",
-          "sub": "85% pass rate — live HTTP & Ctrl-C"
+          "value": "S7 & S5",
+          "sub": "81% & 86% pass — PTY Ctrl-C & HTTP"
         }
       ],
       "footerRight": "SWIPE →"
@@ -57,36 +57,36 @@
       "filename": "02-meta-pass-vs-fail.png",
       "badges": [
         { "text": "COHORT SPLIT", "tone": "mint" },
-        { "text": "14 PASS · 6 PARTIAL", "tone": "outline" }
+        { "text": "14 PASS · 7 PARTIAL", "tone": "outline" }
       ],
-      "headlinePrimary": "Working longer didn't buy a 7/7 pass.",
-      "headlineMuted": "Partial runs averaged the same time and turns.",
+      "headlinePrimary": "Speed and turns didn't predict a 7/7 pass.",
+      "headlineMuted": "Partial runs averaged slightly faster clocks.",
       "splitBar": {
-        "label": "Published Leaderboard Outcomes (20 Runs)",
-        "primaryLabel": "FULL 7/7 PASS: 14 runs (70%)",
-        "primaryPct": 70,
-        "secondaryLabel": "PARTIAL (4–6/7): 6 runs (30%)",
-        "secondaryPct": 30
+        "label": "Published Leaderboard Outcomes (21 Runs)",
+        "primaryLabel": "FULL 7/7 PASS: 14 runs (66.7%)",
+        "primaryPct": 66.7,
+        "secondaryLabel": "PARTIAL (4–6/7): 7 runs (33.3%)",
+        "secondaryPct": 33.3
       },
       "stats": [
         {
           "label": "Avg Duration",
-          "value": "59m vs 62m",
-          "sub": "7/7 runs were actually slightly faster"
+          "value": "59m vs 55m",
+          "sub": "Ultra-fast 14–22m runs missed S7"
         },
         {
           "label": "Avg Turns",
-          "value": "216 vs 224",
+          "value": "216 vs 229",
           "sub": "More turns didn't fix broken assumptions"
         },
         {
           "label": "Avg Cost",
-          "value": "$3.67 vs $0.58",
+          "value": "$3.67 vs $0.53",
           "sub": "Ultra-cheap runs clustered in the <7/7 group"
         },
         {
           "label": "Avg Peak Ctx",
-          "value": "224k vs 232k",
+          "value": "224k vs 215k",
           "sub": "Context size alone didn't decide outcome"
         }
       ],
@@ -177,13 +177,13 @@
       "steps": [
         {
           "num": "01",
-          "title": "S5: synthetic tests hide HTTP bugs (17/20)",
+          "title": "S5: synthetic tests hide HTTP bugs (18/21)",
           "desc": "Hand-rolled chunked parsers passed local test suites, then broke on live Cloudflare `301` redirects (`glm-5.3-flash Low/Max`, `pi-deepseek`)."
         },
         {
           "num": "02",
-          "title": "S7: real terminals break shortcuts (17/20)",
-          "desc": "Foreground PTY `Ctrl-C` exposed BEAM boot races, POSIX `wait` traps, and sandbox blind spots (`muse-code`, `deepseek-flash`)."
+          "title": "S7: real terminals break shortcuts (17/21)",
+          "desc": "Foreground PTY `Ctrl-C` exposed BEAM boot races, `SIGTERM` shutdowns, bare escripts, and sandbox blind spots (`subq-savant`, `muse-code`, `deepseek-flash`)."
         },
         {
           "num": "03",
@@ -243,7 +243,7 @@
         { "text": "4 BLIND SPOTS", "tone": "outline" }
       ],
       "headlinePrimary": "4 metrics that lie if you read them alone.",
-      "headlineMuted": "What 20 forensic audits taught me.",
+      "headlineMuted": "What 21 forensic audits taught me.",
       "items": [
         {
           "num": "01",
@@ -278,7 +278,7 @@
         { "text": "3 RULES", "tone": "outline" }
       ],
       "headlinePrimary": "3 rules for picking a coding agent today.",
-      "headlineMuted": "Distilled from 20 real-world runs.",
+      "headlineMuted": "Distilled from 21 real-world runs.",
       "items": [
         {
           "num": "01",
@@ -297,11 +297,11 @@
         }
       ],
       "archive": {
-        "label": "EXPLORE ALL 20 RUNS",
+        "label": "EXPLORE ALL 21 RUNS",
         "body": "Filter the full leaderboard, inspect Pareto frontiers, and run side-by-side comparisons:",
         "url": "eval.rizafahmi.com"
       },
-      "footerRight": "EXPLORE THE LEADERBOARD →"
+      "footerRight": "NEXT: PART 8 →"
     }
   ]
 }

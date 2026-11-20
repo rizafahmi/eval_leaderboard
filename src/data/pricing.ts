@@ -393,6 +393,24 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
     pricingStatusNote:
       'Billed $0.00 during OpenCode limited-time free access (Nov 2026); permanent API pricing TBD',
   },
+  'subq-savant-1.4': {
+    modelKey: 'subq-savant-1.4',
+    displayName: 'subq-savant-1.4',
+    provider: 'SubQ',
+    billedTier: {
+      label: '2026 SubQ Savant 1.4 API (90% cache off)',
+      inputPerMillionUsd: 0.1,
+      cachedInputPerMillionUsd: 0.01,
+      outputPerMillionUsd: 0.5,
+      notes: '90% context caching discount; 4M context window (early access)',
+    },
+    standardApiTier: {
+      label: '2026 SubQ Savant 1.4 API',
+      inputPerMillionUsd: 0.1,
+      cachedInputPerMillionUsd: 0.01,
+      outputPerMillionUsd: 0.5,
+    },
+  },
 };
 
 export interface NumericTokenBag {

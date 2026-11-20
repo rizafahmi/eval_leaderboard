@@ -20,6 +20,8 @@
     "shiki": "4.5.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "satori": "^0.63.2",
     "typescript": "5.9.3"
   }
 }

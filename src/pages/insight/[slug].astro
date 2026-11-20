@@ -30,6 +30,8 @@ const relatedRuns = insight.relatedRunIds
   activeNav="insight"
   lang={insight.lang}
   ogType="article"
+  ogImage={`/og/insight/${entry.id}.png`}
+  ogImageAlt={`${insight.part}: ${insight.title}. ${insight.subtitle} (${insight.slides.length} slides)`}
 >
   <header class="c-page-header">
     <nav aria-label="Breadcrumb" style="margin-bottom: 0.75rem;">
