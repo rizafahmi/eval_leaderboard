@@ -105,16 +105,26 @@ function loadFonts(): Promise<FontSpec[]> {
   return cachedFontsPromise;
 }
 
+function sanitizeOgText(text: string): string {
+  return text
+    .replaceAll('≤', '<=')
+    .replaceAll('≥', '>=')
+    .replaceAll('≠', '!=')
+    .replaceAll('→', '->');
+}
+
 function h(
   type: string,
   style: Record<string, string | number>,
   children?: SatoriChild | SatoriChild[]
 ): SatoriNode {
+  const safeChildren =
+    typeof children === 'string' ? sanitizeOgText(children) : children;
   return {
     type,
     props: {
-      style,
-      ...(children !== undefined ? { children } : {}),
+      style: { boxSizing: 'border-box', ...style },
+      ...(safeChildren !== undefined ? { children: safeChildren } : {}),
     },
   };
 }
@@ -202,8 +212,8 @@ export async function renderInsightOgPng(
 
   const stats = coverSlide?.stats?.slice(0, 3) ?? [];
 
-  const totalHeadlineChars = headlinePrimary.length + headlineMuted.length;
-  const headlineSize = totalHeadlineChars > 92 ? 32 : totalHeadlineChars > 72 ? 36 : 40;
+  const totalHeadlineChars = Math.max(headlinePrimary.length, headlineMuted.length);
+  const headlineSize = totalHeadlineChars > 52 ? 32 : totalHeadlineChars > 42 ? 35 : 40;
 
   const slideCountLabel = `${insight.slides.length} ${insight.slides.length === 1 ? 'SLIDE' : 'SLIDES'}`;
 
@@ -213,11 +223,11 @@ export async function renderInsightOgPng(
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      width: 1200,
-      height: 630,
+      width: '100%',
+      height: '100%',
       backgroundColor: COLORS.obsidian,
       color: COLORS.silver,
-      padding: '40px 56px 34px',
+      padding: '38px 54px 32px',
       fontFamily: 'Schibsted Grotesk',
     },
     [
@@ -228,6 +238,7 @@ export async function renderInsightOgPng(
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          width: '100%',
           paddingBottom: 18,
           borderBottom: `4px solid ${COLORS.borderStrong}`,
         },
@@ -348,6 +359,7 @@ export async function renderInsightOgPng(
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       flex: 1,
+                      minWidth: 0,
                       padding: '18px 20px',
                       backgroundColor: isAccent ? COLORS.acid : COLORS.obsidianAlt,
                       border: `2px solid ${isAccent ? COLORS.ebony : COLORS.borderStrong}`,
@@ -421,11 +433,12 @@ export async function renderInsightOgPng(
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          width: '100%',
           paddingTop: 18,
           borderTop: `1px solid ${COLORS.borderSubtle}`,
           fontFamily: 'Martian Mono',
           fontWeight: 700,
-          fontSize: 16,
+          fontSize: 15,
         },
         [
           h('div', { display: 'flex', color: COLORS.silver }, insight.footerLeft),
@@ -449,6 +462,9 @@ export async function renderInsightOgPng(
     fitTo: {
       mode: 'width',
       value: 1200,
+    },
+    font: {
+      loadSystemFonts: false,
     },
   });
 
