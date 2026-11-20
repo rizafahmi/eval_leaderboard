@@ -1,0 +1,305 @@
+{
+  "published": true,
+  "order": 6,
+  "part": "Part 6",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "The Speed & Context Frontier: gpt-6-sol vs. gpt-6.1-sol",
+  "subtitle": "Fastest 7/7 (25m) and leanest 7/7 (6.50M tokens) on the board.",
+  "description": "A 7-slide breakdown of OpenAI's gpt-6-sol (Codex CLI) and gpt-6.1-sol (Pi): how they claimed the #1 fastest (25m) and #1 leanest (6.50M tokens, 75k peak context) 7/7 spots despite the highest tool error rates on the leaderboard.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["gpt-6-sol", "gpt-6.1-sol", "Speed Frontier"],
+  "relatedRunIds": [
+    "codex-cli-gpt-6-sol-high-20261025-1935",
+    "pi-gpt-6-1-sol-high-20261025-1820"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-gpt6-speed-frontier-cover.png",
+      "badges": [
+        { "text": "PARETO FRONTIER", "tone": "acid" },
+        { "text": "GPT-6 · GPT-6.1", "tone": "sky" }
+      ],
+      "headlinePrimary": "The Speed & Context Frontier: gpt-6-sol vs. gpt-6.1-sol.",
+      "headlineMuted": "Fastest 7/7 and leanest 7/7 on the entire board.",
+      "lead": "**25 minutes** on Codex CLI and **6.50M tokens** on Pi — with **11× fewer tokens** than `inkling-2-small`.",
+      "stats": [
+        {
+          "label": "Fastest 7/7",
+          "value": "25m",
+          "sub": "gpt-6-sol (Codex CLI) · $3.14",
+          "accent": true
+        },
+        {
+          "label": "Leanest 7/7",
+          "value": "6.50M",
+          "sub": "gpt-6.1-sol (Pi) · 75.0k peak ctx"
+        },
+        {
+          "label": "Pi Cost",
+          "value": "$1.37",
+          "sub": "95% cache off · 40m · 7/7"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "efficiency-metrics",
+      "kind": "metrics",
+      "label": "CONTEXT & TOKEN ECONOMY",
+      "filename": "02-gpt6-token-economy.png",
+      "badges": [
+        { "text": "EFFICIENCY", "tone": "mint" },
+        { "text": "SMALL CONTEXT", "tone": "outline" }
+      ],
+      "headlinePrimary": "75k peak context. 6.50M total tokens.",
+      "headlineMuted": "Compact prompts beat massive reasoning dumps.",
+      "splitBar": {
+        "label": "Total Tokens: gpt-6.1-sol (6.50M) vs 7/7 Board Average (27.92M)",
+        "primaryLabel": "GPT-6.1-SOL: 6.50M (23.3%)",
+        "primaryPct": 23.3,
+        "secondaryLabel": "SAVED VS 7/7 AVG: 21.42M (76.7%)",
+        "secondaryPct": 76.7
+      },
+      "stats": [
+        {
+          "label": "Thinking Budget",
+          "value": "17k–25k",
+          "sub": "38–39% of output — #1 & #2 lowest of 7/7"
+        },
+        {
+          "label": "Output Tokens",
+          "value": "45k–63k",
+          "sub": "5×–7× less output than inkling-2-small"
+        },
+        {
+          "label": "Tools / Turn",
+          "value": "1.00–1.01×",
+          "sub": "Zero parallel batching — pure speed"
+        },
+        {
+          "label": "Tool Error Rate",
+          "value": "15.6–18.1%",
+          "sub": "Highest of all 7/7 runs — still fastest"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "GPT-6-SOL VS GPT-6.1-SOL",
+      "filename": "03-gpt6-vs-gpt61.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "CODEX CLI VS PI", "tone": "outline" }
+      ],
+      "headlinePrimary": "Speed on Codex CLI. Thrift on Pi.",
+      "headlineMuted": "gpt-6-sol vs. gpt-6.1-sol head-to-head.",
+      "columns": ["Metric", "gpt-6-sol", "gpt-6.1-sol", "Delta"],
+      "rows": [
+        {
+          "metric": "Duration",
+          "primary": "25m",
+          "baseline": "40m",
+          "delta": "-38%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost",
+          "primary": "$3.14",
+          "baseline": "$1.37",
+          "delta": "+129%",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "11.23M",
+          "baseline": "6.50M",
+          "delta": "+73%",
+          "deltaTone": "violet"
+        },
+        {
+          "metric": "Peak Context",
+          "primary": "135.0k",
+          "baseline": "75.0k",
+          "delta": "+80%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Total Tokens — Leanest 7/7 Runs on the Leaderboard",
+        "items": [
+          {
+            "name": "gpt-6.1-sol (Pi)",
+            "value": "6.50M",
+            "widthPct": 32.6,
+            "accent": true
+          },
+          {
+            "name": "gpt-6-sol (Codex)",
+            "value": "11.23M",
+            "widthPct": 56.3
+          },
+          {
+            "name": "gemini-4-argon (AGY)",
+            "value": "12.75M",
+            "widthPct": 63.9
+          },
+          {
+            "name": "hy4-flash-free (OC)",
+            "value": "19.95M",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* gpt-6.1-sol also benefits from a 95% cache discount ($0.10/1M vs $0.20/1M on gpt-6-sol).",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "otp-upfront",
+      "kind": "steps",
+      "label": "CASE STUDY #1 UPFRONT OTP AUDIT",
+      "filename": "04-gpt6-otp-audit.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "S1 & S3 SPEED", "tone": "outline" }
+      ],
+      "headlinePrimary": "How gpt-6-sol finished in 25 minutes flat.",
+      "headlineMuted": "Read OTP source first, dodge traps completely.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Read erl_signal_handler.erl in S1",
+          "desc": "Inspected OTP 28 source upfront and picked `SIGUSR2` over `SIGUSR1` — avoiding the BEAM crash-dump trap that cost other models 20+ minutes."
+        },
+        {
+          "num": "02",
+          "title": "Solved OTP 28 TLS rejection in S3",
+          "desc": "Immediately diagnosed OTP 28's `:selfsigned_peer` rejection and switched its test harness to a two-tier Root CA + leaf certificate chain."
+        },
+        {
+          "num": "03",
+          "title": "Clean 8-commit outside-in history",
+          "desc": "Maintained genuine stage-by-stage commits across `S1`–`S7` — reversing an earlier unpublished Pi `gpt-6-sol` run that committed retroactively."
+        }
+      ],
+      "callout": {
+        "title": "Fast Because It Didn't Guess",
+        "body": "Spending 2 turns reading OTP source upfront saved **40+ turns** of trial-and-error debugging in S1 and S7.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "gpt61-systems-depth",
+      "kind": "steps",
+      "label": "CASE STUDY #2 SYSTEMS DEPTH",
+      "filename": "05-gpt61-systems-depth.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "GPT-6.1-SOL ON PI", "tone": "outline" }
+      ],
+      "headlinePrimary": "Only 6.50M tokens — still caught subtle bugs.",
+      "headlineMuted": "Three deep systems wins on gpt-6.1-sol.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Decompiled erl_signal_handler.beam",
+          "desc": "Used BEAM bytecode decompilation in S1 to solve both the `SIGUSR1` crash-dump and PTY EOF hang cleanly."
+        },
+        {
+          "num": "02",
+          "title": "Proved collector-lag inflation in S6",
+          "desc": "Used `:erlang.suspend_process/1` to prove and fix latency measurement inflation caused by collector scheduling lag."
+        },
+        {
+          "num": "03",
+          "title": "Self-initiated IPv6 literal fix",
+          "desc": "During release verification, spotted an IPv6 literal parsing edge case on its own and landed a clean fix (`93ff29f`)."
+        }
+      ],
+      "callout": {
+        "title": "Lean Context ≠ Shallow Engineering",
+        "body": "At **75.0k peak context** and **17.0k thinking tokens**, `gpt-6.1-sol` still outperformed heavier runs on systems precision.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-gpt6-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Fast and lean, not spotless.",
+      "headlineMuted": "4 caveats behind the GPT-6 frontier runs.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Highest tool error rates of all 7/7 runs",
+          "text": "`18.1%` (27/149) on Codex CLI and `15.6%` (28/180) on Pi — including **5 hidden `apply_patch` router failures** in Codex `stderr.log`."
+        },
+        {
+          "num": "02",
+          "head": "Lightest self-written test suites",
+          "text": "`gpt-6.1-sol` wrote **21 tests** (fewest of all 7/7 runs) and `gpt-6-sol` wrote **31** — vs `61–80` on `inkling` and `glm-5.3`."
+        },
+        {
+          "num": "03",
+          "head": "Codex CLI doubled token volume vs Pi",
+          "text": "Higher harness prompt overhead (`11.23M` vs `6.50M`) plus a smaller cache discount (`90%` vs `95%`) made Codex **2.3× pricier** (`$3.14` vs `$1.37`)."
+        },
+        {
+          "num": "04",
+          "head": "Zero parallel tool batching",
+          "text": "Both ran `1.00–1.01` tools/turn — leaving extra wall-clock speed on the table compared to Gemini 4 Argon's `1.86` tools/turn."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-gpt6-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from the GPT-6 frontier.",
+      "headlineMuted": "Why compact context wins.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Terse thinking can beat verbose reasoning",
+          "text": "**17k–25k** thinking tokens delivered faster, cleaner fixes than models burning `137k–208k` reasoning tokens."
+        },
+        {
+          "num": "02",
+          "head": "Tool error rate ≠ run quality",
+          "text": "High `15–18%` tool errors from fast TDD iteration and patch retries still produced the **#1 fastest** (`25m`) and **#1 leanest** (`6.50M`) 7/7 runs."
+        },
+        {
+          "num": "03",
+          "head": "Cache tier + lean harness = huge savings",
+          "text": "Pairing `gpt-6.1-sol`'s **95% cache discount** with Pi's minimal prompt cut cost to **`$1.37`** — less than half of Codex CLI."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & PARETO FRONTIER",
+        "body": "Explore **gpt-6-sol** and **gpt-6.1-sol** on the Speed × Cost Pareto plot:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "EXPLORE THE LEADERBOARD →"
+    }
+  ]
+}

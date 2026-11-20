@@ -1,0 +1,295 @@
+{
+  "published": true,
+  "order": 5,
+  "part": "Part 5",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "Third-party vs. native harness: muse-spark-1.3 on Pi vs. Muse Code",
+  "subtitle": "Same Meta model — Pi beat the native harness on every metric.",
+  "description": "A 7-slide controlled harness ablation of Meta's muse-spark-1.3-contributor (#high) on Pi vs. Muse Code: how Pi hit 7/7 for $0.14 while Muse Code's Seatbelt sandbox, 8.5× larger prompt, and Turn-339 compaction stalled at 6/7.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["muse-spark-1.3", "Pi vs Muse Code", "Harness Ablation"],
+  "relatedRunIds": [
+    "pi-muse-spark-1-3-contrib-high-20261026-0535",
+    "muse-code-muse-spark-1-3-contrib-high-20261105-1529"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-muse-spark-harness-cover.png",
+      "badges": [
+        { "text": "HARNESS ABLATION", "tone": "acid" },
+        { "text": "MUSE-SPARK-1.3", "tone": "sky" }
+      ],
+      "headlinePrimary": "When a third-party harness beats the native one.",
+      "headlineMuted": "muse-spark-1.3 on Pi vs. Muse Code.",
+      "lead": "Exact same Meta weights and `#high` effort — **Pi** passed **7/7** for **$0.14**, while **Muse Code** stalled at **6/7**.",
+      "stats": [
+        {
+          "label": "Pi (3rd-Party)",
+          "value": "7/7",
+          "sub": "56m · $0.14 · cheapest paid 7/7",
+          "accent": true
+        },
+        {
+          "label": "Muse Code (Native)",
+          "value": "6/7",
+          "sub": "77m · $0.25 · S7 failed"
+        },
+        {
+          "label": "Token Gap",
+          "value": "2.0×",
+          "sub": "37.69M on Pi vs 74.07M on Muse"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "context-anatomy",
+      "kind": "metrics",
+      "label": "PROMPT & CONTEXT TAX",
+      "filename": "02-muse-spark-context-tax.png",
+      "badges": [
+        { "text": "HARNESS OVERHEAD", "tone": "mint" },
+        { "text": "SAME WEIGHTS", "tone": "outline" }
+      ],
+      "headlinePrimary": "An 8.5× bigger system prompt compounded fast.",
+      "headlineMuted": "Muse Code burned 74.07M tokens — #1 highest on the board.",
+      "splitBar": {
+        "label": "Total Token Volume: Pi (37.69M) vs Muse Code (74.07M)",
+        "primaryLabel": "PI: 37.69M (50.9%)",
+        "primaryPct": 50.9,
+        "secondaryLabel": "EXTRA ON MUSE CODE: +36.38M (49.1%)",
+        "secondaryPct": 49.1
+      },
+      "stats": [
+        {
+          "label": "Initial Prompt",
+          "value": "3.4k vs 29.2k",
+          "sub": "Muse Code started 8.5× heavier"
+        },
+        {
+          "label": "Peak Context",
+          "value": "254k vs 389k",
+          "sub": "Muse triggered async compaction at 384k"
+        },
+        {
+          "label": "Host Tests",
+          "value": "57/57 vs 81/97",
+          "sub": "16 tests failed on host after Muse finished"
+        },
+        {
+          "label": "Tools / Turn",
+          "value": "1.11× vs 1.00×",
+          "sub": "Pi batched tools · Muse ran strictly serial"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "HEAD-TO-HEAD",
+      "filename": "03-muse-spark-pi-vs-native.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "MUSE-SPARK-1.3 · #HIGH", "tone": "outline" }
+      ],
+      "headlinePrimary": "Faster, half the tokens, and a full pass.",
+      "headlineMuted": "Pi vs. Muse Code on identical weights.",
+      "columns": ["Metric", "Pi", "Muse Code", "Delta"],
+      "rows": [
+        {
+          "metric": "Holdouts",
+          "primary": "7/7",
+          "baseline": "6/7",
+          "delta": "PASS",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Duration",
+          "primary": "56m",
+          "baseline": "77m",
+          "delta": "-27%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost",
+          "primary": "$0.14",
+          "baseline": "$0.25",
+          "delta": "-44%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "37.69M",
+          "baseline": "74.07M",
+          "delta": "-49%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Total Tokens (Same Model, Two Harnesses)",
+        "items": [
+          {
+            "name": "Pi (7/7 · $0.14)",
+            "value": "37.69M",
+            "widthPct": 50.9,
+            "accent": true
+          },
+          {
+            "name": "Muse Code (6/7 · $0.25)",
+            "value": "74.07M",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* Both runs held 99.28%–99.33% prefix cache hit rates ($0.002/1M cached input kept both under $0.25).",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "sandbox-blindspot",
+      "kind": "steps",
+      "label": "CASE STUDY #1 SANDBOX BLIND SPOT",
+      "filename": "04-muse-code-sandbox.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "SEATBELT SANDBOX", "tone": "outline" }
+      ],
+      "headlinePrimary": "Muse Code's sandbox hid 16 failing tests.",
+      "headlineMuted": "And blinded the agent on S7 Ctrl-C.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Seatbelt blocked loopback & PTYs",
+          "desc": "Muse Code's `proxy_only` sandbox rejected loopback TCP (`:eperm`) and blocked real PTY allocation during agent test runs."
+        },
+        {
+          "num": "02",
+          "title": "Wrong S7 diagnosis",
+          "desc": "Without a real foreground terminal, the model misdiagnosed background `&` `SIG_IGN` and port process-group isolation."
+        },
+        {
+          "num": "03",
+          "title": "16 failures on the real host",
+          "desc": "Running `mix test` outside the sandbox exposed **81/97** tests passing and a broken `S7` foreground `Ctrl-C` handler."
+        }
+      ],
+      "callout": {
+        "title": "Harness Sandbox ≠ Reality",
+        "body": "A strict sandbox can prevent an agent from verifying networking and PTY code — turning a capable model into a **6/7** run.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "pi-deep-fix",
+      "kind": "steps",
+      "label": "CASE STUDY #2 HOW PI WON S7",
+      "filename": "05-pi-signal-debugging.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "PI EXECUTION", "tone": "outline" }
+      ],
+      "headlinePrimary": "Unblocked on Pi, the same model solved S7.",
+      "headlineMuted": "Zero dependencies and 57/57 clean tests.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Zero-dep HTTP/1.1 + TLS (`deps: []`)",
+          "desc": "Hand-rolled a streaming HTTP/1.1 + TLS client in S3 while solving Mix's `:ssl` code-path pruning and `:logger_std_h` stderr routing."
+        },
+        {
+          "num": "02",
+          "title": "15.7-minute S7 signal root-cause",
+          "desc": "With real PTY access on Pi, it uncovered OTP's `:erl_signal_handler` race against `System.trap_signal(:sigterm, ...)` and fixed it cleanly."
+        },
+        {
+          "num": "03",
+          "title": "No context compaction needed",
+          "desc": "Peak context stayed at **254.1k** across 262 turns, avoiding the mid-turn compaction drift that hit Muse Code at Turn 339."
+        }
+      ],
+      "callout": {
+        "title": "Cheapest Paid 7/7 on the Board",
+        "body": "At **$0.14** (`99.28%` cache hit), Pi + `muse-spark-1.3` beat every other paid 7/7 run by nearly **10×**.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-muse-spark-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Pi won the run, not every detail.",
+      "headlineMuted": "4 caveats across both muse-spark-1.3 runs.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Pi skipped Credo (9 post-run issues)",
+          "text": "Pi left `deps: []` with no linter, whereas Muse Code built a custom AST lint gate (`mix capy_bench.lint`)."
+        },
+        {
+          "num": "02",
+          "head": "Turn-339 compaction amnesia on Muse Code",
+          "text": "Mid-turn async compaction at **384k** tokens caused Muse Code's final summary to claim S1–S7 were 'already implemented'."
+        },
+        {
+          "num": "03",
+          "head": "Silent crash dumps & pipe-masked errors",
+          "text": "On Pi, only 3 of 179 bash calls flagged `isError: true` because pipes masked red-phase failures and 4 silent `erl_crash.dump` files."
+        },
+        {
+          "num": "04",
+          "head": "Ultra-cheap cache pricing hid token bloat",
+          "text": "A **98% cache discount** (`$0.002/1M`) kept 74.07M tokens at `$0.25` — at standard flash rates, that volume would cost **$2.40+**."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-muse-spark-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from Pi vs. Muse Code.",
+      "headlineMuted": "Never judge a model by one harness.",
+      "items": [
+        {
+          "num": "01",
+          "head": "The native harness isn't always best",
+          "text": "Third-party **Pi** beat native **Muse Code** on pass rate (`7/7` vs `6/7`), speed (`-27%`), tokens (`-49%`), and cost (`-44%`)."
+        },
+        {
+          "num": "02",
+          "head": "Lean prompts protect long-horizon work",
+          "text": "Starting at `3.4k` instead of `29.2k` tokens avoided a `384k` mid-turn compaction that broke end-of-run coherence."
+        },
+        {
+          "num": "03",
+          "head": "Sandboxes must match target runtime",
+          "text": "Blocking loopback TCP and PTYs makes network and CLI benchmarks untestable — masking failures until host verification."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & HARNESS COMPARE",
+        "body": "Inspect both **muse-spark-1.3** runs side-by-side in the Compare workbench:",
+        "url": "eval.rizafahmi.com/compare"
+      },
+      "footerRight": "COMPARE ON THE WEB →"
+    }
+  ]
+}

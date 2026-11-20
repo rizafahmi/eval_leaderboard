@@ -1,0 +1,307 @@
+{
+  "published": true,
+  "order": 7,
+  "part": "Part 7",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "What separates 7/7 from 6/7 across all 20 benchmark runs",
+  "subtitle": "Patterns from 20 published runs, 9 harnesses, and 15 models.",
+  "description": "A 7-slide meta-synthesis of all 20 published Capy Bench runs: where the 6 partial runs failed (S5 & S7), why duration and turns don't predict success, the Speed × Cost Pareto frontier, and what actually separates 7/7 winners.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["Meta Analysis", "20 Runs", "Pareto Frontier"],
+  "relatedRunIds": [
+    "codex-cli-gpt-6-sol-high-20261025-1935",
+    "pi-gpt-6-1-sol-high-20261025-1820",
+    "pi-muse-spark-1-3-contrib-high-20261026-0535",
+    "opencode-hy4-flash-free-high-20261117-0755"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-meta-synthesis-cover.png",
+      "badges": [
+        { "text": "META SYNTHESIS", "tone": "acid" },
+        { "text": "20 PUBLISHED RUNS", "tone": "sky" }
+      ],
+      "headlinePrimary": "What separates 7/7 from 6/7 across 20 runs.",
+      "headlineMuted": "Patterns from 15 models and 9 harnesses.",
+      "lead": "**14 runs** cleared every stage; **6 runs** stalled short — and they spent almost the exact same time trying.",
+      "stats": [
+        {
+          "label": "Full Pass Rate",
+          "value": "14 / 20",
+          "sub": "70% passed all 7 holdouts",
+          "accent": true
+        },
+        {
+          "label": "Easy Stages",
+          "value": "20 / 20",
+          "sub": "S1, S2 & S4 passed on every run"
+        },
+        {
+          "label": "Real Gatekeepers",
+          "value": "S5 & S7",
+          "sub": "85% pass rate — live HTTP & Ctrl-C"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "pass-vs-fail",
+      "kind": "metrics",
+      "label": "7/7 VS PARTIAL RUNS",
+      "filename": "02-meta-pass-vs-fail.png",
+      "badges": [
+        { "text": "COHORT SPLIT", "tone": "mint" },
+        { "text": "14 PASS · 6 PARTIAL", "tone": "outline" }
+      ],
+      "headlinePrimary": "Working longer didn't buy a 7/7 pass.",
+      "headlineMuted": "Partial runs averaged the same time and turns.",
+      "splitBar": {
+        "label": "Published Leaderboard Outcomes (20 Runs)",
+        "primaryLabel": "FULL 7/7 PASS: 14 runs (70%)",
+        "primaryPct": 70,
+        "secondaryLabel": "PARTIAL (4–6/7): 6 runs (30%)",
+        "secondaryPct": 30
+      },
+      "stats": [
+        {
+          "label": "Avg Duration",
+          "value": "59m vs 62m",
+          "sub": "7/7 runs were actually slightly faster"
+        },
+        {
+          "label": "Avg Turns",
+          "value": "216 vs 224",
+          "sub": "More turns didn't fix broken assumptions"
+        },
+        {
+          "label": "Avg Cost",
+          "value": "$3.67 vs $0.58",
+          "sub": "Ultra-cheap runs clustered in the <7/7 group"
+        },
+        {
+          "label": "Avg Peak Ctx",
+          "value": "224k vs 232k",
+          "sub": "Context size alone didn't decide outcome"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "pareto-frontier",
+      "kind": "comparison",
+      "label": "THE PARETO FRONTIER",
+      "filename": "03-meta-pareto-frontier.png",
+      "badges": [
+        { "text": "PARETO FRONTIER", "tone": "sky" },
+        { "text": "SPEED × COST (7/7)", "tone": "outline" }
+      ],
+      "headlinePrimary": "Four runs define the Speed × Cost frontier.",
+      "headlineMuted": "From $0.00 free tier to 25-minute flagship speed.",
+      "columns": ["Metric", "gpt-6-sol", "hy4-flash", "Delta"],
+      "rows": [
+        {
+          "metric": "Duration",
+          "primary": "25m",
+          "baseline": "45m",
+          "delta": "-44%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost",
+          "primary": "$3.14",
+          "baseline": "$0.00",
+          "delta": "+$3.14",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "11.23M",
+          "baseline": "19.95M",
+          "delta": "-44%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "Turns",
+          "primary": "149",
+          "baseline": "227",
+          "delta": "-34%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "Speed Among the 4 Frontier Champions (Lower = Faster)",
+        "items": [
+          {
+            "name": "gpt-6-sol ($3.14)",
+            "value": "25m",
+            "widthPct": 44.6,
+            "accent": true
+          },
+          {
+            "name": "gpt-6.1-sol ($1.37)",
+            "value": "40m",
+            "widthPct": 71.4
+          },
+          {
+            "name": "hy4-flash ($0.00)",
+            "value": "45m",
+            "widthPct": 80.4
+          },
+          {
+            "name": "muse-spark ($0.14)",
+            "value": "56m",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* Only 3 runs are strictly Pareto-optimal (hy4-flash, gpt-6.1-sol, gpt-6-sol); muse-spark ($0.14) is the cheapest paid 7/7.",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "gatekeepers",
+      "kind": "steps",
+      "label": "PATTERN #1 REAL GATEKEEPERS",
+      "filename": "04-meta-s5-s7-gatekeepers.png",
+      "badges": [
+        { "text": "PATTERN #1", "tone": "violet" },
+        { "text": "FAILURE MODES", "tone": "outline" }
+      ],
+      "headlinePrimary": "Everyone passes S1, S2 & S4.",
+      "headlineMuted": "Live HTTP (S5) and PTY Ctrl-C (S7) separate the field.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "S5: synthetic tests hide HTTP bugs (17/20)",
+          "desc": "Hand-rolled chunked parsers passed local test suites, then broke on live Cloudflare `301` redirects (`glm-5.3-flash Low/Max`, `pi-deepseek`)."
+        },
+        {
+          "num": "02",
+          "title": "S7: real terminals break shortcuts (17/20)",
+          "desc": "Foreground PTY `Ctrl-C` exposed BEAM boot races, POSIX `wait` traps, and sandbox blind spots (`muse-code`, `deepseek-flash`)."
+        },
+        {
+          "num": "03",
+          "title": "Winners audit runtime internals first",
+          "desc": "The cleanest 7/7 runs read OTP source (`erl_signal_handler.erl`, `httpc_handler.erl`) instead of guessing through trial-and-error."
+        }
+      ],
+      "callout": {
+        "title": "Why Holdout Probes Matter",
+        "body": "Every single `<7/7` run reported **green local tests** — only live HTTP and real foreground PTY holdouts caught the bugs.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "harness-multiplier",
+      "kind": "steps",
+      "label": "PATTERN #2 HARNESS MULTIPLIER",
+      "filename": "05-meta-harness-effect.png",
+      "badges": [
+        { "text": "PATTERN #2", "tone": "violet" },
+        { "text": "HARNESS EFFECT", "tone": "outline" }
+      ],
+      "headlinePrimary": "Your harness moves the needle as much as the model.",
+      "headlineMuted": "Three controlled ablations proved it.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "muse-spark-1.3: Pi vs Muse Code",
+          "desc": "Same weights flipped from **6/7** (`77m`, `$0.25`) on native Muse Code to **7/7** (`56m`, `$0.14`) on third-party Pi."
+        },
+        {
+          "num": "02",
+          "title": "deepseek-flash: Pi → DSH → OMP",
+          "desc": "Across 3 harnesses, the exact same budget family climbed **4/7 → 5/7 → 6/7** at `$0.13–$0.19`."
+        },
+        {
+          "num": "03",
+          "title": "gemini-4-carbon: AGY vs OMP",
+          "desc": "Switching from Antigravity CLI to OMP shaved **25 minutes** (`88m → 63m`) and cut cost **-17%** (`$7.16 → $5.91`)."
+        }
+      ],
+      "callout": {
+        "title": "Prompt Size, Sandbox & Batching",
+        "body": "Lean system prompts, real PTY access, and parallel tool batching (`1.86×` on Argon OMP) compound on every single turn.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "CROSS-BOARD CAVEATS",
+      "filename": "06-meta-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 BLIND SPOTS", "tone": "outline" }
+      ],
+      "headlinePrimary": "4 metrics that lie if you read them alone.",
+      "headlineMuted": "What 20 forensic audits taught me.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Total tokens without cache rate",
+          "text": "`94%–99.5%` prefix caching cut bills by **80%–95%** — a `73M`-token run can cost `$0.25` or `$6.95` depending on cache-read rates."
+        },
+        {
+          "num": "02",
+          "head": "Raw tool error percentage",
+          "text": "Gemini 4 AGY had **100% file-edit accuracy** yet showed `11%–14%` tool errors from deliberate red-phase TDD test runs."
+        },
+        {
+          "num": "03",
+          "head": "Green tests without git hygiene",
+          "text": "`erl_crash.dump` files (2.9–5.5 MB) slipped into git history across `hy4-flash`, `glm-5.3-flash`, and `muse-spark` via `git add -A`."
+        },
+        {
+          "num": "04",
+          "head": "Single-run variance (n=1)",
+          "text": "Real-world API stalls (`19m57s` on Carbon, `21m` aborts on GLM Low) and temporary free tiers shift individual run numbers."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-meta-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 RULES", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 rules for picking a coding agent today.",
+      "headlineMuted": "Distilled from 20 real-world runs.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Pick the tier for your constraint",
+          "text": "**Speed**: `gpt-6-sol` (`25m`) · **Value**: `muse-spark` on Pi (`$0.14`) or `glm-5.3-flash High` (`$0.87`) · **Balanced**: `Gemini 4 Hydrogen/Neon` (`34–44m`)."
+        },
+        {
+          "num": "02",
+          "head": "Don't blindly crank effort to Max",
+          "text": "Middle-high effort (`High`) beat `Max` on completion, speed, and cost — and concise thinking (`17k–25k`) beat bloated loops."
+        },
+        {
+          "num": "03",
+          "head": "Audit the harness & holdouts, not just the model",
+          "text": "The best weights fail inside a blind sandbox or bloated prompt — always verify against live targets and real terminals."
+        }
+      ],
+      "archive": {
+        "label": "EXPLORE ALL 20 RUNS",
+        "body": "Filter the full leaderboard, inspect Pareto frontiers, and run side-by-side comparisons:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "EXPLORE THE LEADERBOARD →"
+    }
+  ]
+}
