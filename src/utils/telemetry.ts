@@ -332,7 +332,7 @@ export function analyzeSingleRun(id: string, d: RunRecordData): AnalyzedRun {
   const plan = getPlanStats(d.planCompletion);
   const tokens = extractExactTokens(d);
   const context = extractContextTelemetry(d);
-  const costMetrics = computeCostEconometrics(tokens, d.model, d.costUsd);
+  const costMetrics = computeCostEconometrics(tokens, d.model, d.costUsd, d.timestamp);
 
   const llmCalls =
     d.calls?.llmCalls ??
@@ -821,6 +821,39 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       runAId: ompDeepseekV4Flash.id,
       runBId: piDeepseekFlash.id,
       findingHeadline: `On the same DeepSeek-V4.1-Flash-1017 model, omp improved holdout completion from ${piDeepseekFlash.plan.completed}/${piDeepseekFlash.plan.total} to ${ompDeepseekV4Flash.plan.completed}/${ompDeepseekV4Flash.plan.total} (fixing live HTTPS system CA verification & adding 0-issue Credo --strict) at $${ompDeepseekV4Flash.data.costUsd.toFixed(2)} Off-Peak (¥0.84; $0.25 at Peak vs. Pi's $${piDeepseekFlash.data.costUsd.toFixed(2)} Peak), failing only S7 on >1s in-flight SIGTERM teardown.`,
+    });
+  }
+
+  // 3b1c. Harness Ablation: DeepSeek Harness vs omp on deepseek-flash (High)
+  const dshDeepseekFlash = runs.find(
+    (r) => r.displayHarness === 'DeepSeek Harness' && r.data.model === 'deepseek-flash'
+  );
+  if (dshDeepseekFlash && ompDeepseekV4Flash) {
+    presets.push({
+      id: 'harness-dsh-vs-omp-deepseek-flash',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'DeepSeek Harness vs. omp (deepseek-flash · High)',
+      subtitle:
+        'Same DeepSeek-V4.1-Flash-1017 checkpoint in Off-Peak window ($0.14 vs $0.13) - dsh --native (24 tools) vs. omp 4-tool isolated',
+      runAId: ompDeepseekV4Flash.id,
+      runBId: dshDeepseekFlash.id,
+      findingHeadline: `Both hit >99.4% cache rates in Off-Peak ($${ompDeepseekV4Flash.data.costUsd.toFixed(2)} vs $${dshDeepseekFlash.data.costUsd.toFixed(2)}), with complementary holdout misses: omp cleared 6/7 (${ompDeepseekV4Flash.data.durationMinutes}m, clean live HTTPS, missed S7 on SIGTERM :erl_signal_handler race) while DeepSeek Harness cleared 5/7 (${dshDeepseekFlash.data.durationMinutes}m, clean post-boot S7 via SIGUSR2, missed S3/S6 on discard_exact/2 double-counting).`,
+    });
+  }
+
+  // 3b1d. Harness Ablation: DeepSeek Harness vs Pi on deepseek-flash (High)
+  if (dshDeepseekFlash && piDeepseekFlash) {
+    presets.push({
+      id: 'harness-dsh-vs-pi-deepseek-flash',
+      category: 'harness',
+      badge: 'HARNESS ABLATION',
+      title: 'DeepSeek Harness vs. Pi (deepseek-flash · High)',
+      subtitle:
+        'Same deepseek-flash model across 46-test suites - dsh Off-Peak ($0.14 / $0.28 Peak eq.) vs. Pi Peak ($0.19)',
+      runAId: dshDeepseekFlash.id,
+      runBId: piDeepseekFlash.id,
+      findingHeadline: `DeepSeek Harness cleared ${dshDeepseekFlash.plan.completed}/${dshDeepseekFlash.plan.total} (adding 0-issue Credo --strict and clean system CA loading at 99.49% cache hit) vs. Pi's ${piDeepseekFlash.plan.completed}/${piDeepseekFlash.plan.total}, but spent ${dshDeepseekFlash.data.durationMinutes}m vs ${piDeepseekFlash.data.durationMinutes}m (${dshDeepseekFlash.llmCalls} vs ${piDeepseekFlash.llmCalls} turns, 49 upfront recon steps) and still failed live chunked HTTPS on discard_exact/2 double-counting.`,
     });
   }
 

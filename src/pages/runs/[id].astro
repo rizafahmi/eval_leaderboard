@@ -609,7 +609,9 @@ const pageSections = [
           </dd>
           <dd class="kpi-sub" title={telemetry.costMetrics.profile?.pricingStatusNote}>
             {telemetry.costMetrics.profile?.pricingBadge
-              ? `${telemetry.costMetrics.profile.billedTier.label} (Nov 2026 · paid rate TBD)`
+              ? d.costUsd === 0
+                ? `${telemetry.costMetrics.profile.billedTier.label} (Nov 2026 · paid rate TBD)`
+                : telemetry.costMetrics.profile.billedTier.label
               : isCostLeader
                 ? `Lowest paid 7/7 leader · range ${formatCost(lowestCost)}–${formatCost(highestCost)}`
                 : isSubDollarPass

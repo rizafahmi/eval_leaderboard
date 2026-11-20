@@ -104,6 +104,8 @@ const HARNESS_DISPLAY_MAP: Record<string, string> = {
   'antigravity cli': 'Antigravity CLI',
   'codex cli': 'Codex CLI',
   'cursor-agent cli': 'Cursor Agent CLI',
+  'deepseek harness': 'DeepSeek Harness',
+  dsh: 'DeepSeek Harness',
   'muse code': 'Muse Code',
   omp: 'omp',
   opencode: 'OpenCode',

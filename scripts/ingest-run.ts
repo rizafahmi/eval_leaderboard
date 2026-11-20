@@ -37,8 +37,8 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     .filter(Boolean);
 
   const events: RawTurnEvent[] = [];
+  const pendingToolEventsByCallId = new Map<string, RawTurnEvent>();
   let stepCounter = 0;
-
   for (const line of lines) {
     let parsed: Record<string, unknown>;
     try {
@@ -51,9 +51,61 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     if (
       parsed.event === 'init' ||
       parsed.event === 'result' ||
-      parsed.type === 'model_usage'
+      parsed.type === 'model_usage' ||
+      parsed.type === 'session' ||
+      parsed.type === 'turn/start' ||
+      parsed.type === 'turn/end' ||
+      parsed.type === 'step/start' ||
+      parsed.type === 'step/end' ||
+      parsed.type === 'permission/preset' ||
+      parsed.type === 'sandbox/mode' ||
+      parsed.type === 'approval/policy' ||
+      parsed.type === 'request/header' ||
+      parsed.type === 'request/context' ||
+      parsed.type === 'session/title' ||
+      parsed.type === 'session-log-deepseek/delivery-accepted' ||
+      parsed.type === 'job/registered' ||
+      parsed.type === 'job/settled' ||
+      parsed.type === 'agent/inbox/spliced'
     ) {
       continue;
+    }
+    if (parsed.type === 'tool/result') {
+      const resData =
+        parsed.data && typeof parsed.data === 'object'
+          ? (parsed.data as Record<string, unknown>)
+          : undefined;
+      const resMsg = resData?.message as Record<string, unknown> | undefined;
+      const callId =
+        typeof resMsg?.toolCallId === 'string'
+          ? resMsg.toolCallId
+          : typeof resData?.callId === 'string'
+            ? resData.callId
+            : undefined;
+      const isResultError = Boolean(
+        resMsg?.isError === true ||
+          resData?.isError === true ||
+          String(resData?.status ?? '').toLowerCase() === 'error'
+      );
+      if (callId) {
+        const pending = pendingToolEventsByCallId.get(callId);
+        if (pending && isResultError) {
+          pending.toolError = true;
+        }
+        pendingToolEventsByCallId.delete(callId);
+      }
+      continue;
+    }
+    if (parsed.type === 'tool_result' && typeof parsed.callId === 'string') {
+      const pending = pendingToolEventsByCallId.get(parsed.callId);
+      if (pending) {
+        const st = String(parsed.status ?? '').toLowerCase();
+        if (parsed.isError === true || st === 'error' || st === 'failed') {
+          pending.toolError = true;
+        }
+        pendingToolEventsByCallId.delete(parsed.callId);
+        continue;
+      }
     }
     if (stepUpdate && stepUpdate.state === 'ACTIVE') {
       continue;
@@ -69,7 +121,13 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
           ? evObj.stepIndex
           : stepCounter;
 
-    const msg = evObj.message as Record<string, unknown> | undefined;
+    const dshData =
+      parsed.data && typeof parsed.data === 'object'
+        ? (parsed.data as Record<string, unknown>)
+        : undefined;
+    const msg =
+      (evObj.message as Record<string, unknown> | undefined) ??
+      (dshData?.message as Record<string, unknown> | undefined);
     const resp = evObj.response as Record<string, unknown> | undefined;
     const payload = evObj.payload as Record<string, unknown> | undefined;
     const payloadModels = Array.isArray(payload?.models)
@@ -82,12 +140,12 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
     const toolInfo = evObj.tool_info as Record<string, unknown> | undefined;
     const usage =
       (evObj.usage as Record<string, unknown> | undefined) ??
+      (dshData?.usage as Record<string, unknown> | undefined) ??
       (msg?.usage as Record<string, unknown> | undefined) ??
       (resp?.usage as Record<string, unknown> | undefined) ??
       payloadModels ??
       partTokens ??
       {};
-
     const cachedInputTokens = Number(
       usage.cache_read_input_tokens ??
         usage.cached_input_tokens ??
@@ -108,10 +166,22 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         usage.input ??
         0
     );
+    const rawOutputForTotalCheck = Number(
+      usage.output_tokens ??
+        usage.completion_tokens ??
+        usage.outputTokens ??
+        usage.output ??
+        0
+    );
+    const reportedTotalTokens = Number(usage.totalTokens ?? usage.total_tokens ?? NaN);
+    const inputAlreadyUncached =
+      Number.isFinite(reportedTotalTokens) &&
+      reportedTotalTokens === rawInput + cachedInputTokens + rawOutputForTotalCheck;
     const hasInclusiveInput =
-      usage.cached_input_tokens !== undefined ||
-      usage.cached_tokens !== undefined ||
-      usage.cacheReadTokens !== undefined;
+      !inputAlreadyUncached &&
+      (usage.cached_input_tokens !== undefined ||
+        usage.cached_tokens !== undefined ||
+        usage.cacheReadTokens !== undefined);
     const uncachedInputTokens = Number(
       usage.uncached_input_tokens ??
         (hasInclusiveInput && rawInput >= cachedInputTokens
@@ -168,11 +238,13 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         ? evObj.tool_name
         : typeof evObj.tool === 'string'
           ? evObj.tool
-          : typeof part?.tool === 'string'
-            ? part.tool
-            : typeof msg?.toolName === 'string'
-              ? msg.toolName
-              : undefined;
+          : parsed.type === 'tool/call' && typeof dshData?.name === 'string'
+            ? dshData.name
+            : typeof part?.tool === 'string'
+              ? part.tool
+              : typeof msg?.toolName === 'string'
+                ? msg.toolName
+                : undefined;
     const toolOutput = typeof toolInfo?.output === 'string' ? toolInfo.output : '';
     const toolExitMatch = toolOutput.match(/Command exited with code (\d+)/);
     const hasNonZeroCommandExit = Boolean(toolExitMatch && toolExitMatch[1] !== '0');
@@ -186,7 +258,7 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
         String(partState?.status ?? '').toLowerCase() === 'error' ||
         hasNonZeroCommandExit
     );
-    events.push({
+    const turnEvent: RawTurnEvent = {
       stepIndex,
       timestamp: typeof evObj.timestamp === 'string' ? evObj.timestamp : undefined,
       role,
@@ -198,7 +270,13 @@ export function parseRawTranscriptJsonl(jsonlContent: string): RawTurnEvent[] {
       toolError,
       commitMessage:
         typeof evObj.commitMessage === 'string' ? evObj.commitMessage : undefined,
-    });
+    };
+    if (parsed.type === 'tool/call' && typeof dshData?.callId === 'string') {
+      pendingToolEventsByCallId.set(dshData.callId, turnEvent);
+    } else if (parsed.type === 'tool_call' && typeof parsed.callId === 'string') {
+      pendingToolEventsByCallId.set(parsed.callId, turnEvent);
+    }
+    events.push(turnEvent);
   }
 
   return events;
@@ -305,7 +383,8 @@ export function buildRunRecordFromEvents(opts: {
   const econ = computeCostEconometrics(
     { uncachedInput, cachedInput, output, thinking, total },
     model,
-    opts.costUsd ?? 0
+    opts.costUsd ?? 0,
+    timestamp
   );
   if (!econ.profile && opts.costUsd === undefined) {
     throw new Error(

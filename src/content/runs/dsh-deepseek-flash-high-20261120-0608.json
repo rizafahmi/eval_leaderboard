@@ -1,0 +1,299 @@
+{
+  "timestamp": "2026-11-20T06:08:23+07:00",
+  "codingHarness": "DeepSeek Harness",
+  "model": "deepseek-flash",
+  "effort": "High",
+  "provider": "DeepSeek",
+  "durationMinutes": 31,
+  "costUsd": 0.14,
+  "commits": 9,
+  "tests": {
+    "passed": 46,
+    "total": 46,
+    "durationSeconds": 57.4,
+    "details": "Finished in 57.4 seconds (0.9s async, 56.4s sync) - 46 passed (57.2s-57.5s in JSONL at Steps 104-107; mix format --check-formatted clean; mix credo: 57 checks / mix credo --strict: 69 checks on 20 files, 197 mods/funs, 0 issues)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": false,
+    "S4": true,
+    "S5": true,
+    "S6": false,
+    "S7": true
+  },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 5,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "unverifiedSlices": [
+      "S3",
+      "S6"
+    ],
+    "agentSuitePassed": 46,
+    "agentSuiteTotal": 46
+  },
+  "interface": {
+    "type": "cli",
+    "command": "dsh headless --patch <native-bench-patch.yml> --permission-mode danger-full-access --approval-policy never --json < PROMPT.md (via run_dsh.fish -m deepseek-flash -t high --native)",
+    "details": "Run window: 06:08:23-06:39:35 WIB (31m 12.2s / 1,872.2s wall-clock in session.v4.jsonl.zstd; 31m13s in manual note, 06:07:25 git init) • Session session-97fcf525-ded1-40bc-b346-9aea960da3a8 (deepseek-official / deepseek-flash, reasoningEffort: high, dsh v0.2.2-rc.5 --native mode with 24 tools advertised, 126 LLM steps, 0 compactions)"
+  },
+  "tokens": {
+    "input": "67.5k",
+    "cachedInput": "13.14M",
+    "output": "151.2k",
+    "total": "13.36M",
+    "cacheHitRate": "99.49%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 67508,
+    "cachedInput": 13144832,
+    "output": 151208,
+    "total": 13363548,
+    "cacheHitRatePct": 99.49
+  },
+  "contextWindow": "203.0k peak (6,648 → 202,954 prompt tokens; 203,592 total; 1,048,576 window)",
+  "contextMetrics": {
+    "minTokens": 6648,
+    "avgTokens": 104860,
+    "peakTokens": 202954,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 19.36
+  },
+  "calls": {
+    "llmCalls": 126,
+    "toolCalls": {
+      "total": 133,
+      "done": 133,
+      "error": 0,
+      "breakdown": [
+        {
+          "tool": "bash",
+          "total": 126,
+          "done": 126,
+          "error": 0
+        },
+        {
+          "tool": "read",
+          "total": 4,
+          "done": 4,
+          "error": 0
+        },
+        {
+          "tool": "job_output",
+          "total": 2,
+          "done": 2,
+          "error": 0
+        },
+        {
+          "tool": "job_kill",
+          "total": 1,
+          "done": 1,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "9ee659a",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "Use portable kill syntax in launcher"
+    },
+    {
+      "hash": "411a4c9",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "Verify V1 release"
+    },
+    {
+      "hash": "04899b1",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "S7: handle Ctrl-C with partial summary"
+    },
+    {
+      "hash": "eda03c8",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "S6: report timing"
+    },
+    {
+      "hash": "e86634d",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "S5: report outcomes and exit codes"
+    },
+    {
+      "hash": "91f30fe",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "S4: run paced five-second loop"
+    },
+    {
+      "hash": "b610c85",
+      "relativeTime": "2 hours",
+      "author": "Riza Fahmi",
+      "message": "S3: send bounded GET requests"
+    },
+    {
+      "hash": "d25e80f",
+      "relativeTime": "3 hours",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments"
+    },
+    {
+      "hash": "7ba7562",
+      "relativeTime": "3 hours",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI"
+    },
+    {
+      "hash": "b95a4fe",
+      "relativeTime": "3 hours",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "67,508",
+      "rate2026": "$0.15 / 1M",
+      "cost2026": "$0.010126"
+    },
+    {
+      "component": "Cached Input (cacheReadTokens)",
+      "tokens": "13,144,832",
+      "rate2026": "$0.003 / 1M (98% off)",
+      "cost2026": "$0.039434"
+    },
+    {
+      "component": "Output (reasoning bundled by dsh)",
+      "tokens": "151,208",
+      "rate2026": "$0.60 / 1M",
+      "cost2026": "$0.090725"
+    },
+    {
+      "component": "Total",
+      "tokens": "13,363,548",
+      "cost2026": "$0.14 ($0.140285)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation & OTP 28 SIGUSR2 / PKI reconnaissance",
+      "stepRange": "1–49",
+      "llmCalls": 49,
+      "manageTaskPolls": 0,
+      "costUsd": 0.04
+    },
+    {
+      "slice": "S1: CLI help, +Bi escript & SIGUSR2 launcher (7ba7562)",
+      "stepRange": "50–57",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S2: Strict CLI argument & URL validation (d25e80f)",
+      "stepRange": "58–61",
+      "llmCalls": 4,
+      "manageTaskPolls": 0,
+      "costUsd": 0
+    },
+    {
+      "slice": "S3: Raw :gen_tcp/:ssl GET client, TLS & test servers (b610c85)",
+      "stepRange": "62–78",
+      "llmCalls": 17,
+      "manageTaskPolls": 0,
+      "costUsd": 0.03
+    },
+    {
+      "slice": "S4: Paced 5s single-flight runner & deterministic tests (91f30fe)",
+      "stepRange": "79–86",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S5: Status summary formatting & exit codes (e86634d)",
+      "stepRange": "87–93",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S6: Elapsed time & completed-response p50/p95 latencies (eda03c8)",
+      "stepRange": "94–98",
+      "llmCalls": 5,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (04899b1)",
+      "stepRange": "99–108",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "costUsd": 0.01
+    },
+    {
+      "slice": "Release verification & portable kill -s USR2 fix (411a4c9, 9ee659a)",
+      "stepRange": "109–126",
+      "llmCalls": 18,
+      "manageTaskPolls": 0,
+      "costUsd": 0.02
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Lossless Session Audit: 31m 12.2s Wall-Clock (31m13s Note), dsh v0.2.2-rc.5 --native Mode, 9 Agent Commits & 46/46 Clean Credo Suite",
+    "Why S3 & S6 Failed Holdout (5/7 vs. 7/7 Claimed): discard_exact/2 Double-Counted Partial recv Chunks, Breaking Live Chunked HTTPS (0/26) & Early-Returning Multi-Packet Bodies",
+    "Clean Post-Boot S7 Ctrl-C via +Bi + SIGUSR2 (Boot-Window Exit 159 Race) & Unnoticed OTP TLS [notice] Pollution on stdout",
+    "Leaderboard-Record 99.49% Prefix Cache Hit ($0.14 Off-Peak / ¥0.94 vs. $0.28 Peak), 49-Step Upfront Recon & Zero write/edit Tool Usage (36 Inline Python Patches)"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Lossless Session Audit: 31m 12.2s Wall-Clock (31m13s Note), dsh v0.2.2-rc.5 --native Mode, 9 Agent Commits & 46/46 Clean Credo Suite",
+      "bullets": [
+        "Exact Wall-Clock Alignment (`31m13s` Note vs. `31m 12.2s` Session Log): Following the pre-run `init` commit (`b95a4fe` at `06:07:25 WIB`), `session-97fcf525-ded1-40bc-b346-9aea960da3a8` opened at `2026-11-19T23:08:23.038Z` (`2026-11-20 06:08:23.038 WIB`) and completed `turn/end` (`reason: completed`) at `06:39:35.211 WIB` for an exact active duration of `31m 12.17s` (`1,872.17s` / `31m`). Projected `20261119T230822Z.events.jsonl` (657 events) matches the exact token totals via its `126` `status` `step_end` `usage` records, while lossless `records/sessions/.../session.v4.jsonl.zstd` (1,045 events) supplies per-event wall-clock timestamps and `request/header` metadata (`model`, `reasoningEffort`, `contextWindow`, advertised `tools`).",
+        "Native Harness Mode (`dsh v0.2.2-rc.5`) & 9 Agent Commits: `request/header` (`seq 15`) confirms `provider: \"deepseek-official\"`, `model: \"deepseek-flash\"`, `reasoningEffort: \"high\"`, `contextWindow: 1,048,576`, and `24` native tools (`bash`, `read`, `write`, `edit`, `glob`, `grep`, `job_*`, `subagent*`, `todo_write`, `web_*`, `workflow`, etc.) with `AGENTS.md` and workspace skills auto-injected. Starting from `b95a4fe` (`init`), the agent produced `9` organic commits (`7ba7562` S1 through `04899b1` S7, `411a4c9` release verification, and `9ee659a` switching `kill -USR2` to portable `kill -s USR2` in `cb`), `885` production LoC across 6 modules (`lib/capy_bench/*.ex`), and `1,362` test LoC across 15 files.",
+        "Test Suite & Credo Parity: Manual `mix test` (`46/46` passed in `57.4s` [`0.9s async, 56.4s sync`]) matches the in-session backgrounded runs (`57.5s` at Step 104 and `57.2s` at Step 106-107), `mix format --check-formatted` passed cleanly, and Credo passed with `0` issues (`57` default checks / `69` `--strict` checks across `20` files, `197 mods/funs`)."
+      ]
+    },
+    {
+      "title": "Why S3 & S6 Failed Holdout (5/7 vs. 7/7 Claimed): discard_exact/2 Double-Counted Partial recv Chunks, Breaking Live Chunked HTTPS (0/26) & Early-Returning Multi-Packet Bodies",
+      "bullets": [
+        "Root Cause at `lib/capy_bench/http.ex:340` (`discard_exact/2` Recursion Bug): When streaming a fixed-length body or HTTP/1.1 chunk size across multiple socket reads, `discard_exact/2` receives `data` smaller than `remaining` and recurses with `discard_exact(%{conn | buffer: data}, remaining - byte_size(data))` instead of `%{conn | buffer: <<>>}`. Because `byte_size(data)` is simultaneously subtracted from `remaining` AND retained in `conn.buffer`, the next recursive frame counts those bytes a second time. The bug was written in Step 62 and survived Step 70's `binary_part/3` buffer-slicing patch untouched.",
+        "Live HTTPS & Multi-Packet Holdout Failures (S3 & S6): Against live `https://rizafahmi.com` (`Transfer-Encoding: chunked`), `discard_exact/2` terminates mid-chunk leaving body bytes in `conn.buffer`, causing `expect_crlf/1` to return `{:error, :invalid_response}` on every single request (`./cb https://rizafahmi.com` exited `1` with `Started: 26, HTTP responses: 0, Transport failures: 26`, whereas `./cb http://rizafahmi.com` passed with `49/49` HTTP `301` and `https://example.com` succeeded only because its tiny response fit in one TLS record). On a local multi-packet `Content-Length: 20` server sending `10` bytes, sleeping `500 ms`, then sending the final `10` bytes, `CapyBench.HTTP.get/2` returned `{:ok, 200, 21ms}` without reading the second half - violating both S3 (stream and discard complete body) and S6 (latency ends at body completion). Local tests missed the bug because `http_test.exs`'s chunked test sent tiny 5-byte chunks (`\"hello\"`, `\" \"`, `\"world\"`) in single TCP writes."
+      ]
+    },
+    {
+      "title": "Clean Post-Boot S7 Ctrl-C via +Bi + SIGUSR2 (Boot-Window Exit 159 Race) & Unnoticed OTP TLS [notice] Pollution on stdout",
+      "bullets": [
+        "All Post-Boot Foreground PTY Ctrl-C Probes Passed (S7 Verified): Unlike `omp-deepseek-v4-flash`'s `SIGTERM` `:erl_signal_handler` bug, `dsh` chose `emu_args: \"+Bi\"` with `cb` forwarding `INT` as `kill -s USR2 \"$child\"` into `System.trap_signal(:sigusr2, ...)` in `CapyBench.CLI.main/1`. Every post-boot foreground PTY probe exited `130` with a single valid partial summary on `stdout`, empty `stderr`, and intact `started == responses + failures`: `0.8s` pacing (`Started: 6, 200: 6`), `0.4s` and `0.8s` during a `1.5s` slow request (`Elapsed: 1.51-1.52s, Started: 1, 200: 1`), and `0.8s` and `1.2s` during a `3.5s` stalled request (`Elapsed: 2.00s, Started: 1, Transport failures: 1`).",
+        "Cold Boot-Window `Ctrl-C` Exit `159` Race & Step 99-103 Test Fixes: Because `cb` runs `\"$here/cb_escript\" \"$@\" &` without `( trap '' USR2; exec ... )` or a readiness handshake, sending `\\x03` during the first `50-250ms` of cold BEAM startup kills `cb_escript` with default POSIX `SIGUSR2` disposition (`User defined signal 2: 31`, exit `159`, matching `omp-gemini-4-argon` and `agy-gemini-4-hydrogen`). The agent actually hit exit `159` at Step 99 when `ctrl_c_test.exs` sent `Ctrl-C` at `300-350ms`, and worked around it at Step 101 by bumping test delays to `900-1,000ms` (then fixed a Python-escaped `\\\\\\\\d` regex typo at Step 103).",
+        "False `PLAN.md` Claim on TLS Diagnostics (`stdout` vs. `stderr`): `PLAN.md` release verification claimed `\"argument errors and TLS diagnostics were on stderr\"`, but Step 112's own log shows `CapyBench.HTTP.tls_opts/1` omitted `log_level: :none`, causing OTP `:ssl` to dump `49` `[notice] TLS :client: ... generated CLIENT ALERT: Fatal - Unknown CA` blocks onto `stdout` ahead of `Target:` while `stderr` stayed empty."
+      ]
+    },
+    {
+      "title": "Leaderboard-Record 99.49% Prefix Cache Hit ($0.14 Off-Peak / ¥0.94 vs. $0.28 Peak), 49-Step Upfront Recon & Zero write/edit Tool Usage (36 Inline Python Patches)",
+      "bullets": [
+        "Off-Peak Unit Economics & Record `99.49%` Cache Stability: Running Thu `23:08-23:39 UTC` (DeepSeek Off-Peak window: `$0.15 / $0.003 / $0.60` USD = `¥1.00 / ¥0.02 / ¥4.00` CNY per 1M), `deepseek-flash` consumed `67,508` uncached input (`$0.0101`), `13,144,832` cached input (`$0.0394`, `99.49%` hit rate - highest on the leaderboard with `125/125` post-Step-1 cache hits and zero evictions across monotonic `6,648 -> 202,954` prompt growth), and `151,208` output tokens (`$0.0907`, `64.7%` of spend; `dsh` bundles reasoning tokens inside `outputTokens`, streaming `367,506` reasoning chars across all 126 steps). Exact totals: `$0.140285` (`$0.14` Off-Peak / `¥0.9352` CNY; `$0.28` Peak equivalent; `$2.0726` Off-Peak uncached counterfactual = `93.2%` cache savings).",
+        "42.2% Inference vs. 57.7% Tool Wall-Clock Split & 49-Step Upfront Recon: LLM inference took `790.6s` (`6.27s/turn` avg, `0.65s` avg TTFT; peaking at `58.3s` / `12,078` output tokens on Step 46 inspecting `:public_key.pkix_test_data` and `49.4s` / `13,091` output tokens on Step 62 synthesizing `http.ex`), while tool execution took `1,080.1s` (`57.7%`). Spending `49` steps (`7m 01s`, `$0.04` / `28%` of spend) on upfront PKI/SAN and `+Bi`/`SIGUSR2` probes paid off in S1-S7 (only `59` steps for all seven slices) but added `~9m` vs. `omp-deepseek-v4-flash`.",
+        "Zero `write`/`edit` Calls Despite 24 Native Tools & Tool-Error Audit: Despite `dsh --native` exposing `write`, `edit`, `glob`, and `grep`, the model made `126` `bash`, `4` `read`, `2` `job_output`, and `1` `job_kill` calls (`1.06` tools/turn, `7` multi-tool turns), creating files via `12` `cat >` heredocs and patching code via `36` inline `python3` scripts. `dsh` flagged `0` `isError: true` results, while bash output contained `3` non-zero probe exits (Steps `12`, `13`, `29`), `1` hung background probe killed via `job_kill` (Steps `25`-`27`, `60s`), `2` backgrounded full-suite test runs awaited via `job_output` (Steps `104`-`107`), `2` compile warnings/errors (Steps `63`, `79`), `3` `mix credo --strict` catches (Steps `73`, `74`, `82`), and `3` red-phase/test-fix `mix test` failures (Steps `89`, `99`, `101`)."
+      ]
+    }
+  ]
+}

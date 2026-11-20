@@ -431,10 +431,49 @@ export function computeUncachedCounterfactualUsd(
   return promptCost + outputCost;
 }
 
-export function getModelPricingProfile(model: string): ModelPricingProfile | null {
+export function isDeepSeekOffPeakUtc(timestamp?: string): boolean {
+  if (!timestamp) return false;
+  const dt = new Date(timestamp);
+  if (Number.isNaN(dt.getTime())) return false;
+  const day = dt.getUTCDay(); // 0=Sun, 6=Sat
+  if (day === 0 || day === 6) return true;
+  const hour = dt.getUTCHours();
+  const isPeak = (hour >= 1 && hour < 4) || (hour >= 6 && hour < 10);
+  return !isPeak;
+}
+
+export function getModelPricingProfile(
+  model: string,
+  timestamp?: string
+): ModelPricingProfile | null {
   const normalized = model.trim().toLowerCase();
   for (const [key, profile] of Object.entries(MODEL_PRICING_CATALOG)) {
     if (key.toLowerCase() === normalized) {
+      if (
+        profile.modelKey === 'deepseek-flash' &&
+        profile.comparisonTier &&
+        isDeepSeekOffPeakUtc(timestamp)
+      ) {
+        return {
+          ...profile,
+          billedTier: {
+            ...profile.comparisonTier,
+            label: '2026 DeepSeek Flash API - Off-Peak (98% cache off)',
+            notes: 'Off-Peak window (outside Mon-Fri 01:00-04:00 & 06:00-10:00 UTC; 50% off Peak)',
+          },
+          standardApiTier: {
+            ...profile.comparisonTier,
+            label: '2026 DeepSeek Flash API - Off-Peak',
+          },
+          comparisonTier: {
+            ...profile.standardApiTier,
+            label: '2026 DeepSeek Flash API - Peak',
+          },
+          pricingBadge: 'off-peak (50% off)',
+          pricingStatusNote:
+            'Executed in DeepSeek Off-Peak UTC window (50% off Peak: $0.15/$0.003/$0.60 USD = ¥1.00/¥0.02/¥4.00 CNY per 1M)',
+        };
+      }
       return profile;
     }
   }
@@ -444,9 +483,10 @@ export function getModelPricingProfile(model: string): ModelPricingProfile | nul
 export function computeCostEconometrics(
   tokens: NumericTokenBag,
   model: string,
-  recordedCostUsd: number
+  recordedCostUsd: number,
+  timestamp?: string
 ): ComputedCostMetrics {
-  const profile = getModelPricingProfile(model);
+  const profile = getModelPricingProfile(model, timestamp);
   if (!profile) {
     return {
       profile: null,

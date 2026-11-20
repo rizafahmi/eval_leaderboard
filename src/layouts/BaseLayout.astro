@@ -37,6 +37,9 @@ const fullTitle = `${title} | Capy Bench`;
 const ogImageUrl = new URL(ogImage, siteOrigin).toString();
 const ogLocale = lang === 'id' ? 'id_ID' : 'en_US';
 const inLanguage = lang === 'id' ? 'id-ID' : 'en-US';
+const cfBeaconToken = import.meta.env.PROD
+  ? import.meta.env.PUBLIC_CF_BEACON_TOKEN?.trim() || undefined
+  : undefined;
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -134,6 +137,30 @@ const jsonLd = {
         ]
       }
     </script>
+
+    {
+      cfBeaconToken && (
+        <script is:inline define:vars={{ cfBeaconToken }}>
+          (() => {
+            function loadCfBeacon() {
+              if (document.querySelector('script[data-cf-beacon]')) return;
+              const s = document.createElement('script');
+              s.async = true;
+              s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+              s.setAttribute('fetchpriority', 'low');
+              s.setAttribute('data-cf-beacon', JSON.stringify({ token: cfBeaconToken }));
+              document.head.appendChild(s);
+            }
+
+            if (document.prerendering) {
+              document.addEventListener('prerenderingchange', loadCfBeacon, { once: true });
+            } else {
+              loadCfBeacon();
+            }
+          })();
+        </script>
+      )
+    }
   </head>
   <body>
     <a href="#main-content" class="skip-link visually-hidden">Skip to main content</a>

@@ -183,11 +183,13 @@
   gap: 0.5rem;
 }
 
-.c-controls-row .btn {
+.c-controls-row .btn,
+.c-bottom-controls .btn {
   touch-action: manipulation;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .c-progress-pill {
@@ -256,6 +258,7 @@
 
 /* Sheet View (Export All Slides grid) */
 .c-carousel-region[data-view="sheet"] .c-controls-row,
+.c-carousel-region[data-view="sheet"] .c-bottom-controls,
 .c-carousel-region[data-view="sheet"] .c-markers {
   display: none;
 }
@@ -281,7 +284,17 @@
   display: flex;
 }
 
-/* Slide Markers (WCAG 2.5.8 target >= 36px, WCAG 1.4.1 non-color active indicator) */
+/* Bottom Prev/Next + Slide Markers (WCAG 2.5.8 target >= 36px, WCAG 1.4.1 non-color active indicator) */
+.c-bottom-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 560px;
+  width: 100%;
+  margin-inline: auto;
+}
+
 .c-markers {
   display: flex;
   justify-content: center;
@@ -291,6 +304,31 @@
   max-width: 560px;
   width: 100%;
   margin-inline: auto;
+}
+
+.c-bottom-controls .c-markers {
+  max-width: none;
+  margin-inline: 0;
+}
+
+@media (max-width: 620px) {
+  .c-bottom-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .c-bottom-controls .c-markers {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .c-bottom-controls .c-bottom-prev {
+    justify-self: start;
+  }
+
+  .c-bottom-controls .c-bottom-next {
+    justify-self: end;
+  }
 }
 
 .c-marker-btn {
@@ -960,6 +998,7 @@
   .c-page-header,
   .c-studio-bar,
   .c-controls-row,
+  .c-bottom-controls,
   .c-markers,
   .c-related-bar,
   .c-slide-export-bar,

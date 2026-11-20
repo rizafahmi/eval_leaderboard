@@ -36,6 +36,8 @@ jobs:
         run: pnpm test
 
       - name: Build static site & validate run JSON schemas
+        env:
+          PUBLIC_CF_BEACON_TOKEN: ${{ vars.PUBLIC_CF_BEACON_TOKEN }}
         run: pnpm run build
 
       - name: Upload GitHub Pages artifact

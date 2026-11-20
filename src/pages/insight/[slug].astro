@@ -168,20 +168,41 @@ const relatedRuns = insight.relatedRunIds
     <!-- Visually hidden polite status region for settled slide changes -->
     <p class="visually-hidden" role="status" aria-live="polite" id="c-live-status"></p>
 
-    <!-- Slide marker buttons (direct jump) -->
-    <nav class="c-markers" id="c-markers" aria-label="Choose a slide">
-      {insight.slides.map((slide, idx) => (
-        <button
-          type="button"
-          class="c-marker-btn"
-          data-marker-index={idx}
-          aria-label={`Go to slide ${idx + 1}: ${slide.label}`}
-          aria-current={idx === 0 ? 'true' : undefined}
-        >
-          {String(idx + 1).padStart(2, '0')}
-        </button>
-      ))}
-    </nav>
+    <!-- Bottom Prev/Next + Slide marker buttons (direct jump) -->
+    <div class="c-bottom-controls">
+      <button
+        type="button"
+        class="btn btn-sm btn-secondary c-bottom-prev"
+        data-direction="previous"
+        aria-label="Previous slide"
+        disabled
+      >
+        ← Prev
+      </button>
+
+      <nav class="c-markers" id="c-markers" aria-label="Choose a slide">
+        {insight.slides.map((slide, idx) => (
+          <button
+            type="button"
+            class="c-marker-btn"
+            data-marker-index={idx}
+            aria-label={`Go to slide ${idx + 1}: ${slide.label}`}
+            aria-current={idx === 0 ? 'true' : undefined}
+          >
+            {String(idx + 1).padStart(2, '0')}
+          </button>
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        class="btn btn-sm c-bottom-next"
+        data-direction="next"
+        aria-label="Next slide"
+      >
+        Next →
+      </button>
+    </div>
   </section>
 
   <!-- Related Run Data Links + Print Fallback -->
@@ -215,8 +236,12 @@ const relatedRuns = insight.relatedRunIds
   <script>
     const region = document.getElementById('c-carousel-region');
     const track = document.getElementById('c-carousel-track');
-    const prevBtn = region?.querySelector<HTMLButtonElement>('button[data-direction="previous"]');
-    const nextBtn = region?.querySelector<HTMLButtonElement>('button[data-direction="next"]');
+    const prevButtons = Array.from(
+      region?.querySelectorAll<HTMLButtonElement>('button[data-direction="previous"]') ?? []
+    );
+    const nextButtons = Array.from(
+      region?.querySelectorAll<HTMLButtonElement>('button[data-direction="next"]') ?? []
+    );
     const progressPill = document.getElementById('c-progress-pill');
     const liveStatus = document.getElementById('c-live-status');
     const markerButtons = Array.from(
@@ -311,20 +336,26 @@ const relatedRuns = insight.relatedRunIds
     }
 
     function updateControlsAfterSettle(index: number) {
-      const prevWasFocused = document.activeElement === prevBtn;
-      const nextWasFocused = document.activeElement === nextBtn;
+      const focusedPrevIdx = prevButtons.findIndex((btn) => document.activeElement === btn);
+      const focusedNextIdx = nextButtons.findIndex((btn) => document.activeElement === btn);
 
       const disablePrev = index <= 0;
       const disableNext = index >= total - 1;
 
-      if (prevBtn) prevBtn.disabled = disablePrev;
-      if (nextBtn) nextBtn.disabled = disableNext;
+      prevButtons.forEach((btn) => {
+        btn.disabled = disablePrev;
+      });
+      nextButtons.forEach((btn) => {
+        btn.disabled = disableNext;
+      });
 
-      // Redirect focus if the active button just became disabled
-      if (prevWasFocused && disablePrev && nextBtn && !nextBtn.disabled) {
-        nextBtn.focus();
-      } else if (nextWasFocused && disableNext && prevBtn && !prevBtn.disabled) {
-        prevBtn.focus();
+      // Redirect focus to the matching opposite control if the active button just became disabled
+      if (focusedPrevIdx !== -1 && disablePrev) {
+        const targetNext = nextButtons[focusedPrevIdx] ?? nextButtons[0];
+        if (targetNext && !targetNext.disabled) targetNext.focus();
+      } else if (focusedNextIdx !== -1 && disableNext) {
+        const targetPrev = prevButtons[focusedNextIdx] ?? prevButtons[0];
+        if (targetPrev && !targetPrev.disabled) targetPrev.focus();
       }
 
       if (hasUserInteracted && index !== settledIndex && liveStatus) {
@@ -381,14 +412,18 @@ const relatedRuns = insight.relatedRunIds
       updateControlsAfterSettle(currentIdx);
     }
 
-    prevBtn?.addEventListener('click', () => {
-      const base = pendingTargetIndex ?? getNearestSlideIndex();
-      scrollToSlide(Math.max(0, base - 1));
+    prevButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const base = pendingTargetIndex ?? getNearestSlideIndex();
+        scrollToSlide(Math.max(0, base - 1));
+      });
     });
 
-    nextBtn?.addEventListener('click', () => {
-      const base = pendingTargetIndex ?? getNearestSlideIndex();
-      scrollToSlide(Math.min(total - 1, base + 1));
+    nextButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const base = pendingTargetIndex ?? getNearestSlideIndex();
+        scrollToSlide(Math.min(total - 1, base + 1));
+      });
     });
 
     markerButtons.forEach((btn) => {

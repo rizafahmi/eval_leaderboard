@@ -99,7 +99,7 @@ test('All benchmark run JSONs satisfy token, slice, step-range, and cost conserv
       }
 
       // 4. Pricing catalog consistency: billedCostUsd from pricing catalog matches recorded costUsd within $0.02
-      const econ = computeCostEconometrics(tc, data.model, data.costUsd);
+      const econ = computeCostEconometrics(tc, data.model, data.costUsd, data.timestamp);
       assert.ok(econ.profile, `${run.id}: model "${data.model}" missing from pricing catalog`);
       assert.ok(
         Math.abs(econ.billedCostUsd - data.costUsd) <= 0.02,
@@ -303,6 +303,120 @@ test('Raw JSONL transcript ingestion parses turns and builds a valid RunRecordDa
   assert.equal(record.calls?.toolCalls?.total, 1);
   assert.equal(record.verification?.holdoutPassed, 2);
   assert.equal(record.verification?.holdoutVerdict, 'partial-pass');
+});
+
+test('DeepSeek Harness session.v4.jsonl ingestion and Off-Peak vs Peak pricing resolve accurately', () => {
+  const dshJsonl = [
+    JSON.stringify({ type: 'session', version: 4, id: 'session-test', createdAt: 1795129703038 }),
+    JSON.stringify({
+      type: 'assistant/message',
+      seq: 19,
+      data: {
+        turn: 1,
+        step: 1,
+        message: { role: 'assistant', content: [] },
+        usage: {
+          inputTokens: 6648,
+          outputTokens: 103,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+          totalTokens: 6751,
+        },
+      },
+    }),
+    JSON.stringify({
+      type: 'tool/call',
+      seq: 20,
+      data: { turn: 1, step: 1, callId: 'c1', name: 'bash', arguments: '{}' },
+    }),
+    JSON.stringify({
+      type: 'tool/result',
+      seq: 23,
+      data: { turn: 1, step: 1, message: { role: 'tool', toolCallId: 'c1', isError: false } },
+    }),
+    JSON.stringify({
+      type: 'tool/call',
+      seq: 24,
+      data: { turn: 1, step: 1, callId: 'c2', name: 'bash', arguments: '{}' },
+    }),
+    JSON.stringify({
+      type: 'tool/result',
+      seq: 25,
+      data: { turn: 1, step: 1, message: { role: 'tool', toolCallId: 'c2', isError: true } },
+    }),
+    JSON.stringify({
+      type: 'assistant/message',
+      seq: 30,
+      data: {
+        turn: 1,
+        step: 2,
+        message: { role: 'assistant', content: [] },
+        usage: {
+          inputTokens: 941,
+          outputTokens: 100,
+          cacheReadTokens: 6656,
+          cacheWriteTokens: 0,
+          totalTokens: 7697,
+        },
+      },
+    }),
+  ].join('\n');
+
+  const events = parseRawTranscriptJsonl(dshJsonl);
+  const offPeakRecord = buildRunRecordFromEvents({
+    events,
+    codingHarness: 'DeepSeek Harness',
+    model: 'deepseek-flash',
+    effort: 'High',
+    provider: 'DeepSeek',
+    timestamp: '2026-11-20T06:08:23+07:00', // Thu 23:08 UTC -> Off-Peak
+    durationMinutes: 31,
+    planCompletion: { S1: true, S2: true, S3: false, S4: true, S5: true, S6: false, S7: true },
+  });
+  assert.equal(offPeakRecord.tokenCounts?.uncachedInput, 7589);
+  assert.equal(offPeakRecord.tokenCounts?.cachedInput, 6656);
+  assert.equal(offPeakRecord.tokenCounts?.output, 203);
+  assert.equal(offPeakRecord.tokenCounts?.total, 14448);
+  assert.equal(offPeakRecord.calls?.llmCalls, 2);
+  assert.equal(offPeakRecord.calls?.toolCalls?.total, 2);
+  assert.equal(offPeakRecord.calls?.toolCalls?.done, 1);
+  assert.equal(offPeakRecord.calls?.toolCalls?.error, 1);
+
+  // Also verify projected *.events.jsonl tool_call/tool_result error correlation + step_end usage
+  const dshEventsJsonl = [
+    JSON.stringify({ type: 'tool_call', callId: 'e1', tool: 'bash', input: {} }),
+    JSON.stringify({ type: 'tool_result', callId: 'e1', status: 'error', result: 'boom' }),
+    JSON.stringify({
+      type: 'status',
+      phase: 'step_end',
+      turn: 1,
+      step: 1,
+      usage: { inputTokens: 1000, cacheReadTokens: 2000, outputTokens: 100, totalTokens: 3100 },
+    }),
+  ].join('\n');
+  const projRecord = buildRunRecordFromEvents({
+    events: parseRawTranscriptJsonl(dshEventsJsonl),
+    codingHarness: 'DeepSeek Harness',
+    model: 'deepseek-flash',
+    effort: 'High',
+    provider: 'DeepSeek',
+    timestamp: '2026-11-20T06:08:23+07:00',
+    durationMinutes: 1,
+    planCompletion: { S1: true, S2: false, S3: false, S4: false, S5: false, S6: false, S7: false },
+  });
+  assert.equal(projRecord.tokenCounts?.total, 3100);
+  assert.equal(projRecord.calls?.toolCalls?.total, 1);
+  assert.equal(projRecord.calls?.toolCalls?.error, 1);
+  const bag = {
+    uncachedInput: 67508,
+    cachedInput: 13144832,
+    output: 151208,
+    total: 13363548,
+  };
+  const offPeakEcon = computeCostEconometrics(bag, 'deepseek-flash', 0.14, '2026-11-20T06:08:23+07:00');
+  const peakEcon = computeCostEconometrics(bag, 'deepseek-flash', 0.28, '2026-11-06T08:18:37+07:00');
+  assert.equal(Number(offPeakEcon.billedCostUsd.toFixed(2)), 0.14);
+  assert.equal(Number(peakEcon.billedCostUsd.toFixed(2)), 0.28);
 });
 
 test('buildRunRecordFromEvents rejects uncataloged models without explicit costUsd and accepts explicit costUsd override', () => {
