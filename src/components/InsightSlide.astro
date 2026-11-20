@@ -1,8 +1,8 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 
-type CarouselData = CollectionEntry<'carousels'>['data'];
-type SlideData = CarouselData['slides'][number];
+type InsightData = CollectionEntry<'insight'>['data'];
+type SlideData = InsightData['slides'][number];
 
 interface Props {
   slide: SlideData;

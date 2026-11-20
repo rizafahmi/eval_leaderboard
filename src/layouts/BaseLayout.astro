@@ -10,7 +10,7 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
-  activeNav?: 'leaderboard' | 'compare' | 'about';
+  activeNav?: 'leaderboard' | 'compare' | 'insight' | 'about';
   lang?: 'en' | 'id';
   ogType?: 'website' | 'article';
   ogImage?: string;
@@ -175,6 +175,15 @@ const jsonLd = {
             </li>
             <li>
               <a
+                href="/insight"
+                class:list={['app-nav-item', { 'is-active': activeNav === 'insight' }]}
+                aria-current={activeNav === 'insight' ? 'page' : undefined}
+              >
+                Insight
+              </a>
+            </li>
+            <li>
+              <a
                 href="/about"
                 class:list={['app-nav-item', { 'is-active': activeNav === 'about' }]}
                 aria-current={activeNav === 'about' ? 'page' : undefined}
@@ -207,7 +216,7 @@ const jsonLd = {
         <div class="reading-footer">
           <p>Capy Bench <span aria-hidden="true">·</span> Field notes by <a href="https://rizafahmi.com">Riza Fahmi</a></p>
           <nav aria-label="Footer">
-            <a href="/carousels">Carousels</a>
+            <a href="/insight">Insight</a>
             <a href="/about">Methodology &amp; specifications</a>
             <a href="#main-content">Back to top ↑</a>
           </nav>

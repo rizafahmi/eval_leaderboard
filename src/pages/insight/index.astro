@@ -1,22 +1,23 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import '../../styles/carousel.css';
+import '../../styles/insight.css';
 
-const carousels = (await getCollection('carousels'))
+const insights = (await getCollection('insight'))
   .filter((entry) => entry.data.published !== false)
   .sort((a, b) => a.data.order - b.data.order);
 ---
 
 <BaseLayout
-  title="Carousels"
-  description="Ringkasan visual berbentuk slide carousel dari catatan eksperimen personal benchmark coding agent."
+  title="Insight"
+  description="Ringkasan visual catatan eksperimen personal benchmark coding agent."
+  activeNav="insight"
   lang="id"
 >
   <section class="c-index-header">
     <span class="section-kicker">PERSONAL EVAL · VISUAL DECKS</span>
     <h1 class="headline-two-tone">
-      Carousels.
+      Insight.
       <span class="muted">Ringkasan visual catatan eksperimen per seri.</span>
     </h1>
     <p>
@@ -24,11 +25,11 @@ const carousels = (await getCollection('carousels'))
     </p>
   </section>
 
-  <section class="c-index-grid" aria-label="Daftar carousel">
-    {carousels.map((entry) => {
+  <section class="c-index-grid" aria-label="Daftar insight">
+    {insights.map((entry) => {
       const { part, date, title, subtitle, slides, tags } = entry.data;
       return (
-        <a href={`/carousels/${entry.id}`} class="c-deck-card">
+        <a href={`/insight/${entry.id}`} class="c-deck-card">
           <div>
             <div class="c-deck-meta">
               <span class="hl hl-acid">{part}</span>

@@ -1,33 +1,34 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CarouselSlide from '../../components/CarouselSlide.astro';
-import '../../styles/carousel.css';
+import InsightSlide from '../../components/InsightSlide.astro';
+import '../../styles/insight.css';
 
 export async function getStaticPaths() {
-  const carousels = (await getCollection('carousels')).filter(
+  const insights = (await getCollection('insight')).filter(
     (entry) => entry.data.published !== false
   );
-  return carousels.map((entry) => ({
+  return insights.map((entry) => ({
     params: { slug: entry.id },
     props: { entry },
   }));
 }
 
 const { entry } = Astro.props;
-const carousel = entry.data;
+const insight = entry.data;
 const isDev = import.meta.env.DEV;
 
 const allRuns = await getCollection('runs');
-const relatedRuns = carousel.relatedRunIds
+const relatedRuns = insight.relatedRunIds
   .map((id) => allRuns.find((r) => r.id === id))
   .filter((r): r is NonNullable<typeof r> => Boolean(r));
 ---
 
 <BaseLayout
-  title={`${carousel.part} · ${carousel.title}`}
-  description={carousel.description}
-  lang={carousel.lang}
+  title={`${insight.part} · ${insight.title}`}
+  description={insight.description}
+  activeNav="insight"
+  lang={insight.lang}
   ogType="article"
 >
   <header class="c-page-header">
@@ -35,17 +36,17 @@ const relatedRuns = carousel.relatedRunIds
       <ol class="app-breadcrumbs">
         <li><a href="/">Leaderboard</a></li>
         <li aria-hidden="true">/</li>
-        <li><a href="/carousels">Carousels</a></li>
+        <li><a href="/insight">Insight</a></li>
         <li aria-hidden="true">/</li>
-        <li><span class="hl hl-acid">{carousel.part}</span></li>
+        <li><span class="hl hl-acid">{insight.part}</span></li>
       </ol>
     </nav>
 
     <h1 class="headline-two-tone">
-      {carousel.title}.
-      <span class="muted">{carousel.subtitle}</span>
+      {insight.title}.
+      <span class="muted">{insight.subtitle}</span>
     </h1>
-    <p class="c-page-desc">{carousel.description}</p>
+    <p class="c-page-desc">{insight.description}</p>
   </header>
 
   <!-- Export Studio Bar (hidden in production unless ?export=1) -->
@@ -68,14 +69,14 @@ const relatedRuns = carousel.relatedRunIds
       <div class="btn-group" role="group" aria-label="Rasio slide">
         <button
           type="button"
-          class:list={['btn btn-sm', { 'is-active': carousel.defaultRatio === '4:5' }]}
+          class:list={['btn btn-sm', { 'is-active': insight.defaultRatio === '4:5' }]}
           data-ratio-btn="4:5"
         >
           4:5 (1080×1350)
         </button>
         <button
           type="button"
-          class:list={['btn btn-sm', { 'is-active': carousel.defaultRatio === '1:1' }]}
+          class:list={['btn btn-sm', { 'is-active': insight.defaultRatio === '1:1' }]}
           data-ratio-btn="1:1"
         >
           1:1 (1080×1080)
@@ -97,21 +98,21 @@ const relatedRuns = carousel.relatedRunIds
         Tips PDF: pilih <strong>Save as PDF</strong>, aktifkan <strong>Background graphics</strong>, Margin: <strong>None</strong>.
       </span>
       <span id="c-export-status">
-        Siap export ({carousel.slides.length} slide · {carousel.defaultRatio === '1:1' ? '1080×1080' : '1080×1350'} px)
+        Siap export ({insight.slides.length} slide · {insight.defaultRatio === '1:1' ? '1080×1080' : '1080×1350'} px)
       </span>
     </div>
   </section>
 
-  <!-- Main Interactive Carousel Region -->
+  <!-- Main Interactive Slide Viewer Region -->
   <section
     class="c-carousel-region"
     id="c-carousel-region"
     aria-roledescription="carousel"
-    aria-label={carousel.title}
-    data-ratio={carousel.defaultRatio}
+    aria-label={insight.title}
+    data-ratio={insight.defaultRatio}
     data-view="viewer"
     data-is-dev={isDev ? 'true' : 'false'}
-    data-lang={carousel.lang}
+    data-lang={insight.lang}
   >
     <!-- Controls before track in DOM order -->
     <div class="c-controls-row">
@@ -128,7 +129,7 @@ const relatedRuns = carousel.relatedRunIds
       </div>
 
       <span class="c-progress-pill" id="c-progress-pill" aria-hidden="true">
-        01 / {String(carousel.slides.length).padStart(2, '0')}
+        01 / {String(insight.slides.length).padStart(2, '0')}
       </span>
 
       <div class="c-nav-actions">
@@ -151,14 +152,14 @@ const relatedRuns = carousel.relatedRunIds
         role="group"
         aria-label="Daftar slide"
       >
-        {carousel.slides.map((slide, idx) => (
-          <CarouselSlide
+        {insight.slides.map((slide, idx) => (
+          <InsightSlide
             slide={slide}
             index={idx}
-            total={carousel.slides.length}
-            brandLabel={carousel.brandLabel}
-            footerLeft={carousel.footerLeft}
-            lang={carousel.lang}
+            total={insight.slides.length}
+            brandLabel={insight.brandLabel}
+            footerLeft={insight.footerLeft}
+            lang={insight.lang}
           />
         ))}
       </div>
@@ -169,7 +170,7 @@ const relatedRuns = carousel.relatedRunIds
 
     <!-- Slide marker buttons (direct jump) -->
     <nav class="c-markers" id="c-markers" aria-label="Pilih slide">
-      {carousel.slides.map((slide, idx) => (
+      {insight.slides.map((slide, idx) => (
         <button
           type="button"
           class="c-marker-btn"
@@ -198,8 +199,8 @@ const relatedRuns = carousel.relatedRunIds
       <button type="button" class="btn btn-sm btn-secondary" id="c-btn-public-print">
         Print / Save PDF
       </button>
-      <a href="/carousels" class="btn btn-sm btn-secondary">
-        ← Semua Carousel
+      <a href="/insight" class="btn btn-sm btn-secondary">
+        ← Semua Insight
       </a>
     </div>
   </aside>

@@ -162,7 +162,7 @@ const slideCommon = {
   footerRight: z.string().optional(),
 };
 
-const carouselSlideSchema = z.discriminatedUnion('kind', [
+const insightSlideSchema = z.discriminatedUnion('kind', [
   z.object({
     ...slideCommon,
     kind: z.literal('cover'),
@@ -254,8 +254,8 @@ const carouselSlideSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-const carousels = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './src/content/carousels' }),
+const insight = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/insight' }),
   schema: z.object({
     published: z.boolean().default(true),
     order: z.number(),
@@ -270,8 +270,8 @@ const carousels = defineCollection({
     defaultRatio: z.enum(['4:5', '1:1']).default('4:5'),
     tags: z.array(z.string()).default([]),
     relatedRunIds: z.array(z.string()).default([]),
-    slides: z.array(carouselSlideSchema).min(1),
+    slides: z.array(insightSlideSchema).min(1),
   }),
 });
 
-export const collections = { runs, carousels };
+export const collections = { runs, insight };
