@@ -1,0 +1,307 @@
+{
+  "published": true,
+  "order": 2,
+  "part": "Part 2",
+  "date": "2026-11-20",
+  "lang": "en",
+  "title": "Deep-diving inkling-2-small-free on my personal benchmark",
+  "subtitle": "Slowest full pass — and the most thorough.",
+  "description": "A 7-slide breakdown of Thinking Machines' inkling-2-small-free (17B-active MoE) on OpenCode v2.2.7: where 390 turns went, how it compares to small & flash peers, OTP :httpc source audit, PTY signal fixes, and counterfactual cost.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": ["inkling-2-small-free", "OpenCode v2.2.7", "Thinking Machines"],
+  "relatedRunIds": [
+    "opencode-inkling-2-small-free-high-20261111-0745",
+    "opencode-hy4-flash-free-high-20261117-0755",
+    "pi-muse-spark-1-3-contrib-high-20261026-0535",
+    "zcode-glm-5-3-flash-high-20261025-0555"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-inkling-2-small-cover.png",
+      "badges": [
+        { "text": "PERSONAL EVAL", "tone": "acid" },
+        { "text": "OPENCODE v2.2.7", "tone": "sky" }
+      ],
+      "headlinePrimary": "Testing inkling-2-small-free on my personal benchmark.",
+      "headlineMuted": "Slowest 7/7 pass — and the most thorough.",
+      "lead": "Thinking Machines' **17B-active / 594B-total MoE** ran 390 turns without a single shortcut.",
+      "stats": [
+        {
+          "label": "Verification",
+          "value": "7/7",
+          "sub": "61/61 tests · 0 Credo issues",
+          "accent": true
+        },
+        {
+          "label": "Duration",
+          "value": "105m58s",
+          "sub": "390 turns · 10 commits"
+        },
+        {
+          "label": "Cache Hit",
+          "value": "99.45%",
+          "sub": "#1 of 14 full-pass runs"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "metrics",
+      "kind": "metrics",
+      "label": "TURN & TOKEN ANATOMY",
+      "filename": "02-inkling-2-small-metrics.png",
+      "badges": [
+        { "text": "SESSION NOTES", "tone": "mint" },
+        { "text": "390 TURNS", "tone": "outline" }
+      ],
+      "headlinePrimary": "106 minutes, 390 turns.",
+      "headlineMuted": "Two-thirds went to just 3 hard stages.",
+      "splitBar": {
+        "label": "Turn Distribution (390 turns)",
+        "primaryLabel": "S1 + S3 + S7: 259 turns (66.4%)",
+        "primaryPct": 66.4,
+        "secondaryLabel": "OTHER 5 SLICES: 131 turns (33.6%)",
+        "secondaryPct": 33.6
+      },
+      "stats": [
+        {
+          "label": "Total Tokens",
+          "value": "73.45M",
+          "sub": "99.45% cached · 403k new · 318k out"
+        },
+        {
+          "label": "Thinking Share",
+          "value": "65.4%",
+          "sub": "207.7k reasoning — highest of 7/7"
+        },
+        {
+          "label": "Peak Context",
+          "value": "378.4k",
+          "sub": "36.1% of 1.05M · 0 compactions"
+        },
+        {
+          "label": "Tool Calls",
+          "value": "382/389",
+          "sub": "1.8% error · 0 parallel calls"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "SMALL & FLASH PEERS",
+      "filename": "03-inkling-vs-peers.png",
+      "badges": [
+        { "text": "COMPARISON", "tone": "sky" },
+        { "text": "SMALL & FLASH 7/7 PEERS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Slow on the clock, solid on the spec.",
+      "headlineMuted": "inkling-2-small vs small & flash 7/7 peers.",
+      "columns": ["Metric", "inkling-2-small", "3-Peer Avg*", "Delta"],
+      "rows": [
+        {
+          "metric": "Duration",
+          "primary": "106m",
+          "baseline": "57m",
+          "delta": "+85%",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Turns",
+          "primary": "390",
+          "baseline": "226",
+          "delta": "+72%",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "73.45M",
+          "baseline": "27.81M",
+          "delta": "+164%",
+          "deltaTone": "violet"
+        },
+        {
+          "metric": "Tests Written",
+          "primary": "61",
+          "baseline": "55",
+          "delta": "+11%",
+          "deltaTone": "mint"
+        }
+      ],
+      "barCompare": {
+        "label": "Total Tokens — Small & Flash 7/7 Runs",
+        "items": [
+          {
+            "name": "hy4-flash-free",
+            "value": "19.95M",
+            "widthPct": 27.2
+          },
+          {
+            "name": "glm-5.3-flash",
+            "value": "25.80M",
+            "widthPct": 35.1
+          },
+          {
+            "name": "muse-spark-1.3",
+            "value": "37.69M",
+            "widthPct": 51.3
+          },
+          {
+            "name": "inkling-2-small",
+            "value": "73.45M",
+            "widthPct": 100,
+            "accent": true
+          }
+        ]
+      },
+      "footnote": "* 3-peer avg: hy4-flash-free, muse-spark-1.3, glm-5.3-flash. deepseek-v4-flash scored 4–6/7 across 3 harnesses.",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "httpc-audit",
+      "kind": "steps",
+      "label": "CASE STUDY #1 ZERO-DEP HTTP",
+      "filename": "04-inkling-httpc-audit.png",
+      "badges": [
+        { "text": "CASE STUDY #1", "tone": "violet" },
+        { "text": "OTP SOURCE AUDIT", "tone": "outline" }
+      ],
+      "headlinePrimary": "Proved :httpc broke the spec.",
+      "headlineMuted": "Then built its own HTTP/1.1 + TLS client.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Empirical probe (24 turns)",
+          "desc": "Built disposable `/tmp` scripts testing `:httpc` streaming on `200`, `302`, `404`, and `503` responses."
+        },
+        {
+          "num": "02",
+          "title": "Read OTP source in /nix/store",
+          "desc": "Inspected `httpc_handler.erl` and proved `:httpc` only streams `200`/`206` — buffering `3xx`/`4xx`/`5xx` bodies whole."
+        },
+        {
+          "num": "03",
+          "title": "Zero-dependency replacement",
+          "desc": "Wrote `CapyBench.Connection` directly on `:gen_tcp` & `:ssl` with monotonic deadlines, 64 KiB caps, and keep-alive reuse."
+        }
+      ],
+      "callout": {
+        "title": "Zero Shortcuts on S3",
+        "body": "Most agents either wrap `:httpc` blindly or pull in Mint. **inkling** verified OTP internals first and shipped a clean zero-dep client.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "signal-fixes",
+      "kind": "steps",
+      "label": "CASE STUDY #2 PTY & CONTRACT",
+      "filename": "05-inkling-pty-fixes.png",
+      "badges": [
+        { "text": "CASE STUDY #2", "tone": "violet" },
+        { "text": "SIGNALS & EDGE CASES", "tone": "outline" }
+      ],
+      "headlinePrimary": "Caught 4 real PTY & spec traps.",
+      "headlineMuted": "Where faster 7/7 runs cut corners.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Boot & POSIX wait races",
+          "desc": "Moved `SIGUSR1` registration to `Application.start/2` and looped `wait` so early `Ctrl-C` didn't SIGHUP-kill the BEAM."
+        },
+        {
+          "num": "02",
+          "title": "24% throughput regression",
+          "desc": "10ms sleep-slicing dropped 5s throughput from `50` to `38–39` reqs — fixed by slicing only waits `> 500ms`."
+        },
+        {
+          "num": "03",
+          "title": "Two subtle contract catches",
+          "desc": "Drained the 5s window after 50 starts (`>= 5.00s`) and rerouted OTP TLS `:logger` notices from `stdout` to `stderr`."
+        }
+      ],
+      "callout": {
+        "title": "Cleaner Finish Than hy4-flash-free",
+        "body": "Caught the **4.91s early exit** (`hy4` stopped at `4.95s`) and kept git history clean after amending a stray `records/` commit in S1.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-inkling-caveats.png",
+      "badges": [
+        { "text": "FIELD NOTES", "tone": "magenta" },
+        { "text": "4 CAVEATS", "tone": "outline" }
+      ],
+      "headlinePrimary": "Deep engineering, heavy token footprint.",
+      "headlineMuted": "4 caveats behind the 7/7 pass.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Zero parallel tool calls",
+          "text": "Executed **389 tools across 390 turns** — never batched reads or edits, inflating both wall-clock time (`106m`) and turn count."
+        },
+        {
+          "num": "02",
+          "head": "Highest thinking tax of all 7/7 runs",
+          "text": "Burned **207.7k reasoning tokens** (`65.4%` of output) — **3×** `hy4-flash-free`'s thinking budget."
+        },
+        {
+          "num": "03",
+          "head": "Three 120s shell timeouts",
+          "text": "Timed out during S1 signal probes, a `/nix/store` file search, and a full `mix test` run in S4."
+        },
+        {
+          "num": "04",
+          "head": "$0 free tier hides the future bill",
+          "text": "At **73.45M tokens**, paid rates would swing from **$0.25** (`muse-spark` rates) to **$2.40** (`glm-flash` rates)."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-inkling-takeaways.png",
+      "badges": [
+        { "text": "TAKEAWAYS", "tone": "mint" },
+        { "text": "3 LESSONS", "tone": "outline" }
+      ],
+      "headlinePrimary": "3 lessons from inkling-2-small.",
+      "headlineMuted": "Why slow doesn't always mean weak.",
+      "items": [
+        {
+          "num": "01",
+          "head": "A 17B-active MoE can do real systems work",
+          "text": "Audited OTP internals, debugged POSIX PTY races, and passed **7/7** where `deepseek-v4-flash` fell short."
+        },
+        {
+          "num": "02",
+          "head": "Serial tool use multiplies token volume",
+          "text": "1-tool turns pushed context to **378.4k** and volume to **73.45M** — making cache-read pricing critical once free access ends."
+        },
+        {
+          "num": "03",
+          "head": "Thoroughness shows up in edge cases",
+          "text": "Checking `stdout` byte counts, 5s window drains, and git hygiene caught subtle bugs that faster 7/7 runs missed."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & SIDE-BY-SIDE COMPARE",
+        "body": "Inspect all 390 turns, 10 commits, and compare `inkling-2-small` against `hy4-flash-free` and **Gemini 4**:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "EXPLORE THE LEADERBOARD →"
+    }
+  ]
+}
