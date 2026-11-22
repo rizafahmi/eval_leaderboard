@@ -200,16 +200,25 @@ progress::-moz-progress-bar {
   color: var(--text-muted);
 }
 
+.app-navbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-utility-btn,
 .theme-toggle {
   border: 1px solid var(--border-subtle-color);
   color: var(--text-muted);
 }
 
+.header-utility-btn svg,
 .theme-toggle svg {
-  inline-size: 1.1rem;
-  block-size: 1.1rem;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
 }
 
+.header-utility-btn:hover:not(:disabled),
 .theme-toggle:hover:not(:disabled) {
   background: var(--bg-surface);
   color: var(--text-primary);
