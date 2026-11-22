@@ -14,6 +14,7 @@ import {
   formatHarnessName,
 } from '../utils/format';
 import { analyzeAndRankRuns } from '../utils/telemetry';
+import { SITE_LICENSE_URL, SITE_REPO_SLUG, SITE_REPO_URL } from '../data/site';
 
 const runs = await getCollection('runs', ({ data }) => data.published !== false);
 const sortedRuns = analyzeAndRankRuns(runs);
@@ -172,6 +173,13 @@ Latency (HTTP responses): p50 38 ms, p95 91 ms`;
           A different language, framework, project, or way of working may produce different
           results—even a different ranking. Read these as field notes to guide your own
           experiments, not a universal verdict on which agent is best.
+        </p>
+        <p class="hero-subtitle">
+          The leaderboard site, published run records, and audit scripts are open source under the{' '}
+          <a href={SITE_LICENSE_URL} class="prose-link" target="_blank" rel="noopener noreferrer">MIT License</a>{' '}
+          at{' '}
+          <a href={SITE_REPO_URL} class="prose-link mono" target="_blank" rel="noopener noreferrer">{SITE_REPO_SLUG}</a>
+          —inspect the data or fork it to track runs on your own stack.
         </p>
       </div>
 
