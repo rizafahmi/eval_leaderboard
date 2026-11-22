@@ -782,13 +782,31 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
-  // 2b. Effort Scaling: Antigravity CLI gemini-4-carbon Medium vs High
+  // 2b. Effort Scaling: Antigravity CLI gemini-4-carbon Low vs Medium vs High
+  const agyCarbonLow = runs.find(
+    (r) =>
+      r.displayHarness === 'Antigravity CLI' &&
+      r.data.model === 'gemini-4-carbon' &&
+      r.data.effort?.toLowerCase() === 'low'
+  );
   const agyCarbonMedium = runs.find(
     (r) =>
       r.displayHarness === 'Antigravity CLI' &&
       r.data.model === 'gemini-4-carbon' &&
       r.data.effort?.toLowerCase() === 'medium'
   );
+  if (agyCarbonLow && agyCarbonMedium) {
+    presets.push({
+      id: 'effort-agy-gemini4-carbon-low-vs-medium',
+      category: 'effort',
+      badge: 'EFFORT SCALING',
+      title: 'Antigravity CLI / gemini-4-carbon: Low vs. Medium Effort',
+      subtitle: '0 thinking tokens + Mint.HTTP + CB_LAUNCHER_PID SIGUSR2/SIGUSR1 handshake (Low) vs. 62.4k thinking + raw :gen_tcp/:ssl (Medium)',
+      runAId: agyCarbonLow.id,
+      runBId: agyCarbonMedium.id,
+      findingHeadline: `Both achieved 7/7 full pass in ~53–54m; Low effort ran with 0 thinking tokens and 49% fewer output tokens (77.2k vs 150.1k) to become the cheapest Gemini 4 run ($${agyCarbonLow.data.costUsd.toFixed(2)} vs $${agyCarbonMedium.data.costUsd.toFixed(2)}) while hardening 50 ms cold-boot Ctrl-C via a bidirectional SIGUSR2/SIGUSR1 handshake, whereas Medium used 20% fewer LLM turns (${agyCarbonMedium.llmCalls} vs ${agyCarbonLow.llmCalls}) and 16% fewer total tokens (${agyCarbonMedium.data.tokens?.total ?? '11.12M'} vs ${agyCarbonLow.data.tokens?.total ?? '13.20M'}).`,
+    });
+  }
   if (agyCarbonMedium && agyCarbonHarness) {
     presets.push({
       id: 'effort-agy-gemini4-carbon-medium-vs-high',

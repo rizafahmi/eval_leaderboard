@@ -1,0 +1,319 @@
+{
+  "timestamp": "2026-11-22T21:18:11+07:00",
+  "codingHarness": "antigravity cli",
+  "model": "gemini-4-carbon",
+  "effort": "Low",
+  "provider": "Gemini",
+  "durationMinutes": 54,
+  "costUsd": 2.97,
+  "commits": 8,
+  "tests": {
+    "passed": 29,
+    "total": 29,
+    "durationSeconds": 60.5,
+    "details": "Finished in 60.5 seconds (1.4s async, 59.0s sync) — 29 passed (60.4s in JSONL task-352 release verification; mix format --check-formatted clean; default mix credo: 57 checks on 11 files, 92 mods/funs, 0 issues in 0.07s; mix credo --strict: 69 checks on 11 files, 92 mods/funs, 0 issues in 0.07s)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 7,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "full-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "agentSuitePassed": 29,
+    "agentSuiteTotal": 29
+  },
+  "interface": {
+    "type": "cli",
+    "command": "agy --mode auto --dangerously-skip-permissions --model gemini-4-carbon-low --effort low --output-format stream-json --print \"$(< PROMPT.md)\" > records/20261122T141811Z.events.jsonl 2> records/20261122T141811Z.stderr.log",
+    "details": "Run window: 21:18:11–22:12:18 WIB (54m 07.3s / 3,247.3s JSONL file span; 54m 02.3s / 3,242.3s result.duration_seconds vs. 52m 47s carried over in manual note; 0 stream stalls or API retries) • Session a1072f43-298b-484d-8c00-4a8d2e8ee9c2 (gemini-4-carbon-low, permission_mode: always-proceed, 122 LLM turns, 378 steps)"
+  },
+  "tokens": {
+    "input": "468.3k",
+    "cachedInput": "12.66M",
+    "output": "77.2k",
+    "total": "13.20M",
+    "cacheHitRate": "96.43%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 468299,
+    "cachedInput": 12656306,
+    "output": 77198,
+    "total": 13201803,
+    "cacheHitRatePct": 96.43
+  },
+  "contextWindow": "198.6k peak (13,106 → 198,605 prompt tokens; 200,073 total; 18.94% out of 1.05M)",
+  "contextMetrics": {
+    "minTokens": 13106,
+    "avgTokens": 107579,
+    "peakTokens": 198605,
+    "windowLimitTokens": 1048576,
+    "peakUtilizationPct": 18.94
+  },
+  "calls": {
+    "llmCalls": 122,
+    "toolCalls": {
+      "total": 213,
+      "done": 176,
+      "error": 37,
+      "breakdown": [
+        {
+          "tool": "run_command",
+          "total": 90,
+          "done": 55,
+          "error": 35
+        },
+        {
+          "tool": "edit_file",
+          "total": 77,
+          "done": 76,
+          "error": 1
+        },
+        {
+          "tool": "read_file",
+          "total": 19,
+          "done": 19,
+          "error": 0
+        },
+        {
+          "tool": "write_file",
+          "total": 14,
+          "done": 14,
+          "error": 0
+        },
+        {
+          "tool": "manage_task",
+          "total": 7,
+          "done": 7,
+          "error": 0
+        },
+        {
+          "tool": "schedule",
+          "total": 6,
+          "done": 5,
+          "error": 1
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "b9a133a",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "Harden foreground Ctrl-C handshake during early VM startup"
+    },
+    {
+      "hash": "3a2f478",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S7: handle terminal Ctrl-C with partial summary and exit 130"
+    },
+    {
+      "hash": "4a2ccfc",
+      "relativeTime": "7 hours",
+      "author": "Riza Fahmi",
+      "message": "S6: report elapsed time and completed-response p50/p95 latency"
+    },
+    {
+      "hash": "9e625e3",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "S5: report HTTP status counts, transport failures, and exit codes"
+    },
+    {
+      "hash": "3a51fd9",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "S4: run paced five-second loop with bounded cancellation and connection reuse"
+    },
+    {
+      "hash": "4c95ec8",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "S3: send bounded GET with TLS verification and stream cancellation"
+    },
+    {
+      "hash": "bfbfa74",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments and URLs before network access"
+    },
+    {
+      "hash": "8924a0b",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "S1: launch cb CLI with help output and foreground signal handling"
+    },
+    {
+      "hash": "f0e3bb0",
+      "relativeTime": "8 hours",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Uncached Input",
+      "tokens": "468,299",
+      "rate2026": "$2.00 / 1M",
+      "cost2026": "$0.9366",
+      "rate2027": "$4.00 / 1M",
+      "cost2027": "$1.8732"
+    },
+    {
+      "component": "Cached Input (cache_read_tokens)",
+      "tokens": "12,656,306",
+      "rate2026": "$0.10 / 1M (95% off)",
+      "cost2026": "$1.2656",
+      "rate2027": "$0.20 / 1M (95% off)",
+      "cost2027": "$2.5313"
+    },
+    {
+      "component": "Output (0 thinking)",
+      "tokens": "77,198",
+      "rate2026": "$10.00 / 1M",
+      "cost2026": "$0.7720",
+      "rate2027": "$20.00 / 1M",
+      "cost2027": "$1.5440"
+    },
+    {
+      "component": "Total",
+      "tokens": "13,201,803",
+      "cost2026": "$2.97 ($2.9742)",
+      "cost2027": "$5.95 ($5.9484)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation & OTP 28 signal/Hex audit: :erl_signal_server, escript & offline Mint/Credo packages",
+      "stepRange": "1–44",
+      "llmCalls": 15,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.25
+    },
+    {
+      "slice": "S1: CLI help, POSIX launcher wrapper & :erl_signal_server SIGUSR1 handler (8924a0b)",
+      "stepRange": "45–74",
+      "llmCalls": 9,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.13
+    },
+    {
+      "slice": "S2: CLI argument & URL validation before network access (bfbfa74)",
+      "stepRange": "75–123",
+      "llmCalls": 15,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.23
+    },
+    {
+      "slice": "S3: Bounded Mint.HTTP GET, TLS verification & stream cancellation (4c95ec8)",
+      "stepRange": "124–208",
+      "llmCalls": 27,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.74
+    },
+    {
+      "slice": "S4: Paced 5s single-flight loop & connection reuse (3a51fd9)",
+      "stepRange": "209–240",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.28
+    },
+    {
+      "slice": "S5: HTTP status counts, transport failures & exit codes (9e625e3)",
+      "stepRange": "241–259",
+      "llmCalls": 6,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 0,
+      "costUsd": 0.15
+    },
+    {
+      "slice": "S6: Elapsed duration & completed-response p50/p95 latency (4a2ccfc)",
+      "stepRange": "260–296",
+      "llmCalls": 12,
+      "manageTaskPolls": 2,
+      "thinkingTokens": 0,
+      "costUsd": 0.33
+    },
+    {
+      "slice": "S7: Foreground PTY Ctrl-C partial summary & exit 130 (3a2f478)",
+      "stepRange": "297–325",
+      "llmCalls": 9,
+      "manageTaskPolls": 1,
+      "thinkingTokens": 0,
+      "costUsd": 0.27
+    },
+    {
+      "slice": "Release verification & early-VM startup Ctrl-C handshake hardening (b9a133a)",
+      "stepRange": "326–378",
+      "llmCalls": 19,
+      "manageTaskPolls": 4,
+      "thinkingTokens": 0,
+      "costUsd": 0.59
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 54m 02s Active Transcript Duration (vs. 52m 47s Note Template), 8 Agent Commits (+1 Pre-Run init) & 29/29 Tests",
+    "Three-Point Effort Scaling on Gemini 4 Carbon (Low vs. Medium vs. High): Zero Thinking Tokens & Lowest Cost of Any Gemini 4 Run ($2.97 vs. $3.35 Medium & $7.16 High)",
+    "Bidirectional POSIX Signal Handshake (CB_LAUNCHER_PID SIGUSR2/SIGUSR1 in b9a133a) Eliminated the 50 ms–250 ms BEAM Cold-Boot Ctrl-C Race",
+    "99.1% File-Tool Precision (110/111), 20 Deliberate Red-Phase TDD Runs, Hybrid schedule/manage_task Waiting & 96.43% Cache Hit Rate"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 54m 02s Active Transcript Duration (vs. 52m 47s Note Template), 8 Agent Commits (+1 Pre-Run init) & 29/29 Tests",
+      "bullets": [
+        "Wall-Clock Discrepancy (`54m` Actual Session Span vs. `52m 47s` in Manual Note): The manual note's `TIme 52m47s` was carried over from the preceding `gemini-4-carbon` (`Medium`) note (`52m 47.2s`). In `agy-carbon4-low_20261122212000`, `records/20261122T141811Z.events.jsonl` opened at `2026-11-22T14:18:11.484Z` (`21:18:11.48 WIB`, `16.5s` after pre-run `init` commit `f0e3bb0` at `21:17:55 WIB`; folder timestamp rounded to `21:20:00`) and flushed its terminal `result` event (`status: \"SUCCESS\"`) at `22:12:18.81 WIB` (`3,247.33s` = `54m 07.3s` file span; `result.duration_seconds: 3242.34248s` = `54m 02.3s` active execution), rounding to `54m` with `0` stream stalls or API retries.",
+        "Model Slug Normalization (`gemini-4-carbon-low` → `gemini-4-carbon` + `Low` Effort): The `init` event in `20261122T141811Z.events.jsonl` (Line 1) reported `model: \"gemini-4-carbon-low\"` and `permission_mode: \"always-proceed\"`, mapping to canonical catalog key `gemini-4-carbon` (`Gemini 4 Carbon`) with `effort: \"Low\"`.",
+        "Commit Count Verification (`8` Agent Commits + `1` Pre-Run `init` = `9` Total Commits): Matches the manual note's `Git commit: 8` and 9-entry `git log` verbatim. Because `f0e3bb0` (`init` at `21:17:55 WIB`) was committed `16.5s` before `agy` launched, `commits` records the `8` agent-authored commits (`8924a0b` `S1` at `21:27:04 WIB` through `3a2f478` `S7` at `22:04:17 WIB`, plus `b9a133a` `Harden foreground Ctrl-C handshake during early VM startup` at `22:11:55 WIB`) while `commitLog` preserves all `9` git commits.",
+        "Test Suite & Credo Verification (`29/29` Passed in `60.5s`, `0` Credo Issues): Matches the manual note (`Finished in 60.5 seconds (1.4s async, 59.0s sync) — Result: 29 passed` and default `mix credo`: `57 checks on 11 files, 92 mods/funs, found no issues` in `0.07s`) and in-session `task-352` (`60.4s — 29 passed`; `mix credo --strict`: `69 checks on 11 files, 92 mods/funs, 0 issues`). In `test/capy_bench/cli_test.exs:410`, `if idx >= 40, do: Process.sleep(450)` delays every request from index `40` onward so `Elapsed` lands around `5.29s–5.32s` depending on whether Request `42` starts just before `5,000 ms`, which can occasionally shave `10 ms` off the test's strict `assert elapsed_s >= 5.30` threshold under heavy host load even though the CLI contract (`Elapsed > 5.00 s`) holds."
+      ]
+    },
+    {
+      "title": "Three-Point Effort Scaling on Gemini 4 Carbon (Low vs. Medium vs. High): Zero Thinking Tokens & Lowest Cost of Any Gemini 4 Run ($2.97 vs. $3.35 Medium & $7.16 High)",
+      "bullets": [
+        "Cheapest Gemini 4 Run on the Leaderboard (`$2.97` vs. `$3.35` Medium & `$7.16` High): Across the full `Antigravity CLI / gemini-4-carbon` effort sweep on the same `$2.00/$0.10/$10.00` rate schedule, `Low` effort cleared all `7/7` slices for `$2.97` (`$2.9742` exact) — cutting billed cost by `11.3%` vs. `Medium` (`$3.35`) and `58.5%` vs. `High` (`$7.16`), and finishing as the only Gemini 4 run under `$3.00` (ahead of `gemini-4-argon` `$3.37`, `gemini-4-hydrogen` `$3.42`, and `gemini-4-neon` `$3.69`).",
+        "Zero Thinking Tokens & `-48.6%` Output Volume vs. +25.8% More Turns Than Medium (`U-Shaped` Turn Count Across Effort Levels): Running with `--effort low` disabled reasoning token generation completely (`0` thinking tokens across all `122` turns vs. `62,413` on `Medium` and `79,702` on `High`), cutting total output tokens by `48.6%` vs. `Medium` (`77,198` vs. `150,097`, saving `$0.7290` in output cost at `$10.00/1M`) and `57.0%` vs. `High` (`179,637`). Without per-turn reasoning, `Low` took `25` more LLM turns than `Medium` (`122` vs. `97`, `+25.8%`, mostly during `S3` Mint setup and `Release verification` startup-race diagnosis) while still using `38.4%` fewer turns than `High` (`122` vs. `198`) and matching `Medium`'s wall-clock time within one minute (`54m` vs. `53m`).",
+        "Architectural Shift (`Mint.HTTP` on Low vs. Raw `:gen_tcp`/`:ssl` on Medium & High): Whereas `gemini-4-carbon` on `Medium` and `High` wrote zero-dependency raw `:gen_tcp`/`:ssl` HTTP clients, `Low` inspected the local Hex cache (`~/.hex/packages/hexpm` at Steps `41–43`) and selected `Mint.HTTP` (`mint 1.7.1` + `hpax 1.0.3` + `castore 1.0.18`) paired with OTP 28 `:public_key.cacerts_get/0` (`CB_TEST_CACERTFILE` PEM override in tests) and a `spawn_monitor` connect worker (`CapyBench.HTTPClient.open_and_transfer/5`) to enforce strict per-request total deadlines across TCP/TLS handshakes (`584` production LoC across `5` files in `lib/capy_bench/` and `1,521` test LoC across `6` files in `test/`)."
+      ]
+    },
+    {
+      "title": "Bidirectional POSIX Signal Handshake (CB_LAUNCHER_PID SIGUSR2/SIGUSR1 in b9a133a) Eliminated the 50 ms–250 ms BEAM Cold-Boot Ctrl-C Race",
+      "bullets": [
+        "Catching the Cold-Boot `Ctrl-C` Race During Release Verification (Steps `329–371`): After committing `S7` (`3a2f478`) at Step `316`, the agent ran an end-to-end Python PTY release-verification script (Step `329`, `task-328`) that sent `\\x03` immediately after spawning `./cb`. When `\\x03` arrived during the first `50 ms–250 ms` of BEAM startup—before `cb.escript` finished loading and called `CapyBench.SignalHandler.install/1` (`:os.set_signal(:sigusr1, :handle)`)—the wrapper's `kill -USR1 \"$child\"` fired before `:erl_signal_server` was listening, leaving `./cb` running for the full `5.0s` window and timing out Python's `3.0s` wait.",
+        "Iterating from `CB_READY_FILE` to Zero-File `CB_LAUNCHER_PID` `SIGUSR2`/`SIGUSR1` Handshake (`b9a133a`): The agent first tested a temporary `CB_READY_FILE` polling wrapper (Steps `333–353`), which still timed out at `0.05s–0.25s` in `task-352` (Step `353`) when `\\x03` arrived before `CB_READY_FILE` was written. In Steps `370–376`, it replaced file polling with an in-memory bidirectional POSIX signal handshake between `./cb` and `CapyBench.SignalHandler`: `./cb` initializes `ready=0` and `interrupted=0`, traps `INT TERM` (`interrupted=1; if [ \"$ready\" -eq 1 ] && [ -n \"$child\" ]; then kill -USR1 \"$child\" 2>/dev/null; fi`), traps `USR2` (`ready=1; if [ \"$interrupted\" -eq 1 ] && [ -n \"$child\" ]; then kill -USR1 \"$child\" 2>/dev/null; fi`), and launches `CB_LAUNCHER_PID=$$ escript \"$dir/cb.escript\" \"$@\" </dev/null &`. Once `SignalHandler.install/1` attaches to `:erl_signal_server`, it executes `System.cmd(\"kill\", [\"-USR2\", pid_str])`, immediately flushing any buffered boot-window `Ctrl-C` as `SIGUSR1`.",
+        "6/6 Live Holdout PTY `Ctrl-C` Verification (`50 ms` Cold-Boot Through Live HTTPS): Both the agent's Step `374` sweep (`0.05s`, `0.20s`, `0.45s`) and independent holdout foreground PTY `Ctrl-C` probes at `50 ms` (`dt=0.27s`, `Started: 0`, `Elapsed: 0.00 s`), `150 ms` (`dt=0.27s`, `Started: 0`), `350 ms` fast pacing (`dt=0.36s`, `Started: 1`, `200: 1`), `500 ms` against a slow `800 ms` response (`dt=1.11s`, `Elapsed: 0.84 s`, `200: 1`), `500 ms` against a stalled `3,000 ms` body (`dt=2.27s`, `Elapsed: 2.00 s`, `Transport failures: 1`), and `600 ms` against live HTTPS `https://rizafahmi.com` (`dt=1.42s`, `200: 1`, `p50 1102 ms`) exited `130` with empty `stderr` and a single 6-line partial summary."
+      ]
+    },
+    {
+      "title": "99.1% File-Tool Precision (110/111), 20 Deliberate Red-Phase TDD Runs, Hybrid schedule/manage_task Waiting & 96.43% Cache Hit Rate",
+      "bullets": [
+        "Hybrid Reactive Waiting (`schedule` with `TimerCondition: \"any\"` + `manage_task` across `10` Backgrounded Commands): Antigravity CLI backgrounded `10` long-running test/verification commands (`Steps 206, 237, 252, 256, 278, 284, 289, 316, 329, 353`, logging a single `root agent idle; waiting for 1 background task(s) to finish` line in `20261122T141811Z.stderr.log` at `21:50:19 WIB` during `S4` `task-236`). On `S3`–`S5`, the agent waited purely for reactive `system_message` wakeups (`0` polls); on `S6`, `S7`, and `Release verification`, it combined `6` `schedule` timers (`TimerCondition: \"any\"`, `3` cancelled early by task completion messages, `2` auto-cancelled because messages were already queued, and `1` rejected at Step `360` due to an already-active `any` timer from Step `355`) with `7` `manage_task` status checks.",
+        "99.1% File-Tool Precision (`110/111`) & Exact Decomposition of All 37 Tool Errors: All `19/19` `read_file`, `14/14` `write_file`, and `7/7` `manage_task` calls succeeded, with a single `edit_file` target mismatch at Step `183` on `test/support/test_servers.ex` (fixed after `read_file` at Step `186`) and the single duplicate `schedule` timer error at Step `360`. The `35` non-zero `run_command` exits comprised `20` deliberate red-phase TDD and iterative `mix test` runs (`S1` Steps `47`, `55`, `61`; `S2` Steps `77`, `85`, `92`, `99`, `105`, `116`; `S3` Steps `171`, `175`, `194`; `S4` Steps `211`, `221`, `228`; `S5` Step `244`; `S6` Steps `262`, `268`, `284`; `S7` Step `299`), `4` `mix credo --strict` catches (`S2` Step `120` cyclomatic complexity, `S3` Step `201` nesting depth, `S4` Step `232` & `S7` Step `308` `>120`-col test lines), `1` duplicate test-name compile catch (`S3` Step `166`), `4` disposable OTP/Hex doc probes (`Preparation` Steps `21`, `36`; `S3` Steps `125`, `141`), and `6` early-startup `Ctrl-C` diagnostic probes during `Release verification` (`Steps 329, 335, 338, 341, 345, 353`).",
+        "Unit Economics, Multi-Tool Batching & Prefix Cache Stability (`96.43%` Hit Rate, `$24.05` Saved): Across `122` turns (`1.75` tools/turn, with `60/122` turns / `49.2%` batching `2–6` parallel tool calls; `2,513.1s` / `77.5%` model inference at `20.60s/turn` vs. `729.3s` / `22.5%` tool & background test execution), `gemini-4-carbon` (`Low`) billed `468,299` uncached input tokens at `$2.00/1M` (`$0.9366`), `12,656,306` cached input tokens at `$0.10/1M` (`$1.2656`), and `77,198` output tokens (`0` thinking) at `$10.00/1M` (`$0.7720`), totaling `13,201,803` tokens and `$2.9742` (`$2.97` under 2026 rates; `$5.95` under 2027 rates; saving `$24.05` / `89.0%` vs. `$27.02` uncached). Only two post-Step-1 turns experienced `cache_read_tokens: 0` prefix resets: Step `22` (`21,658` tokens) and Step `150` (`87,230` tokens)."
+      ]
+    }
+  ]
+}
