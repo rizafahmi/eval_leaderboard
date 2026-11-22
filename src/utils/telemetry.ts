@@ -683,10 +683,16 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
 
   // 1c. Harness Ablation: omp vs Antigravity CLI on gemini-4-carbon (High)
   const ompCarbonHarness = runs.find(
-    (r) => r.displayHarness === 'omp' && r.data.model === 'gemini-4-carbon'
+    (r) =>
+      r.displayHarness === 'omp' &&
+      r.data.model === 'gemini-4-carbon' &&
+      r.data.effort?.toLowerCase() === 'high'
   );
   const agyCarbonHarness = runs.find(
-    (r) => r.displayHarness === 'Antigravity CLI' && r.data.model === 'gemini-4-carbon'
+    (r) =>
+      r.displayHarness === 'Antigravity CLI' &&
+      r.data.model === 'gemini-4-carbon' &&
+      r.data.effort?.toLowerCase() === 'high'
   );
   if (ompCarbonHarness && agyCarbonHarness) {
     presets.push({
@@ -773,6 +779,26 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
       runAId: flashHigh.id,
       runBId: flashMax.id,
       findingHeadline: `Max effort nearly doubled token volume (${flashMax.data.tokens?.total ?? '51.95M'} vs ${flashHigh.data.tokens?.total ?? '25.80M'}) and cost ($${flashMax.data.costUsd.toFixed(2)} vs $${flashHigh.data.costUsd.toFixed(2)}) while introducing an S5 spec miss.`,
+    });
+  }
+
+  // 2b. Effort Scaling: Antigravity CLI gemini-4-carbon Medium vs High
+  const agyCarbonMedium = runs.find(
+    (r) =>
+      r.displayHarness === 'Antigravity CLI' &&
+      r.data.model === 'gemini-4-carbon' &&
+      r.data.effort?.toLowerCase() === 'medium'
+  );
+  if (agyCarbonMedium && agyCarbonHarness) {
+    presets.push({
+      id: 'effort-agy-gemini4-carbon-medium-vs-high',
+      category: 'effort',
+      badge: 'EFFORT SCALING',
+      title: 'Antigravity CLI / gemini-4-carbon: Medium vs. High Effort',
+      subtitle: 'Same harness, OTP :gen_tcp/:ssl architecture & $2/$0.10/$10 rate schedule — 2.01 vs 1.17 tools/turn parallel batching',
+      runAId: agyCarbonMedium.id,
+      runBId: agyCarbonHarness.id,
+      findingHeadline: `Both achieved 7/7 full pass; Medium effort cut LLM turns by 51% (${agyCarbonMedium.llmCalls} vs ${agyCarbonHarness.llmCalls}), total tokens by 59% (${agyCarbonMedium.data.tokens?.total ?? '11.12M'} vs ${agyCarbonHarness.data.tokens?.total ?? '26.88M'}), active time by 40% (${agyCarbonMedium.data.durationMinutes}m vs ${agyCarbonHarness.data.durationMinutes}m), and billed cost by 53% ($${agyCarbonMedium.data.costUsd.toFixed(2)} vs $${agyCarbonHarness.data.costUsd.toFixed(2)}) via 2.01 tools/turn batching and 0 stream stalls.`,
     });
   }
 
