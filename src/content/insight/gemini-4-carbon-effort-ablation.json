@@ -1,0 +1,362 @@
+{
+  "published": true,
+  "order": 10,
+  "part": "Part 10",
+  "date": "2026-11-22",
+  "lang": "en",
+  "title": "Gemini 4 Carbon: Medium vs. High effort",
+  "subtitle": "Same 7/7 pass. Half the turns, 53% lower cost.",
+  "description": "7-slide comparison of Gemini 4 Carbon at Medium vs. High effort on Antigravity CLI: 97 vs. 198 turns, $3.35 vs. $7.16, 53m vs. 88m, and 7/7 holdouts.",
+  "seoTitle": "Gemini 4 Carbon: Medium vs. High Effort",
+  "seoDescription": "Gemini 4 Carbon Medium vs. High on Antigravity CLI: 7/7 pass, 97 vs. 198 turns, 53m vs. 88m, and $3.35 vs. $7.16.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": [
+    "Gemini 4 Carbon",
+    "Effort Ablation",
+    "Antigravity CLI"
+  ],
+  "relatedRunIds": [
+    "agy-gemini-4-carbon-medium-20261122-1745",
+    "agy-gemini-4-carbon-high-20261118-1244",
+    "agy-gemini-4-argon-high-20261118-2142",
+    "agy-gemini-4-neon-high-20261119-0842",
+    "agy-gemini-4-hydrogen-high-20261119-1110",
+    "zcode-glm-5-3-flash-high-20261025-0555"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-gemini-4-carbon-effort-cover.png",
+      "badges": [
+        {
+          "text": "EFFORT TEST",
+          "tone": "acid"
+        },
+        {
+          "text": "GEMINI 4 CARBON",
+          "tone": "sky"
+        }
+      ],
+      "headlinePrimary": "Gemini 4 Carbon: Medium vs. High.",
+      "headlineMuted": "Same 7/7 pass for half the cost.",
+      "lead": "On Antigravity CLI, **Medium** passed all **7/7** stages in **53m** for **$3.35**. **High** took **88m** and **$7.16**.",
+      "stats": [
+        {
+          "label": "Carbon Medium",
+          "value": "$3.35",
+          "sub": "7/7 · 53m · 97 turns",
+          "accent": true
+        },
+        {
+          "label": "Carbon High",
+          "value": "$7.16",
+          "sub": "7/7 · 88m · 198 turns"
+        },
+        {
+          "label": "Tools / Turn",
+          "value": "2.01×",
+          "sub": "vs 1.17× on High"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "turn-consolidation",
+      "kind": "metrics",
+      "label": "WHY COST FELL 53%",
+      "filename": "02-gemini-4-carbon-turn-consolidation.png",
+      "badges": [
+        {
+          "text": "TOKEN BREAKDOWN",
+          "tone": "mint"
+        },
+        {
+          "text": "ANTIGRAVITY CLI",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "Fewer turns saved more than shorter thinking.",
+      "headlineMuted": "Medium ran 2 tools per turn.",
+      "splitBar": {
+        "label": "Total Tokens: Medium (11.12M) vs High (26.88M)",
+        "primaryLabel": "MEDIUM: 11.12M (41.4%)",
+        "primaryPct": 41.4,
+        "secondaryLabel": "SAVED: 15.76M (58.6%)",
+        "secondaryPct": 58.6
+      },
+      "stats": [
+        {
+          "label": "LLM Turns",
+          "value": "97",
+          "sub": "vs 198 on High (-51%)"
+        },
+        {
+          "label": "Thinking / Turn",
+          "value": "643 tok",
+          "sub": "vs 403 on High (+59%)"
+        },
+        {
+          "label": "Multi-Tool Turns",
+          "value": "65%",
+          "sub": "63 of 97 turns ran 2–5 tools"
+        },
+        {
+          "label": "Turn Savings",
+          "value": "$2.95",
+          "sub": "77% of the $3.81 cost drop"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "HEAD TO HEAD",
+      "filename": "03-gemini-4-carbon-medium-vs-high.png",
+      "badges": [
+        {
+          "text": "COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "GEMINI 4",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "Medium is now the cheapest Gemini 4 run.",
+      "headlineMuted": "40% faster and 53% cheaper than High.",
+      "columns": [
+        "Metric",
+        "Medium",
+        "High",
+        "Diff"
+      ],
+      "rows": [
+        {
+          "metric": "Active Time",
+          "primary": "53m",
+          "baseline": "88m",
+          "delta": "-40%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Cost (2026)",
+          "primary": "$3.35",
+          "baseline": "$7.16",
+          "delta": "-53%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "11.12M",
+          "baseline": "26.88M",
+          "delta": "-59%",
+          "deltaTone": "mint"
+        },
+        {
+          "metric": "LLM Turns",
+          "primary": "97",
+          "baseline": "198",
+          "delta": "-51%",
+          "deltaTone": "sky"
+        }
+      ],
+      "barCompare": {
+        "label": "2026 Cost Across Gemini 4 Runs (All 7/7)",
+        "items": [
+          {
+            "name": "AGY Carbon Med",
+            "value": "$3.35",
+            "widthPct": 46.8,
+            "accent": true
+          },
+          {
+            "name": "AGY Argon High",
+            "value": "$3.37",
+            "widthPct": 47.1
+          },
+          {
+            "name": "OMP Carbon High",
+            "value": "$5.91",
+            "widthPct": 82.5
+          },
+          {
+            "name": "AGY Carbon High",
+            "value": "$7.16",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* With zero stalls and the same 96.39% cache hit rate, High still costs $6.30.",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "what-changed",
+      "kind": "steps",
+      "label": "WHAT STAYED & CHANGED",
+      "filename": "04-carbon-what-changed.png",
+      "badges": [
+        {
+          "text": "CODE DIFF",
+          "tone": "violet"
+        },
+        {
+          "text": "MEDIUM VS HIGH",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "Same code design. One startup fix.",
+      "headlineMuted": "Where High spent the extra $3.81.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "Same HTTP & TLS stack",
+          "desc": "Both inspected OTP 28 bytecode first and built zero-dependency `:gen_tcp` and `:ssl` clients."
+        },
+        {
+          "num": "02",
+          "title": "Medium stopped at the spec",
+          "desc": "Passed `36/36` tests, `0` Credo issues, and `Ctrl-C` after `350 ms` (`8` release turns)."
+        },
+        {
+          "num": "03",
+          "title": "High fixed early Ctrl-C",
+          "desc": "Tested `50–550 ms` `Ctrl-C` delays and added `CB_READY_FILE` for cold BEAM boot (`26` release turns)."
+        }
+      ],
+      "callout": {
+        "title": "Half the Turns on Every Stage",
+        "body": "Turns dropped `46%–58%` across S1–S7. S3 fell `43 → 19` turns; S7 fell `19 → 8`.",
+        "tone": "sky"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "flash-vs-frontier",
+      "kind": "steps",
+      "label": "SMALL VS LARGE MODELS",
+      "filename": "05-small-vs-large-effort.png",
+      "badges": [
+        {
+          "text": "EFFORT SCALING",
+          "tone": "violet"
+        },
+        {
+          "text": "PART 4 VS PART 10",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "Small models need High. Large models don't.",
+      "headlineMuted": "GLM-5.3-Flash vs Gemini 4 Carbon.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "GLM-5.3-Flash Low (6/7)",
+          "desc": "Looped for `344` turns (`$1.10`, `111m`) and failed live chunked `301` responses."
+        },
+        {
+          "num": "02",
+          "title": "GLM-5.3-Flash High (7/7)",
+          "desc": "Planned upfront, finished in `190` turns (`$0.87`, `71m`), and passed all `7/7` stages."
+        },
+        {
+          "num": "03",
+          "title": "Gemini 4 Carbon Medium (7/7)",
+          "desc": "Already knew OTP 28, so **Medium** finished in `97` turns while **High** took `198` one-tool steps."
+        }
+      ],
+      "callout": {
+        "title": "Set Effort by Model Size",
+        "body": "Use **High** on small models to prevent loops. Use **Medium** on large models to cut slow micro-steps.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "NOTES",
+      "filename": "06-gemini-4-carbon-effort-caveats.png",
+      "badges": [
+        {
+          "text": "CAVEATS",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 NOTES",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "4 notes on the data.",
+      "headlineMuted": "Limits of this run.",
+      "items": [
+        {
+          "num": "01",
+          "head": "300 ms startup gap on Medium",
+          "text": "Sending `Ctrl-C` during the first `300 ms` of BEAM boot exits `130` before printing a summary."
+        },
+        {
+          "num": "02",
+          "head": "Cache resets added $0.86 to High",
+          "text": "High had `5` mid-run cache resets (`94.68%` hit). Medium had `1` (`96.39%` hit)."
+        },
+        {
+          "num": "03",
+          "head": "Most tool errors were TDD tests",
+          "text": "Of `36` errors, `20` were planned failing `mix test` runs and `5` were Credo checks. `108/109` file edits worked."
+        },
+        {
+          "num": "04",
+          "head": "Low effort not tested yet",
+          "text": "Only **Medium** and **High** were tested on Carbon. **Low** may still drop below `7/7`."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS",
+      "filename": "07-gemini-4-carbon-effort-takeaways.png",
+      "badges": [
+        {
+          "text": "SUMMARY",
+          "tone": "mint"
+        },
+        {
+          "text": "3 POINTS",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "3 takeaways.",
+      "headlineMuted": "When to use Medium vs. High.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Default Carbon to Medium",
+          "text": "Same `7/7` score, `35m` faster (`53m` vs `88m`), and `53%` cheaper (`$3.35` vs `$7.16`)."
+        },
+        {
+          "num": "02",
+          "head": "Check tools per turn",
+          "text": "Batching `2.01` tools per turn cut prompt-cache replays in half and lowered tokens by `59%`."
+        },
+        {
+          "num": "03",
+          "head": "Use High for race bugs",
+          "text": "Spend `2×` for **High** only when sub-`250 ms` startup or signal races matter."
+        }
+      ],
+      "archive": {
+        "label": "COMPARE BOTH RUNS",
+        "body": "View **Carbon Medium** vs **Carbon High** stage by stage:",
+        "url": "eval.rizafahmi.com/compare"
+      },
+      "footerRight": "COMPARE ON THE WEB →"
+    }
+  ]
+}
