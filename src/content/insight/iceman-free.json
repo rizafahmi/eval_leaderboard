@@ -1,0 +1,354 @@
+{
+  "published": true,
+  "order": 11,
+  "part": "Part 11",
+  "date": "2026-11-25",
+  "lang": "en",
+  "title": "Testing iceman-free on my personal benchmark",
+  "subtitle": "28% fewer tokens than hy4-flash, yet 12m slower and stopped at S7.",
+  "description": "A 7-slide visual breakdown of OpenCode's $0 stealth model iceman-free: 85.8% inference wall-clock, 3-way OpenCode free-tier comparison, the 200 ms SIGUSR1 boot-window crash, S7 turn sink, and field caveats.",
+  "seoTitle": "iceman-free on OpenCode: 14.4M Tokens, 6/7",
+  "seoDescription": "7-slide breakdown of OpenCode's $0 stealth model iceman-free: 85.8% inference clock, hy4-flash-free comparison, 200 ms SIGUSR1 boot race, and field caveats.",
+  "brandLabel": "EVAL.RIZAFAHMI.COM",
+  "footerLeft": "@rizafahmi · Personal Eval",
+  "defaultRatio": "4:5",
+  "tags": [
+    "iceman-free",
+    "OpenCode v2.2.7",
+    "Stealth Model"
+  ],
+  "relatedRunIds": [
+    "opencode-iceman-free-default-20261124-1751",
+    "opencode-hy4-flash-free-high-20261117-0755",
+    "opencode-inkling-2-small-free-high-20261111-0745"
+  ],
+  "slides": [
+    {
+      "id": "cover",
+      "kind": "cover",
+      "label": "COVER",
+      "filename": "01-iceman-free-cover.png",
+      "badges": [
+        {
+          "text": "PERSONAL EVAL",
+          "tone": "acid"
+        },
+        {
+          "text": "OPENCODE v2.2.7 · $0",
+          "tone": "sky"
+        }
+      ],
+      "headlinePrimary": "Testing iceman-free on my personal benchmark.",
+      "headlineMuted": "28% fewer tokens than hy4-flash, yet 12m slower and stopped at S7.",
+      "lead": "OpenCode's `$0` stealth model sailed through **S1–S6** with **14.38M tokens** and a **17s** test suite, then tripped on a **200 ms `SIGUSR1` boot race**.",
+      "stats": [
+        {
+          "label": "Verification",
+          "value": "6 / 7",
+          "sub": "S1–S6 passed · S7 failed",
+          "accent": true
+        },
+        {
+          "label": "Duration",
+          "value": "56m58s",
+          "sub": "85.8% model · 14.2% tests"
+        },
+        {
+          "label": "Total Tokens",
+          "value": "14.38M",
+          "sub": "213 turns · 97.89% cached"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "metrics",
+      "kind": "metrics",
+      "label": "TIME SPLIT",
+      "filename": "02-iceman-free-metrics.png",
+      "badges": [
+        {
+          "text": "SESSION NOTES",
+          "tone": "mint"
+        },
+        {
+          "text": "213 TURNS · 13.75s/TURN",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "85.8% of the clock was waiting on the model.",
+      "headlineMuted": "Fast 17s tests couldn't offset 13.75s/turn latency.",
+      "splitBar": {
+        "label": "Time Split (56m58s)",
+        "primaryLabel": "MODEL TIME: 48m50s (85.8%)",
+        "primaryPct": 85.8,
+        "secondaryLabel": "TESTS & TOOLS: 8m05s (14.2%)",
+        "secondaryPct": 14.2
+      },
+      "stats": [
+        {
+          "label": "Total Tokens",
+          "value": "14.38M",
+          "sub": "97.89% cached · 301k new · 105k out"
+        },
+        {
+          "label": "Peak Context",
+          "value": "126.2k",
+          "sub": "48.1% of 262.1k limit · 0 compactions"
+        },
+        {
+          "label": "Self-Written Tests",
+          "value": "33 / 33",
+          "sub": "17.0s suite · 6.5× faster than hy4"
+        },
+        {
+          "label": "Tool Calls",
+          "value": "230 / 232",
+          "sub": "174 shell · 53 edit (2 misses) · 5 read"
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "comparison",
+      "kind": "comparison",
+      "label": "OPENCODE $0 TRIO",
+      "filename": "03-iceman-vs-hy4-opencode.png",
+      "badges": [
+        {
+          "text": "SAME-HARNESS COMPARISON",
+          "tone": "sky"
+        },
+        {
+          "text": "OPENCODE v2.2.7",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "Same OpenCode $0 tier. Opposite bottlenecks.",
+      "headlineMuted": "iceman-free vs hy4-flash-free (+ inkling-2-small).",
+      "columns": [
+        "Metric",
+        "iceman-free",
+        "hy4-flash-free",
+        "Delta"
+      ],
+      "rows": [
+        {
+          "metric": "Holdout",
+          "primary": "6 / 7",
+          "baseline": "7 / 7",
+          "delta": "-1 (S7)",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Duration",
+          "primary": "56m58s",
+          "baseline": "44m51s",
+          "delta": "+27.0%",
+          "deltaTone": "magenta"
+        },
+        {
+          "metric": "Total Tokens",
+          "primary": "14.38M",
+          "baseline": "19.95M",
+          "delta": "-27.9%",
+          "deltaTone": "acid"
+        },
+        {
+          "metric": "Model / Turn",
+          "primary": "13.75s",
+          "baseline": "6.37s",
+          "delta": "2.16× slower",
+          "deltaTone": "violet"
+        }
+      ],
+      "barCompare": {
+        "label": "Total Tokens Across All 3 OpenCode Free Models",
+        "items": [
+          {
+            "name": "iceman-free (6/7)",
+            "value": "14.38M",
+            "widthPct": 19.6,
+            "accent": true
+          },
+          {
+            "name": "hy4-flash-free (7/7)",
+            "value": "19.95M",
+            "widthPct": 27.2
+          },
+          {
+            "name": "inkling-2-small (7/7)",
+            "value": "73.45M",
+            "widthPct": 100
+          }
+        ]
+      },
+      "footnote": "* All 3 runs used OpenCode v2.2.7 ($0 limited-time free tier, Nov 2026); iceman-free ran with default variant.",
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "ctrl-c-race",
+      "kind": "steps",
+      "label": "CASE STUDY #1 BOOT RACE",
+      "filename": "04-iceman-sigusr1-race.png",
+      "badges": [
+        {
+          "text": "CASE STUDY #1",
+          "tone": "violet"
+        },
+        {
+          "text": "S7 CTRL-C RACE",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "The 200 ms SIGUSR1 boot-window crash.",
+      "headlineMuted": "Why Ctrl-C passed agent tests but failed holdout.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "100–150 ms: Signal lost",
+          "desc": "`./cb` forwards `INT` to `kill -USR1`, but during subshell startup the signal drops — `cb` ignores `Ctrl-C`, runs 5s, and exits `0`."
+        },
+        {
+          "num": "02",
+          "title": "200–250 ms: ERTS crash dump",
+          "desc": "BEAM installs its default `SIGUSR1` crash-dump handler before `CLI.main/1` runs — printing `Received SIGUSR1`, writing `erl_crash.dump`, and exiting `1`."
+        },
+        {
+          "num": "03",
+          "title": "300 ms+: Exit 130 works",
+          "desc": "Once `CapyBench.SignalHandler` attaches, `Ctrl-C` prints a valid partial summary and exits `130`."
+        }
+      ],
+      "callout": {
+        "title": "Self-Test Blind Spot",
+        "body": "`ctrl_c_test.exs` only tested `600 ms` and `1,500 ms` delays — never probing the **100–250 ms** BEAM startup window.",
+        "tone": "violet"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "s7-budget",
+      "kind": "steps",
+      "label": "CASE STUDY #2 S7 TURN SINK",
+      "filename": "05-iceman-s7-budget.png",
+      "badges": [
+        {
+          "text": "CASE STUDY #2",
+          "tone": "violet"
+        },
+        {
+          "text": "68 TURNS ON S7",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "S7 ate a third of the run — and still slipped.",
+      "headlineMuted": "68 turns and 38.6% of all thinking tokens went to Ctrl-C.",
+      "steps": [
+        {
+          "num": "01",
+          "title": "S1–S6 in 135 turns",
+          "desc": "The first 6 slices were crisp and compact (`24 + 11 + 50 + 35 + 7 + 8` turns), clearing every HTTP, HTTPS, pacing, and percentile check."
+        },
+        {
+          "num": "02",
+          "title": "Hit the exact bug at Step 192",
+          "desc": "During S7 testing, `mix test` literally triggered `Received SIGUSR1` and wrote `erl_crash.dump` into the repo."
+        },
+        {
+          "num": "03",
+          "title": "Removed the dump, not the race",
+          "desc": "At Step 202 the agent ran `rm -f erl_crash.dump`, committed `5407aa3`, and left a second `1.74 MB` crash dump untracked after release verification."
+        }
+      ],
+      "callout": {
+        "title": "Contrast: hy4-flash-free on the Same Harness",
+        "body": "`hy4-flash-free` bypassed OS signals with `stty -isig` + a raw `0x03` stdin watcher in **32 turns**, passing **5/5** probes down to **50 ms**.",
+        "tone": "acid"
+      },
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "caveats",
+      "kind": "caveats",
+      "label": "FIELD NOTES",
+      "filename": "06-iceman-free-caveats.png",
+      "badges": [
+        {
+          "text": "FIELD NOTES",
+          "tone": "magenta"
+        },
+        {
+          "text": "4 CAVEATS",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "4 rough edges behind the 6/7 score.",
+      "headlineMuted": "Quiet shortcuts surfaced in the session logs.",
+      "items": [
+        {
+          "num": "01",
+          "head": "No #high effort knob",
+          "text": "`--model opencode/iceman-free#high` threw `VariantUnavailableError`; the run executed on `variant: default` (`effort_updates: false`)."
+        },
+        {
+          "num": "02",
+          "head": "Skipped Credo linting",
+          "text": "Documented `mix compile --warnings-as-errors` as lint in `README.md`, despite `PLAN.md` stating compilation doesn't substitute for linting."
+        },
+        {
+          "num": "03",
+          "head": "No HTTP connection reuse",
+          "text": "Added `mint ~> 1.6` for streaming and TLS, but closed connections after every request in S4 rather than exercising keep-alive reuse."
+        },
+        {
+          "num": "04",
+          "head": "262k ceiling & temporary $0 tier",
+          "text": "Peaked at **48.1%** of its `262.1k` context window; `$0.00` reflects OpenCode's limited-time stealth preview (Nov 2026)."
+        }
+      ],
+      "footerRight": "SWIPE →"
+    },
+    {
+      "id": "takeaways",
+      "kind": "takeaways",
+      "label": "TAKEAWAYS & ARCHIVE",
+      "filename": "07-iceman-free-takeaways.png",
+      "badges": [
+        {
+          "text": "TAKEAWAYS",
+          "tone": "mint"
+        },
+        {
+          "text": "3 LESSONS",
+          "tone": "outline"
+        }
+      ],
+      "headlinePrimary": "3 lessons from OpenCode's 3-model free tier.",
+      "headlineMuted": "Token economy doesn't guarantee speed or 7/7.",
+      "items": [
+        {
+          "num": "01",
+          "head": "Per-turn latency dominates wall-clock",
+          "text": "Cutting tokens by **28%** and test runtime by **6.5×** still lost by **12 minutes** when inference ran **2.2× slower** per turn."
+        },
+        {
+          "num": "02",
+          "head": "Cold-boot races defeat happy-path tests",
+          "text": "Testing `Ctrl-C` only after `600 ms` hides BEAM's `200–250 ms` `SIGUSR1` window — real holdouts must probe startup timing."
+        },
+        {
+          "num": "03",
+          "head": "Read the crash dumps in the logs",
+          "text": "A model that deletes `erl_crash.dump` instead of asking why `SIGUSR1` fired will ship the exact failure to production."
+        }
+      ],
+      "archive": {
+        "label": "FULL LOGS & COMPARE",
+        "body": "Inspect the full `iceman-free` transcript audit and head-to-head OpenCode comparison:",
+        "url": "eval.rizafahmi.com"
+      },
+      "footerRight": "END OF PART 11"
+    }
+  ]
+}
