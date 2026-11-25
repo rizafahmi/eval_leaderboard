@@ -1,0 +1,282 @@
+{
+  "timestamp": "2026-11-24T17:51:14+07:00",
+  "codingHarness": "OpenCode",
+  "model": "iceman-free",
+  "effort": "Default",
+  "provider": "OpenCode",
+  "durationMinutes": 57,
+  "costUsd": 0,
+  "commits": 7,
+  "tests": {
+    "passed": 33,
+    "total": 33,
+    "durationSeconds": 17,
+    "details": "Finished in 17.0 seconds (0.07s async, 17.0s sync) — 33 passed (no Credo setup; README documents mix compile --warnings-as-errors as lint)"
+  },
+  "planCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": false
+  },
+  "agentPlanCompletion": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true,
+    "S7": true
+  },
+  "verification": {
+    "holdoutPassed": 6,
+    "holdoutTotal": 7,
+    "holdoutVerdict": "partial-pass",
+    "agentClaimedPassed": 7,
+    "agentClaimedTotal": 7,
+    "unverifiedSlices": [
+      "S7"
+    ],
+    "agentSuitePassed": 33,
+    "agentSuiteTotal": 33
+  },
+  "interface": {
+    "type": "cli",
+    "command": "opencode run --standalone --format json --thinking --auto --archived --model opencode/iceman-free < PROMPT.md",
+    "details": "Run window: 17:51:14–18:48:12 WIB (56m 57.9s / 3,417.9s CLI wall-clock in opencode.log, 56m 51.1s in events.jsonl; duration omitted in manual note; preceded by a rejected 17:49:42 WIB --model opencode/iceman-free#high launch with VariantUnavailableError) • Session ses_df2d1995cffexZYTbUBsCxU8V5 (opencode / iceman-free, variant: default, stealth model released 2026-11-06, OpenCode v2.2.7, 213 steps, 0 compactions)"
+  },
+  "tokens": {
+    "input": "301.3k",
+    "cachedInput": "13.97M",
+    "output": "105.0k",
+    "thinking": "59.4k",
+    "total": "14.38M",
+    "cacheHitRate": "97.89%"
+  },
+  "tokenCounts": {
+    "uncachedInput": 301269,
+    "cachedInput": 13972992,
+    "output": 104993,
+    "thinking": 59393,
+    "total": 14379254,
+    "cacheHitRatePct": 97.89
+  },
+  "contextWindow": "126.2k peak (1,385 → 126,182 prompt tokens; 126,687 total; 48.13% out of 262.1k)",
+  "contextMetrics": {
+    "minTokens": 1385,
+    "avgTokens": 67015,
+    "peakTokens": 126182,
+    "windowLimitTokens": 262144,
+    "peakUtilizationPct": 48.13
+  },
+  "calls": {
+    "llmCalls": 213,
+    "toolCalls": {
+      "total": 232,
+      "done": 230,
+      "error": 2,
+      "breakdown": [
+        {
+          "tool": "shell",
+          "total": 174,
+          "done": 174,
+          "error": 0
+        },
+        {
+          "tool": "edit",
+          "total": 53,
+          "done": 51,
+          "error": 2
+        },
+        {
+          "tool": "read",
+          "total": 5,
+          "done": 5,
+          "error": 0
+        }
+      ]
+    }
+  },
+  "commitLog": [
+    {
+      "hash": "5407aa3",
+      "relativeTime": "12 hours",
+      "author": "Riza Fahmi",
+      "message": "S7: handle Ctrl-C with graceful partial summary"
+    },
+    {
+      "hash": "041c434",
+      "relativeTime": "12 hours",
+      "author": "Riza Fahmi",
+      "message": "S6: report timing with percentiles and elapsed time"
+    },
+    {
+      "hash": "392c0b7",
+      "relativeTime": "12 hours",
+      "author": "Riza Fahmi",
+      "message": "S5: report outcomes and exit codes"
+    },
+    {
+      "hash": "4a53f8a",
+      "relativeTime": "12 hours",
+      "author": "Riza Fahmi",
+      "message": "S4: paced five-second loop with dispatch scheduling"
+    },
+    {
+      "hash": "228071f",
+      "relativeTime": "13 hours",
+      "author": "Riza Fahmi",
+      "message": "S3: send bounded GET with HTTPS verification and timeout handling"
+    },
+    {
+      "hash": "5cf634e",
+      "relativeTime": "13 hours",
+      "author": "Riza Fahmi",
+      "message": "S2: validate CLI arguments and reject invalid URLs"
+    },
+    {
+      "hash": "52aff16",
+      "relativeTime": "13 hours",
+      "author": "Riza Fahmi",
+      "message": "S1: launch CLI with help flags and escript entry point"
+    },
+    {
+      "hash": "35880d3",
+      "relativeTime": "13 hours",
+      "author": "Riza Fahmi",
+      "message": "init"
+    }
+  ],
+  "costBreakdown": [
+    {
+      "component": "Input (uncached)",
+      "tokens": "301,269",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Cached (cacheRead)",
+      "tokens": "13,972,992",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Output (incl. 59,393 reasoning)",
+      "tokens": "104,993",
+      "rate2026": "$0.00 / 1M (limited-time free)",
+      "cost2026": "$0.00"
+    },
+    {
+      "component": "Total",
+      "tokens": "14,379,254",
+      "cost2026": "$0.00 (OpenCode limited-time free tier, Nov 2026)"
+    }
+  ],
+  "sliceBreakdown": [
+    {
+      "slice": "Preparation + S1: README contract, CLI help & escript entry point (52aff16)",
+      "stepRange": "1–24",
+      "llmCalls": 24,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 5412,
+      "costUsd": 0
+    },
+    {
+      "slice": "S2: CLI argument & URL validation before networking (5cf634e)",
+      "stepRange": "25–35",
+      "llmCalls": 11,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 4013,
+      "costUsd": 0
+    },
+    {
+      "slice": "S3: Bounded Mint HTTP/1 GET, TLS verification & timeout handling (228071f)",
+      "stepRange": "36–85",
+      "llmCalls": 50,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 11486,
+      "costUsd": 0
+    },
+    {
+      "slice": "S4: Paced 5s loop, dispatch scheduling & cancellation (4a53f8a)",
+      "stepRange": "86–120",
+      "llmCalls": 35,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 10833,
+      "costUsd": 0
+    },
+    {
+      "slice": "S5: Outcome accounting, status classes & exit codes (392c0b7)",
+      "stepRange": "121–127",
+      "llmCalls": 7,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 836,
+      "costUsd": 0
+    },
+    {
+      "slice": "S6: Elapsed time & completed-response p50/p95 percentiles (041c434)",
+      "stepRange": "128–135",
+      "llmCalls": 8,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 1394,
+      "costUsd": 0
+    },
+    {
+      "slice": "S7: SIGUSR1 wrapper, SignalHandler & PTY Ctrl-C tests (5407aa3)",
+      "stepRange": "136–203",
+      "llmCalls": 68,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 22929,
+      "costUsd": 0
+    },
+    {
+      "slice": "Release verification: escript build, HTTP/HTTPS & PTY sign-off (5407aa3 amend)",
+      "stepRange": "204–213",
+      "llmCalls": 10,
+      "manageTaskPolls": 0,
+      "thinkingTokens": 2490,
+      "costUsd": 0
+    }
+  ],
+  "notes": [
+    "Manual Note vs. Session Log Audit: 56m 58s Wall-Clock, iceman-free Default Variant (No #high), 7 Agent Commits & No Credo",
+    "S7 Holdout Failure Reproduced Empirically: Unprotected SIGUSR1 Wrapper Triggers BEAM Crash Dump (Received SIGUSR1, Exit 1) During 200–250 ms Startup Window",
+    "Mint ~> 1.6 Per-Request HTTP/1 Architecture (No Keep-Alive Reuse) & Fast 17.0s 33-Test Suite",
+    "85.8% Inference Wall-Clock (13.75s/Step), 97.89% Cache Hit Rate & 28% Fewer Tokens Than hy4-flash-free on OpenCode"
+  ],
+  "notesDetails": [
+    {
+      "title": "Manual Note vs. Session Log Audit: 56m 58s Wall-Clock, iceman-free Default Variant (No #high), 7 Agent Commits & No Credo",
+      "bullets": [
+        "Exact Wall-Clock Window (`56m 58s` / `57m`, Omitted in Manual Note): Following the pre-run `init` commit (`35880d3` at `17:49:27 WIB`), `opencode v2.2.7` first failed at `17:49:42.441 WIB` (`opencode.log`) with `VariantUnavailableError: Variant unavailable for opencode/iceman-free: high` because `iceman-free` sets `capabilities.effort_updates: false` in `models-dev:v2:catalog`. Relaunched without `#high` at `17:51:14.247 WIB` (`--model opencode/iceman-free`, `variant: \"default\"`), session `ses_df2d1995cffexZYTbUBsCxU8V5` dispatched Step 1 at `17:51:20.974 WIB` (`Line 1` of `20261124T105114Z.events.jsonl`), completed Step 213 at `18:48:12.047 WIB` (`Line 865`, `3,411.1s` / `56m 51.1s` transcript span), and exited at `18:48:12.126 WIB` (`3,417.9s` / `56m 57.9s` CLI wall-clock).",
+        "Stealth Model Metadata (`opencode/iceman-free`): `models-dev:v2:catalog` identifies `iceman-free` (\"Iceman Free\", released `2026-11-06`, \"Stealth model, free for a limited time\") with a `262,144`-token context limit (`131,072` max output) and `$0.00` billed cost across all token tiers. Peak context reached `126,182` prompt tokens (`126,687` total, `48.13%` of `262.1k`) at Step 213 with `0` compactions.",
+        "7 Agent Commits (`52aff16` → `5407aa3`), `33/33` Tests & No Credo: All 7 agent-authored commits plus pre-run `35880d3` (`init`), `33/33` passing ExUnit tests (`17.0s`), and the absence of Credo match the manual note. In S7, the initial commit `6388f17` (Step 203, `18:45:23 WIB`) was amended at Step 212 (`18:47:56 WIB`) into `5407aa3` after tweaking `test/capy_bench/ctrl_c_test.exs`. Rather than adding `{:credo, ...}`, `README.md` documented `mix compile --warnings-as-errors` as the lint step—contrary to `PLAN.md`'s note that compilation does not substitute for linting."
+      ]
+    },
+    {
+      "title": "S7 Holdout Failure Reproduced Empirically: Unprotected SIGUSR1 Wrapper Triggers BEAM Crash Dump (Received SIGUSR1, Exit 1) During 200–250 ms Startup Window",
+      "bullets": [
+        "Root Cause in `./cb` + `lib/capy_bench/cli.ex` (`5407aa3`): `./cb` spawns `( trap '' INT; exec \"$DIR/cb.escript\" \"$@\" ) &` and traps `INT` to run `kill -USR1 \"$pid\"`, but never ignores `USR1` across BEAM boot. Inside Elixir, `CapyBench.CLI.main/1` calls `:os.set_signal(:sigusr1, :handle)` and swaps `:erl_signal_handler` with `CapyBench.SignalHandler`—which only takes effect after ERTS boots and loads the escript (~250–300 ms).",
+        "Empirical Live PTY Reproduction (`100 ms`–`1,500 ms` Sweep): Probing `./cb` against a local HTTP server with foreground PTY `\\x03` reproduced three distinct regimes: (1) at `100 ms` and `150 ms`, `SIGUSR1` is lost during subshell/ERTS startup so `./cb` ignores `Ctrl-C` and completes the full 5s run (`Started: 50`, exit `0`); (2) at `200 ms` and `250 ms`, ERTS has installed its default `SIGUSR1` crash-dump handler before `CapyBench.CLI.main/1` runs, reproducing the evaluator's exact S7 failure (`Received SIGUSR1`, `Crash dump is being written to: erl_crash.dump...done`, empty stdout, exit `1`); (3) at `300 ms`, `350 ms`, `500 ms`, and `1,500 ms`, `CapyBench.SignalHandler` is active and exits `130` with a valid partial summary.",
+        "S7 Burned `68` Steps (`31.9%` of All Turns) & Missed the Boot Window: S7 was the single largest stage (`Steps 136–203`, `22,929` thinking tokens—`38.6%` of total reasoning). The agent itself hit `Received SIGUSR1` + `erl_crash.dump` at Step 192 (`Line 779`), deleted `erl_crash.dump` at Step 202 (`Line 819`), and only tested `600 ms` and `1,500 ms` `Ctrl-C` delays in `test/capy_bench/ctrl_c_test.exs`, leaving the `200–250 ms` boot race unresolved (and another `1.74 MB` `erl_crash.dump` untracked in the workspace)."
+      ]
+    },
+    {
+      "title": "Mint ~> 1.6 Per-Request HTTP/1 Architecture (No Keep-Alive Reuse) & Fast 17.0s 33-Test Suite",
+      "bullets": [
+        "Mint HTTP/1.1 Streaming Without Connection Reuse (`228071f`, `4a53f8a`): The agent added `{:mint, \"~> 1.6\"}` in S3 for redirect-free, retry-free HTTP/1 streaming and explicit TLS verification (`verify: :verify_peer`, custom CA support, hostname matching), and intentionally closed each Mint connection after every request in S4 (`PLAN.md` notes \"no reuse path\").",
+        "Compact 33-Test Suite (`17.0s`): S1–S6 cleared all holdout checks cleanly with a concise `33`-test suite (`0.07s` async, `17.0s` sync)—6.5× faster to execute than `hy4-flash-free`'s `110.5s` `53`-test suite—keeping tool execution down to `14.2%` of total wall-clock."
+      ]
+    },
+    {
+      "title": "85.8% Inference Wall-Clock (13.75s/Step), 97.89% Cache Hit Rate & 28% Fewer Tokens Than hy4-flash-free on OpenCode",
+      "bullets": [
+        "Inference-Dominated Latency (`85.8%` Inference vs. `14.2%` Tools): Per-message timestamps in `opencode.db` show `48m 49.5s` (`2,929.5s`, avg `13.75s/step`) spent in LLM inference versus `8m 05.0s` (`485.0s`) in tool execution—more than double `hy4-flash-free`'s `6.37s/step` inference latency, which explains why `iceman-free` took `12m` longer (`57m` vs. `45m`) despite `14` fewer LLM turns (`213` vs. `227`) and `28%` fewer total tokens (`14.38M` vs. `19.95M`).",
+        "Token Economy, `97.89%` Cache Hit Rate & Tool Profile: Across `213` steps (`232` tool calls; `17` multi-tool turns, `1.09` tools/turn; `174 shell`, `53 edit`, `5 read`, `0 write`), `iceman-free` consumed `301,269` uncached input, `13,972,992` cached input (`97.89%` hit rate), and `104,993` output tokens (`59,393` reasoning + `45,600` visible/tool tokens; `14,379,254` total). After cold-start cache warm-up on Steps 2–3, prefix caching held steady except for two partial cache drops at Step 29 (`8,775` uncached / `8,192` cached) and Step 138 (`68,784` uncached / `16,384` cached at the start of S7). Only `2` tool-level errors occurred across the entire run, both `edit` `oldString` mismatches at Step 39 (`Line 168`) and Step 190 (`Line 772`)."
+      ]
+    }
+  ]
+}

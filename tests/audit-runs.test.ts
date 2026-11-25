@@ -582,9 +582,11 @@ test('Value & Execution Frontier separates paid vs $0 promos cleanly across all 
 
     // 3. Paired value bars have zero NaN/Infinity and separate $0 promo runs cleanly
     const bars = computePairedValueBars(analyzed, lens);
+    const expectedPromoCount = analyzed.filter((r) => isZeroCostPromoRun(r, lens)).length;
+    assert.ok(expectedPromoCount >= 3, `${lens}: expected >= 3 $0 promo runs`);
     assert.equal(bars.executionRows.length, analyzed.length);
-    assert.equal(bars.promoRows.length, 2);
-    assert.equal(bars.paidValueRows.length, analyzed.length - 2);
+    assert.equal(bars.promoRows.length, expectedPromoCount);
+    assert.equal(bars.paidValueRows.length, analyzed.length - expectedPromoCount);
     for (const row of [...bars.executionRows, ...bars.paidValueRows, ...bars.promoRows]) {
       assert.ok(Number.isFinite(row.lensCostUsd), `${lens}/${row.id}: lensCostUsd must be finite`);
       assert.ok(Number.isFinite(row.executionBarPct), `${lens}/${row.id}: executionBarPct must be finite`);

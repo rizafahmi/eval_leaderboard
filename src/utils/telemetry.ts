@@ -1006,6 +1006,23 @@ export function discoverAblationPresets(runs: AnalyzedRun[]): AblationPreset[] {
     });
   }
 
+  // 3c2. Model Comparison: OpenCode hy4-flash-free vs iceman-free
+  const ocIceman = runs.find(
+    (r) => r.displayHarness === 'OpenCode' && r.data.model === 'iceman-free'
+  );
+  if (ocHy4 && ocIceman) {
+    presets.push({
+      id: 'model-opencode-hy4-vs-iceman',
+      category: 'model',
+      badge: 'MODEL COMPARISON',
+      title: 'OpenCode: hy4-flash-free vs. iceman-free',
+      subtitle: 'Same OpenCode v2.2.7 harness & Mint HTTP/1.1 — stty -isig + Credo (7/7) vs. SIGUSR1 boot race & no Credo (6/7)',
+      runAId: ocHy4.id,
+      runBId: ocIceman.id,
+      findingHeadline: `iceman-free used 28% fewer tokens (${ocIceman.data.tokens?.total ?? '14.38M'} vs ${ocHy4.data.tokens?.total ?? '19.95M'}) and 6% fewer turns (${ocIceman.llmCalls} vs ${ocHy4.llmCalls}), but spent 68 turns on S7 and missed holdout S7 (6/7, Received SIGUSR1 BEAM boot race) while hy4-flash-free cleared 7/7 12m faster (${ocHy4.data.durationMinutes}m vs ${ocIceman.data.durationMinutes}m) with 0-issue Credo.`,
+    });
+  }
+
   // 4. Model Family Tier: ZCode glm-5.3-flash (High) vs glm-5.3 (High)
   const glmFlagshipHigh = runs.find(
     (r) => r.data.model === 'glm-5.3' && r.data.effort?.toLowerCase() === 'high'

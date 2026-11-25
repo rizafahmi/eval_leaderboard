@@ -393,6 +393,27 @@ export const MODEL_PRICING_CATALOG: Record<string, ModelPricingProfile> = {
     pricingStatusNote:
       'Billed $0.00 during OpenCode limited-time free access (Nov 2026); permanent API pricing TBD',
   },
+  'iceman-free': {
+    modelKey: 'iceman-free',
+    displayName: 'iceman-free',
+    provider: 'OpenCode',
+    billedTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+      notes: 'Stealth model, free for a limited time on OpenCode (as of Nov 2026); standard API pricing TBD',
+    },
+    standardApiTier: {
+      label: 'OpenCode Limited-Time Free Tier',
+      inputPerMillionUsd: 0,
+      cachedInputPerMillionUsd: 0,
+      outputPerMillionUsd: 0,
+    },
+    pricingBadge: 'free (limited time)',
+    pricingStatusNote:
+      'Stealth model billed $0.00 during OpenCode limited-time free access (Nov 2026); permanent API pricing TBD',
+  },
   'subq-savant-1.4': {
     modelKey: 'subq-savant-1.4',
     displayName: 'subq-savant-1.4',
